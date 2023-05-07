@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.zip.GZIPInputStream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
@@ -17,19 +19,29 @@ import com.fathzer.jchess.uci.UCIMove;
 
 public class DefaultOpenings implements Function<Board<com.fathzer.jchess.Move>, com.fathzer.jchess.Move> {
 	private static final Random RND = new Random(); 
-	private static final String KNOWN = "/lichess/masters.json";
+	private static final String KNOWN = "/lichess/masters.json.gz";
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
-	public static final DefaultOpenings INSTANCE = new DefaultOpenings();
+	public static final DefaultOpenings INSTANCE;
+	
+	static {
+		try {
+			INSTANCE = new DefaultOpenings();
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+	}
 
 	private final Map<String, Opening> db;
 	
-	private DefaultOpenings() {
-		try (InputStream in = getClass().getResourceAsStream(KNOWN)) {
+	private DefaultOpenings() throws IOException {
+		this(() -> DefaultOpenings.class.getResourceAsStream(KNOWN), true);
+	}
+	
+	public DefaultOpenings(Supplier<InputStream> stream, boolean zipped) throws IOException {
+		try (InputStream in = zipped ? new GZIPInputStream(stream.get()) : stream.get()) {
 	        MapType mapType = MAPPER.getTypeFactory().constructMapType(HashMap.class, String.class, Opening.class);
 			db = MAPPER.readValue(in, mapType);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
 		}
 	}
 	
