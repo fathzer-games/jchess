@@ -107,10 +107,6 @@ public class JChess extends Application {
 		}
 	}
 
-	private Preferences getPreferences() {
-		return Preferences.userRoot().node(this.getClass().getCanonicalName());
-	}
-
 	@Override
 	protected JMenuBar buildMenuBar() {
 		final JMenuBar bar = super.buildMenuBar();
