@@ -6,7 +6,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.pgn.GameHistory;
 import com.fathzer.games.clock.Clock;
 
 import lombok.Getter;
@@ -47,9 +49,12 @@ public class Game {
 	@Getter
 	private boolean paused;
 	private boolean startClockAfterFirstMove = false;
+	@Getter
+	private GameHistory history;
 
-	public Game(Board<Move> board, Clock clock) {
+	public Game(Board<Move> board, ChessRules rules, Clock clock) {
 		this.board = board;
+		this.history = new GameHistory(rules);
 		this.firstMove = true;
 		this.clock = clock;
 		if (clock!=null) {
@@ -84,19 +89,10 @@ public class Game {
 		EXECUTOR.execute(new EngineTurn(engine, moveConsumer));
 	}
 	
-	public void onMove() {
+	public void onMove(Move move) {
 		if (clock!=null) {
 			clock.tap();
 		}
-	}
-	
-	public void doMove(Move move) {
-		if (paused) {
-			throw new IllegalStateException("Can't do move when game is paused");
-		}
-		if (isFirstMove()) {
-			firstMove = false;
-		}
-		board.move(move);
+		history.add(move);
 	}
 }

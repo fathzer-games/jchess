@@ -7,9 +7,9 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.fathzer.games.Color;
-import com.fathzer.games.Rules;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.games.clock.Clock;
@@ -33,7 +33,7 @@ public class GameSession {
 	}
 	
 	private final GamePanel panel;
-	private Rules<Board<Move>, Move> rules;
+	private ChessRules rules;
 	private GameSettings settings;
 	private Function<Board<Move>, Move> whiteEngine;
 	private Function<Board<Move>, Move> blackEngine;
@@ -46,7 +46,7 @@ public class GameSession {
 		this.panel = panel;
 		this.state = new Observable<>(State.ENDED);
 		state.addListener(this::onStateChanged);
-		panel.getBoard().addPropertyChangeListener(ChessBoardPanel.TARGET, evt -> onMove());
+		panel.getBoard().addPropertyChangeListener(ChessBoardPanel.TARGET, evt -> onMove((Move) evt.getNewValue()));
 		panel.setResignationHandler(this::resign);
 		setSettings(settings);
 		gameCount = 0;
@@ -112,7 +112,7 @@ public class GameSession {
 	}
 	
 	private void initGame() {
-		this.game = new Game(rules.newGame(), buildClock());
+		this.game = new Game(rules.newGame(), rules, buildClock());
 		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
 		panel.setPlayer1Color(player1Color);
 		panel.setClock(game.getClock());
@@ -225,14 +225,14 @@ public class GameSession {
 		this.state.setValue(state);
 	}
 
-	private void onMove() {
+	private void onMove(Move move) {
 		panel.repaint();
 		final Status status = panel.getBoard().getGameState().getStatus();
 		if (!Status.PLAYING.equals(status)) {
 			// Game is ended
 			endOfGame(status);
 		} else {
-			this.game.onMove();
+			this.game.onMove(move);
 			nextMove();
 		}
 	}
@@ -270,6 +270,7 @@ public class GameSession {
 	private void endOfGame(final Status status) {
 		setState(State.PAUSED);
 		log.debug("End of game,  state: {}", getState());
+		GameRecorder.record(this.game.getHistory());
 		final String revenge = "Revenge";
 		int choice = JOptionPane.showOptionDialog(panel, getMessage(status), "End of game", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {revenge,"Enough for today"}, revenge);
 		if (choice==0) {

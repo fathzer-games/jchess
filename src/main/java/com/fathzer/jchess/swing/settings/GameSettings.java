@@ -5,10 +5,8 @@ import java.util.Random;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fathzer.games.Color;
-import com.fathzer.games.Rules;
 import com.fathzer.games.clock.ClockSettings;
-import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Move;
+import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.fischerrandom.FischerRandomRules;
 import com.fathzer.jchess.generic.StandardChessRules;
 
@@ -43,7 +41,7 @@ public class GameSettings {
 	@AllArgsConstructor
 	public enum Variant {
 		STANDARD(StandardChessRules.INSTANCE), CHESS960(FischerRandomRules.INSTANCE);
-		private Rules<Board<Move>, Move> rules;
+		private ChessRules rules;
 	}
 	
 	public enum ColorSetting {
