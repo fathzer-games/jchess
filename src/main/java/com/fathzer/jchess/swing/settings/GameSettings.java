@@ -1,4 +1,4 @@
-package com.fathzer.jchess.swing;
+package com.fathzer.jchess.swing.settings;
 
 import java.util.Random;
 
@@ -49,7 +49,7 @@ public class GameSettings {
 	public enum ColorSetting {
 		RANDOM, BLACK, WHITE;
 		
-		Color getColor() {
+		public Color getColor() {
 			if (BLACK.equals(this)) {
 				return Color.BLACK;
 			} else if (WHITE.equals(this)) {

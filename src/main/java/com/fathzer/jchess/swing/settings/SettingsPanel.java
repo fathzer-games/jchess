@@ -1,4 +1,4 @@
-package com.fathzer.jchess.swing;
+package com.fathzer.jchess.swing.settings;
 
 import javax.swing.JPanel;
 import javax.swing.JTextArea;

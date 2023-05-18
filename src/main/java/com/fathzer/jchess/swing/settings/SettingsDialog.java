@@ -1,4 +1,4 @@
-package com.fathzer.jchess.swing;
+package com.fathzer.jchess.swing.settings;
 
 import java.awt.Window;
 import java.awt.event.ActionEvent;

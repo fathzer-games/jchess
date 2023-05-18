@@ -18,9 +18,10 @@ import com.fathzer.jchess.fischerrandom.FischerRandomRules;
 import com.fathzer.jchess.generic.BasicEvaluator;
 import com.fathzer.jchess.generic.StandardChessRules;
 import com.fathzer.jchess.lichess.DefaultOpenings;
-import com.fathzer.jchess.swing.GameSettings.ColorSetting;
-import com.fathzer.jchess.swing.GameSettings.EngineSettings;
-import com.fathzer.jchess.swing.GameSettings.Variant;
+import com.fathzer.jchess.swing.settings.GameSettings;
+import com.fathzer.jchess.swing.settings.GameSettings.ColorSetting;
+import com.fathzer.jchess.swing.settings.GameSettings.EngineSettings;
+import com.fathzer.jchess.swing.settings.GameSettings.Variant;
 import com.fathzer.util.Observable;
 
 import lombok.extern.slf4j.Slf4j;

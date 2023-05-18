@@ -1,4 +1,4 @@
-package com.fathzer.jchess.swing;
+package com.fathzer.jchess.swing.settings;
 
 import static org.junit.jupiter.api.Assertions.*;
 

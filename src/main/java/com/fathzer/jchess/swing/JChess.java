@@ -11,6 +11,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fathzer.jchess.swing.settings.GameSettings;
+import com.fathzer.jchess.swing.settings.SettingsDialog;
 import com.fathzer.soft.ajlib.swing.framework.Application;
 import java.awt.Color;
 
