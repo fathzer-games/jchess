@@ -7,8 +7,8 @@ import java.util.function.Function;
 
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.ChessRules;
+import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.pgn.GameHistory;
 import com.fathzer.games.clock.Clock;
 
 import lombok.Getter;

@@ -270,7 +270,11 @@ public class GameSession {
 	private void endOfGame(final Status status) {
 		setState(State.PAUSED);
 		log.debug("End of game,  state: {}", getState());
-		GameRecorder.record(this.game.getHistory());
+		try {
+			GameRecorder.record(this.settings, this.player1Color, this.game.getHistory());
+		} catch (Exception e) {
+			log.error("An error occured while writing pgn",e);
+		}
 		final String revenge = "Revenge";
 		int choice = JOptionPane.showOptionDialog(panel, getMessage(status), "End of game", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {revenge,"Enough for today"}, revenge);
 		if (choice==0) {

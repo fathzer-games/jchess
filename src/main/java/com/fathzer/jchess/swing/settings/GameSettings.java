@@ -35,7 +35,7 @@ public class GameSettings {
 	private ClockSettings clock = null;
 	private PlayerSettings player1 = new PlayerSettings();
 	private ColorSetting player1Color = ColorSetting.RANDOM;
-	private PlayerSettings player2 = new PlayerSettings(new EngineSettings(), null);
+	private PlayerSettings player2 = new PlayerSettings(null, new EngineSettings(), null);
 	
 	@Getter
 	@AllArgsConstructor
@@ -63,6 +63,7 @@ public class GameSettings {
 	@Getter
 	@Setter
 	public static class PlayerSettings {
+		private String name = null;
 		private EngineSettings engine = null;
 		private ClockSettings extraClock = null;
 	}
