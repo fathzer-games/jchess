@@ -14,6 +14,7 @@ import com.fathzer.jchess.pgn.PGNHeaders.Builder;
 import com.fathzer.jchess.pgn.PGNWriter;
 import com.fathzer.jchess.swing.settings.GameSettings;
 import com.fathzer.jchess.swing.settings.GameSettings.PlayerSettings;
+import com.fathzer.jchess.swing.settings.GameSettings.Variant;
 
 import lombok.experimental.UtilityClass;
 
@@ -24,6 +25,9 @@ public class GameRecorder {
 			final Builder builder = new PGNHeaders.Builder();
 			builder.setWhiteName(who(settings, player1Color, Color.WHITE));
 			builder.setBlackName(who(settings, player1Color, Color.BLACK));
+			if (Variant.STANDARD!=settings.getVariant()) {
+				builder.setVariant(settings.getVariant().name());
+			}
 			// Add white and black names
 			new PGNWriter().getPGN(builder.build(), history).forEach(out::println);
 			out.flush();

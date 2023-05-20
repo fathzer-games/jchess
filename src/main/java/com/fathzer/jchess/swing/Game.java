@@ -54,7 +54,7 @@ public class Game {
 
 	public Game(Board<Move> board, ChessRules rules, Clock clock) {
 		this.board = board;
-		this.history = new GameHistory(rules);
+		this.history = new GameHistory(rules, board);
 		this.firstMove = true;
 		this.clock = clock;
 		if (clock!=null) {
