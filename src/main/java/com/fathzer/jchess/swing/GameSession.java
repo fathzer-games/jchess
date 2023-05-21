@@ -227,12 +227,12 @@ public class GameSession {
 
 	private void onMove(Move move) {
 		panel.repaint();
+		this.game.onMove(move);
 		final Status status = panel.getBoard().getGameState().getStatus();
 		if (!Status.PLAYING.equals(status)) {
 			// Game is ended
 			endOfGame(status);
 		} else {
-			this.game.onMove(move);
 			nextMove();
 		}
 	}

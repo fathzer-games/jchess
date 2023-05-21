@@ -13,11 +13,14 @@ import java.util.zip.GZIPInputStream;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.movelibrary.LibraryMove;
+import com.fathzer.jchess.movelibrary.Proposal;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
 
-public class DefaultOpenings implements Function<Board<com.fathzer.jchess.Move>, com.fathzer.jchess.Move> {
+public class DefaultOpenings implements Function<Board<Move>, Move> {
 	private static final Random RND = new Random(); 
 	private static final String KNOWN = "/lichess/masters.json.gz";
 	private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -32,7 +35,7 @@ public class DefaultOpenings implements Function<Board<com.fathzer.jchess.Move>,
 		}
 	}
 
-	private final Map<String, Opening> db;
+	private final Map<String, Proposal> db;
 	
 	private DefaultOpenings() throws IOException {
 		this(() -> DefaultOpenings.class.getResourceAsStream(KNOWN), true);
@@ -40,25 +43,24 @@ public class DefaultOpenings implements Function<Board<com.fathzer.jchess.Move>,
 	
 	public DefaultOpenings(Supplier<InputStream> stream, boolean zipped) throws IOException {
 		try (InputStream in = zipped ? new GZIPInputStream(stream.get()) : stream.get()) {
-	        MapType mapType = MAPPER.getTypeFactory().constructMapType(HashMap.class, String.class, Opening.class);
+	        MapType mapType = MAPPER.getTypeFactory().constructMapType(HashMap.class, String.class, Proposal.class);
 			db = MAPPER.readValue(in, mapType);
 		}
 	}
 	
-	private String toFen(Board<com.fathzer.jchess.Move> board) {
+	private String toFen(Board<Move> board) {
 		String fen = FENParser.to(board);
 		int index = fen.lastIndexOf(' ', fen.lastIndexOf(' ')-1);
 		return fen.substring(0, index);
 	}
 
 	@Override
-	public com.fathzer.jchess.Move apply(Board<com.fathzer.jchess.Move> board) {
-		final Opening opening = db.get(toFen(board));
+	public Move apply(Board<Move> board) {
+		final Proposal opening = db.get(toFen(board));
 		if (opening==null || opening.getMoves().isEmpty()) {
 			return null;
 		}
-		System.out.println (opening.getName()+" -> "+opening.getMoves()); //TODO
-		final Move move = opening.getMoves().get(RND.nextInt(opening.getMoves().size()));
+		final LibraryMove move = opening.getMoves().get(RND.nextInt(opening.getMoves().size()));
 		return JChessUCIEngine.toMove(UCIMove.from(move.getCoord()), board.getActiveColor());
 	}
 }

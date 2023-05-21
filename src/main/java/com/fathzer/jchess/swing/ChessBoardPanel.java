@@ -294,6 +294,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
                 this.targets = getMoves().filter(m->m.getFrom()==position).mapToInt(Move::getTo).distinct().toArray();
                 if (this.targets.length>0) {
 	                setSelected(position);
+	                sprites.setGhost(e.getPoint());
 	                setDestinations(targets);
                 } else {
                 	setSelected(-1);

@@ -34,11 +34,15 @@ public class SpriteMover implements MouseMotionListener {
 			this.height = sprite.getHeight(null);
 		}
 	}
+	
+	public void setGhost(Point point) {
+    	this.ghost = point;
+	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
     	if (sprite!=null && eventValidator.test(e)) {
-	    	this.ghost = e.getPoint();
+	    	setGhost(e.getPoint());
 	    	if (this.last!=null) {
 	    		component.repaint(this.last);
 				component.repaint(ghost.x-width/2, ghost.y-height/2, width, height);
