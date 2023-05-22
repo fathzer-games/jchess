@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GameSession {
 	public enum State {
-		PAUSED, RUNNING, ENDED
+		CREATED, PAUSED, RUNNING, ENDED
 	}
 	
 	private final GamePanel panel;
@@ -44,25 +44,12 @@ public class GameSession {
 
 	public GameSession(GamePanel panel, GameSettings settings) {
 		this.panel = panel;
-		this.state = new Observable<>(State.ENDED);
+		this.state = new Observable<>(State.CREATED);
 		state.addListener(this::onStateChanged);
 		panel.getBoard().addPropertyChangeListener(ChessBoardPanel.TARGET, evt -> onMove((Move) evt.getNewValue()));
 		panel.setResignationHandler(this::resign);
 		setSettings(settings);
 		gameCount = 0;
-	}
-	
-	private void firstGame() {
-		this.gameCount = 0;
-		initGame();
-		panel.getBoard().setReverted(Color.BLACK.equals(player1Color));
-		setEngine(player1Color, getEngine(settings.getVariant(), settings.getPlayer1().getEngine()));
-		setEngine(player1Color.opposite(), getEngine(settings.getVariant(), settings.getPlayer2().getEngine()));
-		if (onlyHumans()) {
-			panel.getBoard().setUpsideDownColor(player1Color.opposite());
-		}
-		panel.getBoard().setShowPossibleMoves(settings.isShowPossibleMoves());
-		panel.getBoard().setTouchMove(settings.isTouchMove());
 	}
 	
 	private void onStateChanged(State old, State current) {
@@ -186,7 +173,14 @@ public class GameSession {
 	
 	public void start() {
 		if (State.ENDED.equals(getState())) {
-			firstGame();
+			this.gameCount = 0;
+			initGame();
+		}
+		setEngine(player1Color, getEngine(settings.getVariant(), settings.getPlayer1().getEngine()));
+		setEngine(player1Color.opposite(), getEngine(settings.getVariant(), settings.getPlayer2().getEngine()));
+		panel.getBoard().setReverted(Color.BLACK.equals(player1Color));
+		if (onlyHumans()) {
+			panel.getBoard().setUpsideDownColor(player1Color.opposite());
 		}
 		setState(State.RUNNING);
 	}
@@ -216,12 +210,11 @@ public class GameSession {
 		});
 	}
 
-	
 	public State getState() {
 		return this.state.getValue();
 	}
 	
-	public void setState(State state) {
+	private void setState(State state) {
 		this.state.setValue(state);
 	}
 
@@ -301,15 +294,20 @@ public class GameSession {
 	}
 
 	public void setSettings(GameSettings settings) {
-		if (!State.ENDED.equals(getState())) {
-			throw new IllegalStateException("Can't change the game settings dutring the game");
+		if (State.RUNNING.equals(getState()) || State.PAUSED.equals(getState())) {
+			throw new IllegalStateException("Can't change the game settings during the game");
 		}
 		this.settings = settings;
 		this.rules = settings.getVariant().getRules();
 		panel.getBoard().setChessRules(rules);
 		panel.setPlayer1Human(settings.getPlayer1().getEngine()==null);
 		panel.setPlayer2Human(settings.getPlayer2().getEngine()==null);
+		panel.getBoard().setShowPossibleMoves(settings.isShowPossibleMoves());
+		panel.getBoard().setTouchMove(settings.isTouchMove());
 		player1Color = settings.getPlayer1Color().getColor();
+		if (onlyHumans()) {
+			panel.getBoard().setUpsideDownColor(player1Color.opposite());
+		}
 		initGame();
 	}
 }

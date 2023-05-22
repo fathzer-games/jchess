@@ -21,10 +21,10 @@ public class MenuPanel extends JPanel {
 
 	private final JButton settings;
 	@Setter
-	private Runnable settingsAction;
+	private transient Runnable settingsAction;
 	private final JButton play;
 	@Setter
-	private Runnable playAction;
+	private transient Runnable playAction;
 
 	/**
 	 * Create the panel.

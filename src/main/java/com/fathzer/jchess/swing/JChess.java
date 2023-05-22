@@ -53,7 +53,7 @@ public class JChess extends Application {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				newGame();
+				startGame();
 			}
 		};
 		panel.setPlayAction(() -> this.startAction.actionPerformed(null));
@@ -118,7 +118,7 @@ public class JChess extends Application {
 		return bar;
 	}
 
-	private void newGame() {
+	private void startGame() {
 		this.startAction.setEnabled(false);
 		this.panel.setMenuVisible(false);
 		this.game.start();
