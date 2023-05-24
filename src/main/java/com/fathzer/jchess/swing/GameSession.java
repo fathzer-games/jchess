@@ -104,6 +104,7 @@ public class GameSession {
 		panel.setPlayer1Color(player1Color);
 		panel.setClock(game.getClock());
 		panel.getBoard().setBoard(game.getBoard());
+		panel.getBoard().setManualMoveEnabled(false);
 	}
 
 	private Clock buildClock() {
@@ -178,22 +179,16 @@ public class GameSession {
 		}
 		setEngine(player1Color, getEngine(settings.getVariant(), settings.getPlayer1().getEngine()));
 		setEngine(player1Color.opposite(), getEngine(settings.getVariant(), settings.getPlayer2().getEngine()));
-		panel.getBoard().setReverted(Color.BLACK.equals(player1Color));
-		if (onlyHumans()) {
-			panel.getBoard().setUpsideDownColor(player1Color.opposite());
-		}
 		setState(State.RUNNING);
 	}
 
 	private void nextMove() {
 		final Color activeColor = game.getBoard().getActiveColor();
 		final Function<Board<Move>, Move> engine = getEngine(activeColor);
+		panel.getBoard().setManualMoveEnabled(engine==null);
 		if (engine!=null) {
 			log.debug("Engine detected for {}",activeColor);
-			panel.getBoard().setManualMoveEnabled(false);
 			game.playEngine(engine, this::play);
-		} else {
-			panel.getBoard().setManualMoveEnabled(true);
 		}
 	}
 	
@@ -305,8 +300,11 @@ public class GameSession {
 		panel.getBoard().setShowPossibleMoves(settings.isShowPossibleMoves());
 		panel.getBoard().setTouchMove(settings.isTouchMove());
 		player1Color = settings.getPlayer1Color().getColor();
-		if (onlyHumans()) {
+		panel.getBoard().setReverted(Color.BLACK.equals(player1Color));
+		if (onlyHumans() && settings.isTabletMode()) {
 			panel.getBoard().setUpsideDownColor(player1Color.opposite());
+		} else {
+			panel.getBoard().setUpsideDownColor(null);
 		}
 		initGame();
 	}

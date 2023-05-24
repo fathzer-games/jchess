@@ -29,6 +29,7 @@ public class GameSettings {
 	
 	private static final Random RANDOM_GENERATOR = new Random();
 	private Variant variant = Variant.CHESS960;
+	private boolean tabletMode = true;
 	private boolean showPossibleMoves = true;
 	private boolean touchMove = false;
 	private boolean startClockAfterFirstMove = false;
