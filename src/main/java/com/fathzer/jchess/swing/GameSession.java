@@ -76,7 +76,7 @@ public class GameSession {
 	
 	private void doRevenge() {
 		final Color previous1 = player1Color;
-		if (ColorSetting.RANDOM.equals(settings.getPlayer1Color()) && gameCount%2==0) {
+		if (ColorSetting.RANDOM.equals(settings.getPlayer1Color()) && gameCount%2!=0) {
 			player1Color = settings.getPlayer1Color().getColor();
 		} else {
 			player1Color = player1Color.opposite();

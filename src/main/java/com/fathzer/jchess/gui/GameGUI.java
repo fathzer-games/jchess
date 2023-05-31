@@ -7,7 +7,7 @@ import com.fathzer.games.Color;
 /** A try to make GameGUI used by GameSession generic to any game.
  * @param <M> The class that represents a move
  */
-public interface GameGUI<M> { //TODO Remove of finish?
+public interface GameGUI<M> { //TODO Remove or finish?
 	/** Player one is the one at the bottom of the screen */
 	void setPlayerHuman(boolean playerOne, boolean playerTwo);
 	void setPlayerOneColor(Color color);
