@@ -61,6 +61,6 @@ public class DefaultOpenings implements Function<Board<Move>, Move> {
 			return null;
 		}
 		final LibraryMove move = opening.getMoves().get(RND.nextInt(opening.getMoves().size()));
-		return JChessUCIEngine.toMove(UCIMove.from(move.getCoord()), board.getActiveColor());
+		return JChessUCIEngine.toMove(board.getCoordinatesSystem(), UCIMove.from(move.getCoord()), board.getActiveColor());
 	}
 }
