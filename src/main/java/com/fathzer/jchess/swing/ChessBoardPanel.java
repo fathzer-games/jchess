@@ -17,6 +17,7 @@ import javax.swing.*;
 import com.fathzer.games.GameState;
 import com.fathzer.games.Rules;
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
@@ -165,13 +166,16 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
         }
     }
 	protected void drawPieces(Graphics g) {
-		for (int i=0;i<dimension.getSize();i++) {
-        	Piece p = board.getPiece(i);
-        	if (p!=null && (i!=selected || this.sprites.getSprite()==null)) {
-            	final int col = reverted ? dimension.getWidth() - dimension.getColumn(i) - 1 : dimension.getColumn(i);
-            	final int row = reverted ? dimension.getHeight() - dimension.getRow(i) - 1 : dimension.getRow(i);
-            	drawPiece(g, p, offsetX+col*squareSize, offsetY+row*squareSize);
-        	}
+		for (int r=0;r<dimension.getHeight();r++) {
+        	final int row = reverted ? dimension.getHeight() - r - 1 : r;
+			for (int c=0;c<dimension.getWidth();c++) {
+	        	final int index = board.getCoordinatesSystem().getIndex(r, c);
+				Piece p = board.getPiece(index);
+	        	if (p!=null && (index!=selected || this.sprites.getSprite()==null)) {
+	            	final int col = reverted ? dimension.getWidth() - c - 1 : c;
+	            	drawPiece(g, p, offsetX+col*squareSize, offsetY+row*squareSize);
+	        	}
+			}
         }
 	}
 	protected void drawPiece(Graphics g, Piece p, int x, int y) {
@@ -234,8 +238,8 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 			int cell = revertIfNeeded(selected);
     		g.setColor(new Color(255,255,255,128));
     		((Graphics2D)g).setStroke(new BasicStroke(5));
-    		int col = board.getDimension().getColumn(cell);
-    		int row = board.getDimension().getRow(cell);
+    		int col = board.getCoordinatesSystem().getColumn(cell);
+    		int row = board.getCoordinatesSystem().getRow(cell);
     		g.drawOval(offsetX+col*squareSize+3, offsetY+row*squareSize+3, squareSize-6, squareSize-6);
 		}
 	}
@@ -246,8 +250,8 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 		}
 		g.setColor(new Color(255,255,255,128));
 		Arrays.stream(destinations).map(this::revertIfNeeded).forEach( cell -> {
-    		int col = board.getDimension().getColumn(cell);
-    		int row = board.getDimension().getRow(cell);
+    		int col = board.getCoordinatesSystem().getColumn(cell);
+    		int row = board.getCoordinatesSystem().getRow(cell);
     		g.fillOval(offsetX+col*squareSize+squareSize/4, offsetY+row*squareSize+squareSize/4, squareSize/2, squareSize/2);
     	});
 	}
@@ -258,10 +262,10 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     		((Graphics2D)g).setStroke(new BasicStroke(8));
     		final int from = revertIfNeeded(lastFrom);
     		final int to = revertIfNeeded(lastTo);
-			final int rowFrom = board.getDimension().getRow(from);
-			final int colFrom = board.getDimension().getColumn(from); 
-			final int rowTo = board.getDimension().getRow(to); 
-			final int colTo = board.getDimension().getColumn(to);
+			final int rowFrom = board.getCoordinatesSystem().getRow(from);
+			final int colFrom = board.getCoordinatesSystem().getColumn(from); 
+			final int rowTo = board.getCoordinatesSystem().getRow(to); 
+			final int colTo = board.getCoordinatesSystem().getColumn(to);
 			g.drawLine(offsetX+colFrom*squareSize+squareSize/2 , offsetY+rowFrom*squareSize+squareSize/2, offsetX+colTo*squareSize+squareSize/2, offsetY+rowTo*squareSize+squareSize/2);
 		}
 	}
@@ -273,8 +277,14 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	private int toPosition(MouseEvent e) {
 		return revertIfNeeded((e.getX()-offsetX)/squareSize+(e.getY()-offsetY)/squareSize*dimension.getWidth());
 	}
-	private int revertIfNeeded(int pos) {
-		return reverted ? board.getDimension().getSize() - 1 - pos : pos;
+	private int revertIfNeeded(int pos) { //TODO Seems complex to use coordinate system to revert the board
+		if (reverted) {
+			final CoordinatesSystem cs = board.getCoordinatesSystem();
+			final int row = dimension.getHeight() - cs.getRow(pos) - 1;
+			final int col = dimension.getWidth() - cs.getColumn(pos) - 1;
+			pos = cs.getIndex(row, col);
+		}
+		return pos;
 	}
     @Override
     public void mousePressed(MouseEvent e) {
