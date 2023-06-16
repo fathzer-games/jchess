@@ -9,10 +9,10 @@ Java 11+ to run the application and mvn to build it.
 ```mvn package```
 
 ## How to launch the swing application
-java ./target/jchess.jar
+```java ./target/jchess.jar```
 
 ## How to launch the UCI engine
-java -Duci=true -jar ./target/jchess.jar
+```java -Duci=true -jar ./target/jchess.jar```
 
 # Known bugs
 
