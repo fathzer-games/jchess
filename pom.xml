@@ -88,6 +88,15 @@
 							<mainClass>com.fathzer.jchess.swing.JChess</mainClass>
 						</transformer>
 					</transformers>
+					<filters>
+						<filter>
+							<artifact>com.fathzer:jchess-core</artifact>
+							<includes>
+								<include>com/fathzer/jchess/**</include>
+								<include>Perft.txt</include>
+							</includes>
+						</filter>
+					</filters>
 				</configuration>
 				<executions>
 					<execution>
