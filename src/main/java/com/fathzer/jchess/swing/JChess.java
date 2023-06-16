@@ -13,6 +13,7 @@ import javax.swing.JMenuBar;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fathzer.jchess.swing.settings.GameSettings;
 import com.fathzer.jchess.swing.settings.SettingsDialog;
+import com.fathzer.jchess.uci.JChessUCI;
 import com.fathzer.soft.ajlib.swing.framework.Application;
 import java.awt.Color;
 
@@ -26,7 +27,11 @@ public class JChess extends Application {
 	private GameSession game;
 
 	public static void main(String[] args) {
-		new JChess().launch();
+		if (Boolean.getBoolean("uci")) {
+			JChessUCI.main(args);
+		} else {
+			new JChess().launch();
+		}
 	}
 	
 	private JChess() {

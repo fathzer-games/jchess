@@ -15,6 +15,7 @@
 		<check-dependencies-java-version>11</check-dependencies-java-version>
 	    <maven.compiler.release>11</maven.compiler.release>
 		<sonar.organization>fathzer-games</sonar.organization>
+		<customized.jar.name>jchess</customized.jar.name>
 	</properties>
 
 	<dependencies>
@@ -92,8 +93,7 @@
 						<filter>
 							<artifact>com.fathzer:jchess-core</artifact>
 							<includes>
-								<include>com/fathzer/jchess/**</include>
-								<include>Perft.txt</include>
+								<include>**</include>
 							</includes>
 						</filter>
 					</filters>

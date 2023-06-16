@@ -1,5 +1,18 @@
 # jchess
-A Swing chess application
+A Swing chess application and a UCI engine based on [JChess-core](https://github.com/fathzer-games/jchess-core).
+
+## Requirements
+Java 11+ to run the application and mvn to build it.
+
+## How to compile the project
+
+```mvn package```
+
+## How to launch the swing application
+java ./target/jchess.jar
+
+## How to launch the UCI engine
+java -Duci=true -jar ./target/jchess.jar
 
 # Known bugs
 
