@@ -212,6 +212,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
                 break;
             case BLACK_KING: j=0; k=1;
                 break;
+            case BORDER:break;
         }
         if (p.getColor().equals(this.invertedColor)) {
         	k = k+2;
@@ -275,9 +276,15 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 			e.getY()>=offsetY && e.getY()<dimension.getHeight()*squareSize+offsetY;
 	}
 	private int toPosition(MouseEvent e) {
-		return revertIfNeeded((e.getX()-offsetX)/squareSize+(e.getY()-offsetY)/squareSize*dimension.getWidth());
+		int col = (e.getX()-offsetX)/squareSize;
+		int row = (e.getY()-offsetY)/squareSize;
+		if (reverted) {
+			col = board.getDimension().getWidth() - col - 1;
+			row = board.getDimension().getWidth() - col - 1;
+		}
+		return board.getCoordinatesSystem().getIndex(row, col);
 	}
-	private int revertIfNeeded(int pos) { //TODO Seems complex to use coordinate system to revert the board
+	private int revertIfNeeded(int pos) {
 		if (reverted) {
 			final CoordinatesSystem cs = board.getCoordinatesSystem();
 			final int row = dimension.getHeight() - cs.getRow(pos) - 1;
@@ -299,7 +306,11 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
         		// If touch move rule applies, refuse to change the selection
         		return;
         	}
-            if (board.getPiece(position)!=null && board.getPiece(position).getColor().equals(board.getActiveColor())) {
+            final Piece piece = board.getPiece(position);
+            if (Piece.BORDER.equals(piece)) {
+            	System.out.println("What's the fuck");
+            }
+			if (piece!=null && piece.getColor().equals(board.getActiveColor())) {
             	// The player clicked one of his pieces
                 this.targets = getMoves().filter(m->m.getFrom()==position).mapToInt(Move::getTo).distinct().toArray();
                 if (this.targets.length>0) {
