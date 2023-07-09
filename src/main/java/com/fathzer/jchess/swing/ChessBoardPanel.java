@@ -9,13 +9,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-import com.fathzer.games.GameState;
 import com.fathzer.games.Rules;
+import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -33,7 +32,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	
 	private final transient com.fathzer.jchess.Dimension dimension;
     private final transient SpriteMover sprites;
-	private transient Rules<Board<Move>, Move> rules;
+	private transient Rules<Board<Move>> rules;
 	private int selected;
 	private boolean reverted;
     private transient Board<Move> board;
@@ -45,7 +44,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     private int offsetX = 0;
     private int offsetY = 0;
     
-	private transient GameState<Move> moveList;
+	private transient List<Move> moveList;
 	private int[] targets;
 	private boolean manualMoves = true;
 	private boolean showPossibleMoves = true;
@@ -84,7 +83,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     	this.repaint();
     }
     
-    public void setChessRules(Rules<Board<Move>, Move> rules) {
+    public void setChessRules(Rules<Board<Move>> rules) {
     	this.rules = rules;
     	this.updatePossibleMoves();
     	this.repaint();
@@ -113,7 +112,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     private void updatePossibleMoves() {
     	this.targets = new int[0];
     	if (board!=null && rules!=null) {
-    		this.moveList = rules.getState(board);
+    		this.moveList = board.getMoves();
     	}
     }
     
@@ -347,8 +346,8 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	public boolean doMove(Move move) {
 		final boolean legal = getMoves().anyMatch(m -> m.getFrom()==move.getFrom() && m.getTo()==move.getTo());
 		if (legal) {
-			board.move(move);
-			moveList = rules.getState(board);
+			board.makeMove(move);
+			moveList = board.getMoves();
 	        setDestinations(new int[0]);
 	        setLastMove(move.getFrom(), move.getTo());
 	        setSelected(-1);
@@ -368,9 +367,9 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 				move = null;
 			} else if (moves.size()>1) {
 				// Promotion
-				final PieceKind[] kinds = moves.stream().map(m->m.promotedTo().getKind()).toArray(PieceKind[]::new);
+				final PieceKind[] kinds = moves.stream().map(m->m.getPromotion().getKind()).toArray(PieceKind[]::new);
 				final PieceKind choice = getPromotion(kinds);
-				move = moves.stream().filter(m -> m.promotedTo().getKind().equals(choice)).findAny().get();
+				move = moves.stream().filter(m -> m.getPromotion().getKind().equals(choice)).findAny().get();
 			} else {
 				move = moves.get(0);
 			}
@@ -386,11 +385,11 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	}
 	
 	private Stream<Move> getMoves() {
-		return StreamSupport.stream(moveList.spliterator(), false);
+		return moveList.stream();
 	}
 	
-	public GameState<Move> getGameState() {
-		return moveList;
+	public Status getStatus() {
+		return board.getStatus();
 	}
 	
     @Override

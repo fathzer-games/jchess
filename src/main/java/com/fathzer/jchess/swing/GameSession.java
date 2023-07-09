@@ -7,16 +7,14 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.Rules;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
-import com.fathzer.jchess.fischerrandom.FischerRandomRules;
 import com.fathzer.jchess.generic.BasicEvaluator;
-import com.fathzer.jchess.generic.StandardChessRules;
 import com.fathzer.jchess.lichess.DefaultOpenings;
 import com.fathzer.jchess.swing.settings.GameSettings;
 import com.fathzer.jchess.swing.settings.GameSettings.ColorSetting;
@@ -33,7 +31,7 @@ public class GameSession {
 	}
 	
 	private final GamePanel panel;
-	private ChessRules rules;
+	private Rules<Board<Move>> rules;
 	private GameSettings settings;
 	private Function<Board<Move>, Move> whiteEngine;
 	private Function<Board<Move>, Move> blackEngine;
@@ -99,7 +97,7 @@ public class GameSession {
 	}
 	
 	private void initGame() {
-		this.game = new Game(rules.newGame(), rules, buildClock());
+		this.game = new Game(rules.newGame(), buildClock());
 		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
 		panel.setPlayer1Color(player1Color);
 		panel.setClock(game.getClock());
@@ -136,9 +134,9 @@ public class GameSession {
 		if (settings==null) {
 			engine = null;
 		} else if (Variant.STANDARD.equals(variant)) {
-			engine = new JChessEngine(StandardChessRules.INSTANCE, new BasicEvaluator(), settings.getLevel()).setOpenings(DefaultOpenings.INSTANCE);
+			engine = new JChessEngine(new BasicEvaluator(), settings.getLevel()).setOpenings(DefaultOpenings.INSTANCE);
 		} else if (Variant.CHESS960.equals(variant)) {
-			engine = new JChessEngine(FischerRandomRules.INSTANCE, new BasicEvaluator(), settings.getLevel());
+			engine = new JChessEngine(new BasicEvaluator(), settings.getLevel());
 			engine.setOpenings(null);
 		} else {
 			throw new IllegalArgumentException("The "+this+" variant does not support engine");
@@ -216,7 +214,7 @@ public class GameSession {
 	private void onMove(Move move) {
 		panel.repaint();
 		this.game.onMove(move);
-		final Status status = panel.getBoard().getGameState().getStatus();
+		final Status status = panel.getBoard().getStatus();
 		if (!Status.PLAYING.equals(status)) {
 			// Game is ended
 			endOfGame(status);

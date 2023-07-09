@@ -6,7 +6,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
 import com.fathzer.games.clock.Clock;
@@ -52,9 +51,9 @@ public class Game {
 	@Getter
 	private GameHistory history;
 
-	public Game(Board<Move> board, ChessRules rules, Clock clock) {
+	public Game(Board<Move> board, Clock clock) {
 		this.board = board;
-		this.history = new GameHistory(rules, board);
+		this.history = new GameHistory(board);
 		this.firstMove = true;
 		this.clock = clock;
 		if (clock!=null) {
