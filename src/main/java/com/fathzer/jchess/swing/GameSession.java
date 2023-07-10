@@ -7,7 +7,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.fathzer.games.Color;
-import com.fathzer.games.Rules;
+import com.fathzer.games.GameBuilder;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
@@ -31,7 +31,7 @@ public class GameSession {
 	}
 	
 	private final GamePanel panel;
-	private Rules<Board<Move>> rules;
+	private GameBuilder<Board<Move>> rules;
 	private GameSettings settings;
 	private Function<Board<Move>, Move> whiteEngine;
 	private Function<Board<Move>, Move> blackEngine;

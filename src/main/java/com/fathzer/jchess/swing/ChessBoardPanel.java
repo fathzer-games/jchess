@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-import com.fathzer.games.Rules;
+import com.fathzer.games.GameBuilder;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -32,7 +32,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	
 	private final transient com.fathzer.jchess.Dimension dimension;
     private final transient SpriteMover sprites;
-	private transient Rules<Board<Move>> rules;
+	private transient GameBuilder<Board<Move>> rules;
 	private int selected;
 	private boolean reverted;
     private transient Board<Move> board;
@@ -83,7 +83,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     	this.repaint();
     }
     
-    public void setChessRules(Rules<Board<Move>> rules) {
+    public void setChessRules(GameBuilder<Board<Move>> rules) {
     	this.rules = rules;
     	this.updatePossibleMoves();
     	this.repaint();
