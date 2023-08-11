@@ -279,7 +279,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 		int row = (e.getY()-offsetY)/squareSize;
 		if (reverted) {
 			col = board.getDimension().getWidth() - col - 1;
-			row = board.getDimension().getWidth() - col - 1;
+			row = board.getDimension().getHeight() - row - 1;
 		}
 		return board.getCoordinatesSystem().getIndex(row, col);
 	}
