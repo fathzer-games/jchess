@@ -14,6 +14,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
+import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.generic.BasicEvaluator;
 import com.fathzer.jchess.lichess.DefaultOpenings;
 import com.fathzer.jchess.swing.settings.GameSettings;
@@ -26,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GameSession {
+	private static final long MILLIS_IN_SECONDS = 1000L;
+
 	public enum State {
 		CREATED, PAUSED, RUNNING, ENDED
 	}
@@ -134,13 +137,26 @@ public class GameSession {
 		if (settings==null) {
 			engine = null;
 		} else if (Variant.STANDARD.equals(variant)) {
-			engine = new JChessEngine(new BasicEvaluator(), settings.getLevel()).setOpenings(DefaultOpenings.INSTANCE);
+			engine = getEngine(settings.getLevel()).setOpenings(DefaultOpenings.INSTANCE);
 		} else if (Variant.CHESS960.equals(variant)) {
-			engine = new JChessEngine(new BasicEvaluator(), settings.getLevel());
+			engine = getEngine(settings.getLevel());
 			engine.setOpenings(null);
 		} else {
 			throw new IllegalArgumentException("The "+this+" variant does not support engine");
 		}
+		return engine;
+	}
+	
+	private JChessEngine getEngine(int level) {
+		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), level);
+		if (level <= 6) {
+			engine.setMaxTime(Long.MAX_VALUE);
+		} else if (level<=8) {
+			engine.setMaxTime(10*MILLIS_IN_SECONDS);
+		} else {
+			engine.setMaxTime(15*MILLIS_IN_SECONDS);
+		}
+		engine.setParallelism(PhysicalCores.count());
 		return engine;
 	}
 

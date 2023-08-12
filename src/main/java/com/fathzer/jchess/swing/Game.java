@@ -11,9 +11,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.games.clock.Clock;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class Game {
 	private static final Executor EXECUTOR = Executors.newSingleThreadExecutor((r) -> {
 	    Thread t = Executors.defaultThreadFactory().newThread(r);
@@ -32,9 +30,7 @@ public class Game {
 		
 		@Override
 		public void run() {
-			log.info("Engine starts searching move for {}",board.getActiveColor());
 			Move move = engine.apply(board);
-			log.info("Engine has choosed move {} for {}",move, board.getActiveColor());
 			moveConsumer.accept(Game.this, move);
 		}
 	}
