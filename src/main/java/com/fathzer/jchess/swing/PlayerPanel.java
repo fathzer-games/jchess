@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 
 import javax.swing.Icon;
 import javax.swing.JButton;
+
 import java.awt.Color;
 import java.awt.Font;
 
@@ -32,7 +33,9 @@ public class PlayerPanel extends JPanel {
 	private static final Icon FLAG_ICON = Utils.createIcon(PlayerPanel.class.getResource(IMAGE_PATH), FLAG_SIZE);
 	private static final Icon FLAG_ICON_REVERTED = Utils.createIcon(PlayerPanel.class.getResource(IMAGE_PATH_REVERTED), FLAG_SIZE);
 
+	private final JPanel flagPanel;
 	private final JButton whiteFlag;
+	private final RotatingLabel scoreLabel;
 	private final RotatingLabel clockLabel;
 	private transient Clock clock;
 	private com.fathzer.games.Color playerColor;
@@ -58,6 +61,13 @@ public class PlayerPanel extends JPanel {
 		whiteFlag.setContentAreaFilled(false);
 		whiteFlag.setFocusPainted(false);
 		
+		scoreLabel = new RotatingLabel();
+		scoreLabel.setFont(new Font("Dialog", Font.BOLD, 20));
+		scoreLabel.setForeground(Color.WHITE);
+		scoreLabel.setText(" ");
+		flagPanel = new JPanel();
+		flagPanel.setOpaque(false);
+		
 		clockLabel = new RotatingLabel();
 		clockLabel.setText(" ");
 		clockLabel.setFont(clockLabel.getFont().deriveFont(Font.BOLD, 16));
@@ -67,15 +77,27 @@ public class PlayerPanel extends JPanel {
 	}
 	
 	public void setReverted(boolean reverted) {
-		getLayout().removeLayoutComponent(whiteFlag);
+		getLayout().removeLayoutComponent(flagPanel);
 		getLayout().removeLayoutComponent(clockLabel);
+		flagPanel.getLayout().removeLayoutComponent(scoreLabel);
+		flagPanel.getLayout().removeLayoutComponent(whiteFlag);
 		addComponents(reverted);
 	}
 	
 	private void addComponents(boolean reverted) {
 		whiteFlag.setIcon(reverted ? FLAG_ICON_REVERTED : FLAG_ICON);
 		clockLabel.setRotation(reverted ? 180 : 0);
-		add(whiteFlag, reverted ? BorderLayout.EAST : BorderLayout.WEST);
+		scoreLabel.setRotation(reverted ? 180 : 0);
+
+		if (reverted) {
+			flagPanel.add(scoreLabel);
+			flagPanel.add(whiteFlag);
+		} else {
+			flagPanel.add(whiteFlag);
+			flagPanel.add(scoreLabel);
+		}
+
+		add(flagPanel, reverted ? BorderLayout.EAST : BorderLayout.WEST);
 		add(clockLabel, reverted ? BorderLayout.WEST : BorderLayout.EAST);
 	}
 
@@ -115,5 +137,17 @@ public class PlayerPanel extends JPanel {
 	
 	public void setWhiteFlagVisible(boolean visible) {
 		this.whiteFlag.setVisible(visible);
+	}
+	
+	public void setScore(int score) {
+		final String text;
+		if (score==0) {
+			text = " ";
+		} else if (score>0) {
+			text = "+"+score;
+		} else {
+			text = Integer.toString(score);
+		}
+		this.scoreLabel.setText(text);
 	}
 }

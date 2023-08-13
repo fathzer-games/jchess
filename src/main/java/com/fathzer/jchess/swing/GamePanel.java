@@ -63,4 +63,12 @@ public class GamePanel extends JPanel {
 			board.setBackground(bg);
 		}
 	}
+	
+	public void setScore(int whiteScore) {
+		if (player1Color!=Color.WHITE) {
+			whiteScore = -whiteScore;
+		}
+		player1.setScore(whiteScore);
+		player2.setScore(-whiteScore);
+	}
 }

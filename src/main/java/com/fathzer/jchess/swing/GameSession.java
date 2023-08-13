@@ -11,11 +11,11 @@ import com.fathzer.games.GameBuilder;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.ai.BasicEvaluator;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.util.PhysicalCores;
-import com.fathzer.jchess.generic.BasicEvaluator;
 import com.fathzer.jchess.lichess.DefaultOpenings;
 import com.fathzer.jchess.swing.settings.GameSettings;
 import com.fathzer.jchess.swing.settings.GameSettings.ColorSetting;
@@ -235,6 +235,7 @@ public class GameSession {
 			// Game is ended
 			endOfGame(status);
 		} else {
+			panel.setScore(new BasicEvaluator().getPoints(game.getBoard()));
 			nextMove();
 		}
 	}
