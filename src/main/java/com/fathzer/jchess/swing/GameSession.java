@@ -9,10 +9,12 @@ import javax.swing.SwingUtilities;
 import com.fathzer.games.Color;
 import com.fathzer.games.GameBuilder;
 import com.fathzer.games.Status;
+import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.ai.BasicEvaluator;
 import com.fathzer.jchess.ai.JChessEngine;
+import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
+import com.fathzer.jchess.ai.evaluator.simple.SimpleEvaluator;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.util.PhysicalCores;
@@ -137,9 +139,9 @@ public class GameSession {
 		if (settings==null) {
 			engine = null;
 		} else if (Variant.STANDARD.equals(variant)) {
-			engine = getEngine(settings.getLevel()).setOpenings(DefaultOpenings.INSTANCE);
+			engine = getEngine(settings.getLevel(), settings.getEvaluator()).setOpenings(DefaultOpenings.INSTANCE);
 		} else if (Variant.CHESS960.equals(variant)) {
-			engine = getEngine(settings.getLevel());
+			engine = getEngine(settings.getLevel(), settings.getEvaluator());
 			engine.setOpenings(null);
 		} else {
 			throw new IllegalArgumentException("The "+this+" variant does not support engine");
@@ -147,8 +149,9 @@ public class GameSession {
 		return engine;
 	}
 	
-	private JChessEngine getEngine(int level) {
-		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), level);
+	private JChessEngine getEngine(int level, String evaluatorName) {
+		final Evaluator<Board<Move>> evaluator = "simple".equals(evaluatorName) ? new SimpleEvaluator() : new BasicEvaluator();
+		final JChessEngine engine = new JChessEngine(evaluator, level);
 		if (level <= 6) {
 			engine.setMaxTime(Long.MAX_VALUE);
 		} else if (level<=8) {

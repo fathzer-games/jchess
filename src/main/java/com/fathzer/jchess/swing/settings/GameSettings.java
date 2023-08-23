@@ -76,5 +76,6 @@ public class GameSettings {
 	public static class EngineSettings {
 		private String name = "jchess";
 		private int level = 6;
+		private String evaluator;
 	}
 }
