@@ -1,1 +1,1 @@
-java -DdebugUCI=false -cp ./target/classes com.fathzer.jchess.uci.JChessUCI
+java -Duci=true -DdebugUCI=true -jar ./target/jchess.jar
