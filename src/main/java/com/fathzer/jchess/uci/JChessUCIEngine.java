@@ -17,7 +17,7 @@ import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
 import com.fathzer.jchess.ai.evaluator.simple.SimpleEvaluator;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.generic.BasicMove;
 import com.fathzer.jchess.lichess.DefaultOpenings;
 import com.fathzer.jchess.uci.option.ComboOption;
@@ -88,6 +88,11 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 		}
 		engine.setEvaluator(evaluator);
 	}
+
+	@Override
+	public boolean isChess960Supported() {
+		return true;
+	}
 	
 	@Override
 	public void move(UCIMove move) {
@@ -120,16 +125,19 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 
 	@Override
 	public void setStartPosition(String fen) {
-		board = FENParser.from(fen);
+		board = FENUtils.from(fen);
 	}
 
 	@Override
-	public LongRunningTask<UCIMove> go() {
+	public LongRunningTask<BestMoveReply> go(GoOptions options) {
 		return new LongRunningTask<>() {
 			@Override
-			public UCIMove get() {
+			public BestMoveReply get() {
+				final UCIEngineSearchConfiguration c = new UCIEngineSearchConfiguration();
+				final UCIEngineSearchConfiguration.EngineConfiguration previous = c.configure(engine, options, board);
 				final Move move = engine.apply(board);
-				return toMove(board.getCoordinatesSystem(), move);
+				c.set(engine, previous);
+				return new BestMoveReply(toMove(board.getCoordinatesSystem(), move));
 			}
 
 			@Override
@@ -164,6 +172,6 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 
 	@Override
 	public String getFEN() {
-		return board==null ? null : FENParser.to(board);
+		return board==null ? null : FENUtils.to(board);
 	}
 }

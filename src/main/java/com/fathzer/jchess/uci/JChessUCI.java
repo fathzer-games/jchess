@@ -20,7 +20,7 @@ import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.plugin.loader.jar.JarPluginLoader;
 import com.fathzer.plugin.loader.utils.FileUtils;
 
@@ -70,7 +70,7 @@ public class JChessUCI extends UCI {
 		}
 		
 		void fill(String fen) {
-			Board<Move> board = FENParser.from(fen);
+			Board<Move> board = FENUtils.from(fen);
 			this.cs = board.getCoordinatesSystem();
 			moves = engine.getBestMoves(board);
 		}

@@ -112,7 +112,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     private void updatePossibleMoves() {
     	this.targets = new int[0];
     	if (board!=null && rules!=null) {
-    		this.moveList = board.getMoves();
+    		this.moveList = board.getLegalMoves();
     	}
     }
     
@@ -347,7 +347,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 		final boolean legal = getMoves().anyMatch(m -> m.getFrom()==move.getFrom() && m.getTo()==move.getTo());
 		if (legal) {
 			board.makeMove(move);
-			moveList = board.getMoves();
+			moveList = board.getLegalMoves();
 	        setDestinations(new int[0]);
 	        setLastMove(move.getFrom(), move.getTo());
 	        setSelected(-1);

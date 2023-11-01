@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.movelibrary.LibraryMove;
 import com.fathzer.jchess.movelibrary.Proposal;
 import com.fathzer.jchess.uci.JChessUCIEngine;
@@ -49,7 +49,7 @@ public class DefaultOpenings implements Function<Board<Move>, Move> {
 	}
 	
 	private String toFen(Board<Move> board) {
-		String fen = FENParser.to(board);
+		String fen = FENUtils.to(board);
 		int index = fen.lastIndexOf(' ', fen.lastIndexOf(' ')-1);
 		return fen.substring(0, index);
 	}
