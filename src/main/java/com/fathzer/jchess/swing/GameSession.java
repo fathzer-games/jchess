@@ -153,11 +153,11 @@ public class GameSession {
 		final Evaluator<Board<Move>> evaluator = "simple".equals(evaluatorName) ? new SimpleEvaluator() : new BasicEvaluator();
 		final JChessEngine engine = new JChessEngine(evaluator, level);
 		if (level <= 6) {
-			engine.setMaxTime(Long.MAX_VALUE);
+			engine.getDeepeningPolicy().setMaxTime(Long.MAX_VALUE);
 		} else if (level<=8) {
-			engine.setMaxTime(10*MILLIS_IN_SECONDS);
+			engine.getDeepeningPolicy().setMaxTime(10*MILLIS_IN_SECONDS);
 		} else {
-			engine.setMaxTime(15*MILLIS_IN_SECONDS);
+			engine.getDeepeningPolicy().setMaxTime(15*MILLIS_IN_SECONDS);
 		}
 		engine.setParallelism(PhysicalCores.count());
 		return engine;

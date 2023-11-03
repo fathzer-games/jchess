@@ -32,11 +32,12 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	private static final String SIMPLIFIED_EVALUATOR = "simplified";
 	
 	private Board<Move> board;
-	private JChessEngine engine;
-	
+	private final JChessEngine engine;
+
 	public JChessUCIEngine() {
 		engine = new JChessEngine(new SimpleEvaluator(), 10);
 		engine.setOpenings(DefaultOpenings.INSTANCE);
+		engine.getDeepeningPolicy().setDeepenOnForced(false);
 	}
 	
 	@Override
@@ -66,11 +67,11 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 			depth = 6;
 		} else if (BEST_LEVEL.equals(level)) {
 			depth = 12;
-			engine.setMaxTime(30000);
+			engine.getDeepeningPolicy().setMaxTime(30000);
 		} else {
 			throw new IllegalArgumentException();
 		}
-		engine.getSearchParams().setDepth(depth);
+		engine.getDeepeningPolicy().setDepth(depth);
 	}
 	
 	private void setParallelism(int parallelism) {
