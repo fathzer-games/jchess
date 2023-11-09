@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.perft.TestableMoveGeneratorSupplier;
 import com.fathzer.games.util.PhysicalCores;
@@ -97,7 +98,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	
 	@Override
 	public void move(UCIMove move) {
-		board.makeMove(toMove(board.getCoordinatesSystem(), move, board.getActiveColor()));
+		board.makeMove(toMove(board.getCoordinatesSystem(), move, board.getActiveColor()), MoveConfidence.UNSAFE);
 	}
 	
 	public static Move toMove(CoordinatesSystem cs, UCIMove move, Color color) {

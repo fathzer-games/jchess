@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import com.fathzer.games.GameBuilder;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -346,7 +347,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	public boolean doMove(Move move) {
 		final boolean legal = getMoves().anyMatch(m -> m.getFrom()==move.getFrom() && m.getTo()==move.getTo());
 		if (legal) {
-			board.makeMove(move);
+			board.makeMove(move, MoveConfidence.LEGAL);
 			moveList = board.getLegalMoves();
 	        setDestinations(new int[0]);
 	        setLastMove(move.getFrom(), move.getTo());
