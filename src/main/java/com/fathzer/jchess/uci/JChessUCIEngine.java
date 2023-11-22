@@ -67,7 +67,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 		} else if (AVERAGE_LEVEL.equals(level)) {
 			depth = 6;
 		} else if (BEST_LEVEL.equals(level)) {
-			depth = 12;
+			depth = 14;
 			engine.getDeepeningPolicy().setMaxTime(30000);
 		} else {
 			throw new IllegalArgumentException();
