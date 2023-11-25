@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
 
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
@@ -95,12 +96,12 @@ public class JChessUCI extends UCI {
 		}
 	}
 	
-	private void speedTest(String[] args) {
+	private void speedTest(Deque<String> args) {
 		final long start = System.currentTimeMillis();
 		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), 8);
 		engine.getDeepeningPolicy().setSize(Integer.MAX_VALUE);
-		if (args.length!=0) {
-			engine.setParallelism(Integer.parseInt(args[0]));
+		if (!args.isEmpty()) {
+			engine.setParallelism(Integer.parseInt(args.pop()));
 		}
 		
 		// 3 possible Mats in 1 with whites

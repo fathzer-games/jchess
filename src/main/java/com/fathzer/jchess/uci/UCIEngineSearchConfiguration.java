@@ -7,8 +7,9 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.time.VuckovicSolakTimeManager;
-import com.fathzer.jchess.uci.GoOptions.PlayerClockData;
-import com.fathzer.jchess.uci.GoOptions.TimeOptions;
+import com.fathzer.jchess.uci.parameters.GoParameters;
+import com.fathzer.jchess.uci.parameters.GoParameters.PlayerClockData;
+import com.fathzer.jchess.uci.parameters.GoParameters.TimeOptions;
 
 /** A class that configures the engine before executing the go command
  */
@@ -25,7 +26,7 @@ public class UCIEngineSearchConfiguration {
 		}
 	}
 	
-	public EngineConfiguration configure(JChessEngine engine, GoOptions options, Board<Move> board) {
+	public EngineConfiguration configure(JChessEngine engine, GoParameters options, Board<Move> board) {
 		final EngineConfiguration result = new EngineConfiguration(engine);
 		final TimeOptions timeOptions = options.getTimeOptions();
 		if (options.isPonder() || !options.getMoveToSearch().isEmpty() || options.getMate()>0 || options.getNodes()>0 || timeOptions.isInfinite()) {

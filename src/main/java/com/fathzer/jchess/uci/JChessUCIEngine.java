@@ -24,8 +24,13 @@ import com.fathzer.jchess.lichess.DefaultOpenings;
 import com.fathzer.jchess.uci.option.ComboOption;
 import com.fathzer.jchess.uci.option.Option;
 import com.fathzer.jchess.uci.option.SpinOption;
+import com.fathzer.jchess.uci.parameters.GoParameters;
 
 public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Move>, MoveGeneratorSupplier<Move>, MoveToUCIConverter<Move> {
+	private static final int SILLY_LEVEL_DEPTH = 4;
+	private static final int AVERAGE_LEVEL_DEPTH = 6;
+	private static final int BEST_LEVEL_DEPTH = 14;
+	
 	private static final String BEST_LEVEL = "best";
 	private static final String AVERAGE_LEVEL = "average";
 	private static final String SILLY_LEVEL = "silly";
@@ -36,7 +41,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	private final JChessEngine engine;
 
 	public JChessUCIEngine() {
-		engine = new JChessEngine(new SimpleEvaluator(), 10);
+		engine = new JChessEngine(new SimpleEvaluator(), AVERAGE_LEVEL_DEPTH);
 		engine.setOpenings(DefaultOpenings.INSTANCE);
 		engine.getDeepeningPolicy().setDeepenOnForced(false);
 	}
@@ -63,11 +68,11 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	private void setLevel(String level) {
 		final int depth;
 		if (SILLY_LEVEL.equals(level)) {
-			depth = 4;
+			depth = SILLY_LEVEL_DEPTH;
 		} else if (AVERAGE_LEVEL.equals(level)) {
-			depth = 6;
+			depth = AVERAGE_LEVEL_DEPTH;
 		} else if (BEST_LEVEL.equals(level)) {
-			depth = 14;
+			depth = BEST_LEVEL_DEPTH;
 			engine.getDeepeningPolicy().setMaxTime(30000);
 		} else {
 			throw new IllegalArgumentException();
@@ -128,10 +133,11 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	@Override
 	public void setStartPosition(String fen) {
 		board = FENUtils.from(fen);
+		board.setMoveComparatorBuilder(engine.getMoveComparatorSupplier());
 	}
 
 	@Override
-	public LongRunningTask<BestMoveReply> go(GoOptions options) {
+	public LongRunningTask<BestMoveReply> go(GoParameters options) {
 		return new LongRunningTask<>() {
 			@Override
 			public BestMoveReply get() {
