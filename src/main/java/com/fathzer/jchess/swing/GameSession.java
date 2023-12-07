@@ -150,7 +150,7 @@ public class GameSession {
 	}
 	
 	private JChessEngine getEngine(int level, String evaluatorName) {
-		final Evaluator<Board<Move>> evaluator = "simple".equals(evaluatorName) ? new SimpleEvaluator() : new BasicEvaluator();
+		final Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluator = "simple".equals(evaluatorName) ? SimpleEvaluator::new : BasicEvaluator::new;
 		final JChessEngine engine = new JChessEngine(evaluator, level);
 		if (level <= 6) {
 			engine.getDeepeningPolicy().setMaxTime(Long.MAX_VALUE);
@@ -238,7 +238,7 @@ public class GameSession {
 			// Game is ended
 			endOfGame(status);
 		} else {
-			panel.setScore(new BasicEvaluator().getPoints(game.getBoard()));
+			panel.setScore(new BasicEvaluator(game.getBoard()).getPoints());
 			nextMove();
 		}
 	}

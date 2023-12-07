@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Function;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
@@ -41,7 +42,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	private final JChessEngine engine;
 
 	public JChessUCIEngine() {
-		engine = new JChessEngine(new SimpleEvaluator(), AVERAGE_LEVEL_DEPTH);
+		engine = new JChessEngine(SimpleEvaluator::new, AVERAGE_LEVEL_DEPTH);
 		engine.setOpenings(DefaultOpenings.INSTANCE);
 		engine.getDeepeningPolicy().setDeepenOnForced(false);
 	}
@@ -85,15 +86,15 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	}
 	
 	private void setEvaluator(String eval) {
-		final Evaluator<Board<Move>> evaluator;
+		final Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluator;
 		if (NAIVE_EVALUATOR.equals(eval)) {
-			evaluator = new BasicEvaluator();
+			evaluator = BasicEvaluator::new;
 		} else if (SIMPLIFIED_EVALUATOR.equals(eval)) {
-			evaluator = new SimpleEvaluator();
+			evaluator = SimpleEvaluator::new;
 		} else {
 			throw new IllegalArgumentException();
 		}
-		engine.setEvaluator(evaluator);
+		engine.setEvaluatorSupplier(evaluator);
 	}
 
 	@Override

@@ -98,7 +98,7 @@ public class JChessUCI extends UCI {
 	
 	private void speedTest(Deque<String> args) {
 		final long start = System.currentTimeMillis();
-		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), 8);
+		final JChessEngine engine = new JChessEngine(BasicEvaluator::new, 8);
 		engine.getDeepeningPolicy().setSize(Integer.MAX_VALUE);
 		if (!args.isEmpty()) {
 			engine.setParallelism(Integer.parseInt(args.pop()));
