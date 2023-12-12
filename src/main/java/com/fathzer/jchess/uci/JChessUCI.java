@@ -27,22 +27,23 @@ import com.fathzer.plugin.loader.utils.FileUtils;
 
 public class JChessUCI extends UCI {
 	public static void main(String[] args) {
-		final UCI uci = new JChessUCI();
-		final JarPluginLoader loader = new JarPluginLoader();
-		final Path pluginsFolder = Paths.get("uci-plugins");
-		if (Files.isDirectory(pluginsFolder)) {
-			try {
-				final List<Path> jars = FileUtils.getJarFiles(pluginsFolder, 1);
-				for (Path jar:jars) {
-					final List<Engine> plugins = loader.getPlugins(jar, Engine.class);
-					plugins.forEach(uci::add);
+		try (UCI uci = new JChessUCI()) {
+			final JarPluginLoader loader = new JarPluginLoader();
+			final Path pluginsFolder = Paths.get("uci-plugins");
+			if (Files.isDirectory(pluginsFolder)) {
+				try {
+					final List<Path> jars = FileUtils.getJarFiles(pluginsFolder, 1);
+					for (Path jar:jars) {
+						final List<Engine> plugins = loader.getPlugins(jar, Engine.class);
+						plugins.forEach(uci::add);
+					}
+				} catch (IOException e) {
+					//TODO Log failure when loading plugins 
+					e.printStackTrace();
 				}
-			} catch (IOException e) {
-				//TODO Log failure when loading plugins 
-				e.printStackTrace();
 			}
+			uci.run();
 		}
-		uci.run();
 	}
 	
 	public JChessUCI() {

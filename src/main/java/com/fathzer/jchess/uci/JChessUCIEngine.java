@@ -10,7 +10,7 @@ import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.ai.evaluation.Evaluator;
-import com.fathzer.games.perft.TestableMoveGeneratorSupplier;
+import com.fathzer.games.perft.TestableMoveGeneratorBuilder;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -27,7 +27,7 @@ import com.fathzer.jchess.uci.option.Option;
 import com.fathzer.jchess.uci.option.SpinOption;
 import com.fathzer.jchess.uci.parameters.GoParameters;
 
-public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Move>, MoveGeneratorSupplier<Move>, MoveToUCIConverter<Move> {
+public class JChessUCIEngine implements Engine, MoveGeneratorSupplier<Move>, TestableMoveGeneratorBuilder<Move, MoveGenerator<Move>>, MoveToUCIConverter<Move> {
 	private static final int SILLY_LEVEL_DEPTH = 4;
 	private static final int AVERAGE_LEVEL_DEPTH = 6;
 	private static final int BEST_LEVEL_DEPTH = 14;
@@ -136,6 +136,13 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 		board = FENUtils.from(fen);
 		board.setMoveComparatorBuilder(engine.getMoveComparatorSupplier());
 	}
+	
+	@Override
+	public MoveGenerator<Move> fromFEN(String fen) {
+		Board<Move> result = FENUtils.from(fen);
+		result.setMoveComparatorBuilder(engine.getMoveComparatorSupplier());
+		return result;
+	}
 
 	@Override
 	public LongRunningTask<BestMoveReply> go(GoParameters options) {
@@ -164,9 +171,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 
 	@Override
 	public MoveGenerator<Move> get() {
-		Board<Move> copy = board.create();
-		copy.copy(board);
-		return copy;
+		return board.fork();
 	}
 	
 	@Override

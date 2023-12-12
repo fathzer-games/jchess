@@ -238,7 +238,7 @@ public class GameSession {
 			// Game is ended
 			endOfGame(status);
 		} else {
-			panel.setScore(new BasicEvaluator(game.getBoard()).getPoints());
+			panel.setScore(BasicEvaluator.getPoints(game.getBoard()));
 			nextMove();
 		}
 	}
