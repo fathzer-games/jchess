@@ -2,6 +2,7 @@ package com.fathzer.jchess.swing;
 
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -139,7 +140,8 @@ public class GameSession {
 		if (settings==null) {
 			engine = null;
 		} else if (Variant.STANDARD.equals(variant)) {
-			engine = getEngine(settings.getLevel(), settings.getEvaluator()).setOpenings(DefaultOpenings.INSTANCE);
+			engine = getEngine(settings.getLevel(), settings.getEvaluator());
+			engine.setOpenings(DefaultOpenings.INSTANCE);
 		} else if (Variant.CHESS960.equals(variant)) {
 			engine = getEngine(settings.getLevel(), settings.getEvaluator());
 			engine.setOpenings(null);
@@ -150,7 +152,7 @@ public class GameSession {
 	}
 	
 	private JChessEngine getEngine(int level, String evaluatorName) {
-		final Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluator = "simple".equals(evaluatorName) ? SimpleEvaluator::new : BasicEvaluator::new;
+		final Supplier<Evaluator<Move, Board<Move>>> evaluator = "simple".equals(evaluatorName) ? SimpleEvaluator::new : BasicEvaluator::new;
 		final JChessEngine engine = new JChessEngine(evaluator, level);
 		if (level <= 6) {
 			engine.getDeepeningPolicy().setMaxTime(Long.MAX_VALUE);

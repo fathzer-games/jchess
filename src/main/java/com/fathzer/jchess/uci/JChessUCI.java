@@ -21,6 +21,7 @@ import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
+import com.fathzer.jchess.ai.evaluator.simple.SimpleEvaluator;
 import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.plugin.loader.jar.JarPluginLoader;
 import com.fathzer.plugin.loader.utils.FileUtils;
@@ -99,7 +100,8 @@ public class JChessUCI extends UCI {
 	
 	private void speedTest(Deque<String> args) {
 		final long start = System.currentTimeMillis();
-		final JChessEngine engine = new JChessEngine(BasicEvaluator::new, 8);
+		final boolean fast = args.isEmpty() || !"s".equals(args.pop());
+		final JChessEngine engine = new JChessEngine(fast?BasicEvaluator::new : SimpleEvaluator::new, 8);
 		engine.getDeepeningPolicy().setSize(Integer.MAX_VALUE);
 		if (!args.isEmpty()) {
 			engine.setParallelism(Integer.parseInt(args.pop()));
@@ -127,10 +129,12 @@ public class JChessUCI extends UCI {
 		mv.assertEquals("c2", mv.cs.getAlgebraicNotation(m.getTo()));
 		max = mv.moves.get(1).getEvaluation();
 		//TODO iterative engine fails to find the second best move in tree, probably because of deepening interruption by first mat
-		// Make a test when it will be fixed with a second move that is a MAT in 3 move (see commented code). 
-//		mv.assertEquals(Type.WIN, max.getType());
-//		mv.assertEquals(3, max.getCountToEnd());
-//		mv.assertEquals(Type.EVAL, mv.moves.get(2).getEvaluation().getType());
+		// Make a test when it will be fixed with a second move that is a MAT in 3 move (see commented code).
+		if (fast) {
+			mv.assertEquals(Type.WIN, max.getType());
+			mv.assertEquals(3, max.getCountToEnd());
+			mv.assertEquals(Type.EVAL, mv.moves.get(2).getEvaluation().getType());
+		}
 		
 		// Check in 2
 		mv.fill("8/8/8/8/1B6/NN6/pk1K4/8 w - - 0 1");
@@ -155,7 +159,9 @@ public class JChessUCI extends UCI {
 		engine.getDeepeningPolicy().setSize(3);
 		engine.getDeepeningPolicy().setAccuracy(100);
 		mv.fill("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1");
-		mv.assertEquals(19, mv.moves.size());
+		if (fast) {
+			mv.assertEquals(19, mv.moves.size());
+		}
 		m = mv.moves.get(0).getContent();
 		mv.assertEquals("d1", mv.cs.getAlgebraicNotation(m.getFrom()));
 		mv.assertEquals("d7", mv.cs.getAlgebraicNotation(m.getTo()));

@@ -6,7 +6,7 @@ import com.fathzer.games.clock.CountDownState;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
-import com.fathzer.jchess.time.VuckovicSolakTimeManager;
+import com.fathzer.jchess.time.VuckovicSolakOracle;
 import com.fathzer.jchess.uci.parameters.GoParameters;
 import com.fathzer.jchess.uci.parameters.GoParameters.PlayerClockData;
 import com.fathzer.jchess.uci.parameters.GoParameters.TimeOptions;
@@ -14,7 +14,7 @@ import com.fathzer.jchess.uci.parameters.GoParameters.TimeOptions;
 /** A class that configures the engine before executing the go command
  */
 public class UCIEngineSearchConfiguration {
-	private static final BasicTimeManager<Board<?>> TIME_MANAGER = new BasicTimeManager<>(VuckovicSolakTimeManager.INSTANCE);
+	private static final BasicTimeManager<Board<?>> TIME_MANAGER = new BasicTimeManager<>(VuckovicSolakOracle.INSTANCE);
 
 	public static class EngineConfiguration {
 		private long maxTime;

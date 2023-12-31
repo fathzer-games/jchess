@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
@@ -86,7 +86,7 @@ public class JChessUCIEngine implements Engine, MoveGeneratorSupplier<Move>, Tes
 	}
 	
 	private void setEvaluator(String eval) {
-		final Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluator;
+		final Supplier<Evaluator<Move, Board<Move>>> evaluator;
 		if (NAIVE_EVALUATOR.equals(eval)) {
 			evaluator = BasicEvaluator::new;
 		} else if (SIMPLIFIED_EVALUATOR.equals(eval)) {
@@ -175,8 +175,8 @@ public class JChessUCIEngine implements Engine, MoveGeneratorSupplier<Move>, Tes
 	}
 	
 	@Override
-	public String toUCI(Move move) {
-		return toMove(board.getCoordinatesSystem(), move).toString();
+	public UCIMove toUCI(Move move) {
+		return toMove(board.getCoordinatesSystem(), move);
 	}
 
 	@Override
