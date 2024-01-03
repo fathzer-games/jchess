@@ -139,9 +139,7 @@ public class JChessUCIEngine implements Engine, MoveGeneratorSupplier<Move>, Tes
 	
 	@Override
 	public MoveGenerator<Move> fromFEN(String fen) {
-		Board<Move> result = FENUtils.from(fen);
-		result.setMoveComparatorBuilder(engine.getMoveComparatorSupplier());
-		return result;
+		return FENUtils.from(fen);
 	}
 
 	@Override

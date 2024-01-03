@@ -1,6 +1,7 @@
 package com.fathzer.jchess.uci;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
 import com.fathzer.games.ai.time.BasicTimeManager;
 import com.fathzer.games.clock.CountDownState;
 import com.fathzer.jchess.Board;
@@ -20,7 +21,7 @@ public class UCIEngineSearchConfiguration {
 		private long maxTime;
 		private int depth;
 		
-		private EngineConfiguration(JChessEngine engine) {
+		private EngineConfiguration(IterativeDeepeningEngine<?, ?> engine) {
 			maxTime = engine.getDeepeningPolicy().getMaxTime();
 			depth = engine.getDeepeningPolicy().getDepth();
 		}
