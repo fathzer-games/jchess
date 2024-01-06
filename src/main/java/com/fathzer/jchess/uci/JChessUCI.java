@@ -23,10 +23,11 @@ import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
 import com.fathzer.jchess.ai.evaluator.simple.SimpleEvaluator;
 import com.fathzer.jchess.fen.FENUtils;
+import com.fathzer.jchess.uci.extended.ExtendedUCI;
 import com.fathzer.plugin.loader.jar.JarPluginLoader;
 import com.fathzer.plugin.loader.utils.FileUtils;
 
-public class JChessUCI extends UCI {
+public class JChessUCI extends ExtendedUCI {
 	public static void main(String[] args) {
 		try (UCI uci = new JChessUCI()) {
 			final JarPluginLoader loader = new JarPluginLoader();
