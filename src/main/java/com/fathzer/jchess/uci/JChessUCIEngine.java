@@ -21,11 +21,12 @@ import com.fathzer.jchess.lichess.DefaultOpenings;
 import com.fathzer.jchess.time.VuckovicSolakOracle;
 import com.fathzer.jchess.uci.extended.Displayable;
 import com.fathzer.jchess.uci.helper.AbstractEngine;
-import com.fathzer.jchess.uci.helper.UCIEvaluatorConfiguration;
+import com.fathzer.jchess.uci.helper.EvaluatorConfiguration;
 import com.fathzer.jchess.uci.option.ComboOption;
 import com.fathzer.jchess.uci.option.Option;
 
 public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implements TestableMoveGeneratorBuilder<Move, Board<Move>>, Displayable {
+	private static final List<EvaluatorConfiguration<Move, Board<Move>>> EVALUATORS = Arrays.asList(new EvaluatorConfiguration<>("simplified",SimpleEvaluator::new),new EvaluatorConfiguration<>("naive",BasicEvaluator::new));
 	private static final BasicTimeManager<Board<Move>> TIME_MANAGER = new BasicTimeManager<>(VuckovicSolakOracle.INSTANCE);
 
 	private static final int SILLY_LEVEL_DEPTH = 4;
@@ -37,11 +38,10 @@ public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implement
 	private static final String SILLY_LEVEL = "silly";
 	
 	public JChessUCIEngine() {
-		super (new JChessEngine(SimpleEvaluator::new, AVERAGE_LEVEL_DEPTH), TIME_MANAGER);
+		super (new JChessEngine(EVALUATORS.get(0).getBuilder(), AVERAGE_LEVEL_DEPTH), TIME_MANAGER);
 		engine.setOpenings(DefaultOpenings.INSTANCE);
 		engine.getDeepeningPolicy().setDeepenOnForced(false);
-		setEvaluators(Arrays.asList(new UCIEvaluatorConfiguration<>("naive",BasicEvaluator::new),
-				new UCIEvaluatorConfiguration<>("simplified",SimpleEvaluator::new)));
+		setEvaluators(EVALUATORS);
 	}
 	
 	@Override
