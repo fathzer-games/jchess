@@ -14,8 +14,8 @@ import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
-import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
-import com.fathzer.jchess.ai.evaluator.simple.SimpleEvaluator;
+import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
+import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.util.PhysicalCores;
@@ -152,7 +152,7 @@ public class GameSession {
 	}
 	
 	private JChessEngine getEngine(int level, String evaluatorName) {
-		final Supplier<Evaluator<Move, Board<Move>>> evaluator = "simple".equals(evaluatorName) ? SimpleEvaluator::new : BasicEvaluator::new;
+		final Supplier<Evaluator<Move, Board<Move>>> evaluator = "simple".equals(evaluatorName) ? SimplifiedEvaluator::new : NaiveEvaluator::new;
 		final JChessEngine engine = new JChessEngine(evaluator, level);
 		if (level <= 6) {
 			engine.getDeepeningPolicy().setMaxTime(Long.MAX_VALUE);
@@ -240,7 +240,9 @@ public class GameSession {
 			// Game is ended
 			endOfGame(status);
 		} else {
-			panel.setScore(BasicEvaluator.getPoints(game.getBoard()));
+			final NaiveEvaluator ev = new NaiveEvaluator();
+			ev.init(game.getBoard());
+			panel.setScore(ev.evaluateAsWhite(game.getBoard()));
 			nextMove();
 		}
 	}

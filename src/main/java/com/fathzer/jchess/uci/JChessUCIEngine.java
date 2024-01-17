@@ -13,8 +13,8 @@ import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.ai.JChessEngine;
-import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
-import com.fathzer.jchess.ai.evaluator.simple.SimpleEvaluator;
+import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
+import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
 import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.generic.BasicMove;
 import com.fathzer.jchess.lichess.DefaultOpenings;
@@ -26,7 +26,7 @@ import com.fathzer.jchess.uci.option.ComboOption;
 import com.fathzer.jchess.uci.option.Option;
 
 public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implements TestableMoveGeneratorBuilder<Move, Board<Move>>, Displayable {
-	private static final List<EvaluatorConfiguration<Move, Board<Move>>> EVALUATORS = Arrays.asList(new EvaluatorConfiguration<>("simplified",SimpleEvaluator::new),new EvaluatorConfiguration<>("naive",BasicEvaluator::new));
+	private static final List<EvaluatorConfiguration<Move, Board<Move>>> EVALUATORS = Arrays.asList(new EvaluatorConfiguration<>("simplified",SimplifiedEvaluator::new),new EvaluatorConfiguration<>("naive",NaiveEvaluator::new));
 	private static final BasicTimeManager<Board<Move>> TIME_MANAGER = new BasicTimeManager<>(VuckovicSolakOracle.INSTANCE);
 
 	private static final int SILLY_LEVEL_DEPTH = 4;
