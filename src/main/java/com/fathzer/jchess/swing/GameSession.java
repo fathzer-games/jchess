@@ -154,14 +154,24 @@ public class GameSession {
 	private JChessEngine getEngine(int level, String evaluatorName) {
 		final Supplier<Evaluator<Move, Board<Move>>> evaluator = "simple".equals(evaluatorName) ? SimplifiedEvaluator::new : NaiveEvaluator::new;
 		final JChessEngine engine = new JChessEngine(evaluator, level);
+		final int threads;
+		final long maxTime;
+		final boolean hasMoreThan1Core = PhysicalCores.count()>=2;
 		if (level <= 6) {
-			engine.getDeepeningPolicy().setMaxTime(Long.MAX_VALUE);
+			threads = 1;
+			maxTime = Long.MAX_VALUE;
 		} else if (level<=8) {
-			engine.getDeepeningPolicy().setMaxTime(10*MILLIS_IN_SECONDS);
+			threads = 1;
+			maxTime = 10*MILLIS_IN_SECONDS;
+		} else if (level<=10) {
+			threads = hasMoreThan1Core ? 2 : 1;
+			maxTime = 15*MILLIS_IN_SECONDS;
 		} else {
-			engine.getDeepeningPolicy().setMaxTime(15*MILLIS_IN_SECONDS);
+			threads = hasMoreThan1Core ? 2 : 1;
+			maxTime = 30*MILLIS_IN_SECONDS;
 		}
-		engine.setParallelism(PhysicalCores.count());
+		engine.setParallelism(threads);
+		engine.getDeepeningPolicy().setMaxTime(maxTime);
 		return engine;
 	}
 

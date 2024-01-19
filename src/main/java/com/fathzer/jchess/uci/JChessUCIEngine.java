@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import com.fathzer.games.ai.time.BasicTimeManager;
 import com.fathzer.games.perft.TestableMoveGeneratorBuilder;
+import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -26,7 +27,9 @@ import com.fathzer.jchess.uci.option.ComboOption;
 import com.fathzer.jchess.uci.option.Option;
 
 public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implements TestableMoveGeneratorBuilder<Move, Board<Move>>, Displayable {
-	private static final List<EvaluatorConfiguration<Move, Board<Move>>> EVALUATORS = Arrays.asList(new EvaluatorConfiguration<>("simplified",SimplifiedEvaluator::new),new EvaluatorConfiguration<>("naive",NaiveEvaluator::new));
+	private static final EvaluatorConfiguration<Move, Board<Move>> SIMPLIFIED_EVAL_CONFIG = new EvaluatorConfiguration<>("simplified",SimplifiedEvaluator::new);
+	private static final EvaluatorConfiguration<Move, Board<Move>> NAIVE_EVAL_CONFIG = new EvaluatorConfiguration<>("naive",NaiveEvaluator::new);
+	private static final List<EvaluatorConfiguration<Move, Board<Move>>> EVALUATORS = Arrays.asList(SIMPLIFIED_EVAL_CONFIG, NAIVE_EVAL_CONFIG);
 	private static final BasicTimeManager<Board<Move>> TIME_MANAGER = new BasicTimeManager<>(VuckovicSolakOracle.INSTANCE);
 
 	private static final int SILLY_LEVEL_DEPTH = 4;
@@ -63,17 +66,28 @@ public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implement
 	
 	private void setLevel(String level) {
 		final int depth;
+		final int threads;
+		final EvaluatorConfiguration<Move, Board<Move>> evaluation;  
+		final boolean hasMoreThan1Core = PhysicalCores.count()>=2;
 		if (SILLY_LEVEL.equals(level)) {
 			depth = SILLY_LEVEL_DEPTH;
+			evaluation = NAIVE_EVAL_CONFIG;
+			threads = 1;
 		} else if (AVERAGE_LEVEL.equals(level)) {
 			depth = AVERAGE_LEVEL_DEPTH;
+			evaluation = SIMPLIFIED_EVAL_CONFIG;
+			threads = 1;
 		} else if (BEST_LEVEL.equals(level)) {
-			depth = BEST_LEVEL_DEPTH;
 			engine.getDeepeningPolicy().setMaxTime(30000);
+			depth = BEST_LEVEL_DEPTH;
+			evaluation = SIMPLIFIED_EVAL_CONFIG;
+			threads = hasMoreThan1Core ? 2 : 1;
 		} else {
 			throw new IllegalArgumentException();
 		}
+		engine.setParallelism(threads);
 		engine.getDeepeningPolicy().setDepth(depth);
+		engine.setEvaluatorSupplier(evaluation.getBuilder());
 	}
 	
 	@Override
