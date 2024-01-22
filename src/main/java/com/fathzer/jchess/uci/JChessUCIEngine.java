@@ -7,6 +7,8 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import com.fathzer.games.ai.time.BasicTimeManager;
+import com.fathzer.games.ai.transposition.SizeUnit;
+import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.perft.TestableMoveGeneratorBuilder;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
@@ -14,6 +16,7 @@ import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.ai.JChessEngine;
+import com.fathzer.jchess.ai.TT;
 import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
 import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
 import com.fathzer.jchess.fen.FENUtils;
@@ -42,7 +45,6 @@ public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implement
 	
 	public JChessUCIEngine() {
 		super (new JChessEngine(EVALUATORS.get(0).getBuilder(), AVERAGE_LEVEL_DEPTH), TIME_MANAGER);
-		engine.setOpenings(DefaultOpenings.INSTANCE);
 		engine.getDeepeningPolicy().setDeepenOnForced(false);
 		setEvaluators(EVALUATORS);
 	}
@@ -57,6 +59,21 @@ public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implement
 		return "Jean-Marc Astesana (Fathzer)";
 	}
 	
+	@Override
+	public boolean hasOwnBook() {
+		return true;
+	}
+
+	@Override
+	public void setOwnBook(boolean activate) {
+		engine.setOpenings(activate?DefaultOpenings.INSTANCE:null);
+	}
+
+	@Override
+	protected TranspositionTable<Move> buildTranspositionTable(int sizeInMB) {
+		return new TT(sizeInMB, SizeUnit.MB);
+	}
+
 	@Override
 	public List<Option<?>> getOptions() {
 		final List<Option<?>> options = super.getOptions();
