@@ -4,10 +4,9 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Move;
@@ -26,7 +25,9 @@ public class UCIEngine implements Closeable, Engine {
 
 	public UCIEngine(String path) throws IOException {
 		log.info ("Launching process {}",path);
-		this.process = new ProcessBuilder(/*"cmd.exe", "/c",*/ path).start();
+		final ProcessBuilder processBuilder = new ProcessBuilder(/*"cmd.exe", "/c",*/ path);
+		processBuilder.directory(Paths.get(path).toFile().getParentFile());
+		this.process = processBuilder.start();
 		this.reader = process.inputReader();
 		this.writer = process.outputWriter();
 		this.options = new ArrayList<>();
@@ -39,6 +40,9 @@ public class UCIEngine implements Closeable, Engine {
 		String result = null;
 		do {
 			line = read();
+			if (line==null) {
+				break;
+			}
 			final String namePrefix = "id name ";
 			final String optionPrefix = "option name ";
 			if (line.startsWith(namePrefix)) {
@@ -47,7 +51,7 @@ public class UCIEngine implements Closeable, Engine {
 				final Option<?> option = parseOption(line.substring(optionPrefix.length()).split(" "));
 				options.add(option);
 			}
-		} while (!"uciok".equals(line) && line!=null);
+		} while (!"uciok".equals(line));
 		if (result==null) {
 			throw new IOException("Engine has no name!");
 		}
