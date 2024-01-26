@@ -5,7 +5,9 @@ import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Move;
@@ -23,8 +25,8 @@ public class UCIEngine implements Closeable, Engine {
 	private final List<Option<?>> options;
 
 	public UCIEngine(String path) throws IOException {
-		log.info ("Launch process {}",path);
-		this.process = new ProcessBuilder("cmd", "/c", path).start();
+		log.info ("Launching process {}",path);
+		this.process = new ProcessBuilder(/*"cmd.exe", "/c",*/ path).start();
 		this.reader = process.inputReader();
 		this.writer = process.outputWriter();
 		this.options = new ArrayList<>();
@@ -32,11 +34,19 @@ public class UCIEngine implements Closeable, Engine {
 	}
 	
 	private String init() throws IOException {
-		this.writer.write("uci");
+		this.write("uci");
 		String line;
 		String result = null;
 		do {
 			line = read();
+			final String namePrefix = "id name ";
+			final String optionPrefix = "option name ";
+			if (line.startsWith(namePrefix)) {
+				result = line.substring(namePrefix.length());
+			} else if (line.startsWith(optionPrefix)) {
+				final Option<?> option = parseOption(line.substring(optionPrefix.length()).split(" "));
+				options.add(option);
+			}
 		} while (!"uciok".equals(line) && line!=null);
 		if (result==null) {
 			throw new IOException("Engine has no name!");
@@ -44,8 +54,21 @@ public class UCIEngine implements Closeable, Engine {
 		return result;
 	}
 	
+	private Option<?> parseOption(String[] tokens) throws IOException {
+		// TODO Auto-generated method stub
+		final String optionName = tokens[0];
+		final Option.Type type = null;
+		return null;
+	}
+
+	private void write(String line) throws IOException {
+		this.writer.write(line);
+		this.writer.newLine();
+		this.writer.flush();
+		log.info("> " + line);
+	}
 	private String read() throws IOException {
-		String line = reader.readLine();
+		final String line = reader.readLine();
 		log.info("< " + line);
 		return line;
 	}

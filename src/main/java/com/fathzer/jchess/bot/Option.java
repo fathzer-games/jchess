@@ -1,7 +1,7 @@
 package com.fathzer.jchess.bot;
 
 public abstract class Option<T> {
-	enum Type {
+	public enum Type {
 		CHECK, SPIN, COMBO, BUTTON, STRING
 	}
 	
