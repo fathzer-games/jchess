@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Move;
@@ -21,6 +22,7 @@ public class UCIEngine implements Closeable, Engine {
 	private final String name;
 	private final BufferedReader reader;
 	private final BufferedWriter writer;
+	private final StdErrReader errorReader;
 	private final List<Option<?>> options;
 
 	public UCIEngine(String path) throws IOException {
@@ -30,6 +32,7 @@ public class UCIEngine implements Closeable, Engine {
 		this.process = processBuilder.start();
 		this.reader = process.inputReader();
 		this.writer = process.outputWriter();
+		this.errorReader = new StdErrReader(process);
 		this.options = new ArrayList<>();
 		this.name = init();
 	}
@@ -107,8 +110,14 @@ public class UCIEngine implements Closeable, Engine {
 
 	@Override
 	public void close() throws IOException {
+		this.write("quit");
 		this.reader.close();
 		this.writer.close();
-		this.process.destroy();
+		this.errorReader.close();
+		try {
+			this.process.waitFor(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			this.process.destroy();
+		}
 	}
 }

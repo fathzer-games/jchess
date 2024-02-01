@@ -33,7 +33,8 @@ public class EngineLoader {
 		final List<String> commands = Files.readAllLines(path);
 		for (String command : commands) {
 			if (!command.isBlank() && !command.startsWith("#")) {
-				try (UCIEngine engine = new UCIEngine(command)) {
+				try {
+					UCIEngine engine = new UCIEngine(command);
 					engines.put(engine.getName(), engine);
 					log.info("engine {} is loaded",engine.getName());
 				} catch (IOException e) {
