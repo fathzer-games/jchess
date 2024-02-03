@@ -4,14 +4,16 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class StdErrReader implements Closeable, Runnable {
 	private final BufferedReader errorReader;
 	private final Thread spyThread;
-	private boolean stopped;
+	private final AtomicBoolean stopped;
 
 	StdErrReader(Process process) {
 		this.errorReader = process.errorReader();
+		this.stopped = new AtomicBoolean();
 		this.spyThread = new Thread(this);
 		this.spyThread.setDaemon(true);
 		this.spyThread.start();
@@ -19,14 +21,14 @@ class StdErrReader implements Closeable, Runnable {
 	
 	@Override
 	public void run() {
-		while (!stopped) {
+		while (!stopped.get()) {
 			try {
 				final String line = errorReader.readLine();
 				if (line!=null) {
 					System.err.println (line); //TODO
 				}
 			} catch (EOFException e) {
-				if (!stopped) {
+				if (!stopped.get()) {
 					log(e);
 				}
 			} catch (IOException e) {
@@ -44,7 +46,7 @@ class StdErrReader implements Closeable, Runnable {
 
 	@Override
 	public void close() throws IOException {
-		this.stopped = true;
+		this.stopped.set(true);
 		this.errorReader.close();
 	}
 }

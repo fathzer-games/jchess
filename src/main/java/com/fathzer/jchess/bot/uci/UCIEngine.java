@@ -4,26 +4,31 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Move;
 import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.bot.PlayParameters;
+import com.fathzer.jchess.bot.Variant;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UCIEngine implements Closeable, Engine {
+	private static final String CHESS960_OPTION = "UCI_Chess960";
 	private final Process process;
 	private final String name;
 	private final BufferedReader reader;
 	private final BufferedWriter writer;
 	private final StdErrReader errorReader;
 	private final List<Option<?>> options;
+	private boolean is960Supported;
 
 	public UCIEngine(String path) throws IOException {
 		log.info ("Launching process {}",path);
@@ -68,16 +73,24 @@ public class UCIEngine implements Closeable, Engine {
 		return null;
 	}
 
-	private void write(String line) throws IOException {
-		this.writer.write(line);
-		this.writer.newLine();
-		this.writer.flush();
-		log.info("> " + line);
+	private void write(String line) {
+		try {
+			this.writer.write(line);
+			this.writer.newLine();
+			this.writer.flush();
+			log.info("> " + line);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
-	private String read() throws IOException {
-		final String line = reader.readLine();
-		log.info("< " + line);
-		return line;
+	private String read() {
+		try {
+			final String line = reader.readLine();
+			log.info("< " + line);
+			return line;
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 	
 	@Override
@@ -91,9 +104,30 @@ public class UCIEngine implements Closeable, Engine {
 	}
 
 	@Override
-	public void newGame() {
-		// TODO Auto-generated method stub
-		
+	public boolean newGame(Variant variant) {
+		if (variant==Variant.CHESS_960 && !is960Supported) {
+			return false;
+		}
+		write("ucinewgame");
+		if (is960Supported) {
+			write("setoption name "+CHESS960_OPTION + " value "+(variant==Variant.CHESS_960?true:false));
+		}
+		write("isready");
+		return waitAnswer("readyok"::equals)!=null;
+	}
+
+	/** Reads the engine standard output until a valid answer is returned.
+	 * @param answerValidator a predicate that checks the lines returned by engine. 
+	 * @return The line that is considered valid, null if no valid line is returned
+	 * and the engine closed its output.
+	 */
+	private String waitAnswer(Predicate<String> answerValidator) {
+		for (String line = read(); line!=null; line=read()) {
+			if (answerValidator.test(line)) {
+				return line;
+			}
+		}
+		return null;
 	}
 
 	@Override
