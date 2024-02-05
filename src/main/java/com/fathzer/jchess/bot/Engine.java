@@ -11,5 +11,7 @@ public interface Engine {
 	 */
 	boolean newGame(Variant variant);
 	void setPosition(String startpos, List<Move> moves);
-	Move play(PlayParameters params);
+	
+	//TODO Switch to another move representation (for instance UCI)?
+	com.fathzer.jchess.Move play(PlayParameters params);
 }

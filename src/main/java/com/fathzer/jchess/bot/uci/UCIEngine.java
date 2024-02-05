@@ -137,7 +137,7 @@ public class UCIEngine implements Closeable, Engine {
 	}
 
 	@Override
-	public Move play(PlayParameters params) {
+	public com.fathzer.jchess.Move play(PlayParameters params) {
 		// TODO Auto-generated method stub
 		return null;
 	}

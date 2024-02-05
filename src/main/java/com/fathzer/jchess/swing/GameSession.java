@@ -16,6 +16,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
 import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
+import com.fathzer.jchess.bot.Engine;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.util.PhysicalCores;
@@ -39,8 +40,8 @@ public class GameSession {
 	private final GamePanel panel;
 	private GameBuilder<Board<Move>> rules;
 	private GameSettings settings;
-	private Function<Board<Move>, Move> whiteEngine;
-	private Function<Board<Move>, Move> blackEngine;
+	private Engine whiteEngine;
+	private Engine blackEngine;
 	private int gameCount;
 	private Color player1Color;
 	private Observable<State> state;
@@ -89,7 +90,7 @@ public class GameSession {
 		panel.getBoard().setReverted(Color.BLACK.equals(player1Color));
 		if (!previous1.equals(player1Color)) {
 			// Switch engines color
-			Function<Board<Move>, Move> dummy = whiteEngine;
+			Engine dummy = whiteEngine;
 			whiteEngine = blackEngine;
 			blackEngine = dummy;
 			if (onlyHumans()) {
@@ -135,7 +136,7 @@ public class GameSession {
 		}
 	}
 	
-	public Function<Board<Move>, Move> getEngine(Variant variant, EngineSettings settings) {
+	public Engine getEngine(Variant variant, EngineSettings settings) {
 		final JChessEngine engine;
 		if (settings==null) {
 			engine = null;
@@ -183,7 +184,7 @@ public class GameSession {
 		this.state.addListener(listener);
 	}
 	
-	public void setEngine(Color color, Function<Board<Move>, Move> engine) {
+	public void setEngine(Color color, Engine engine) {
 		if (Color.WHITE.equals(color)) {
 			this.whiteEngine = engine;
 		} else if (Color.BLACK.equals(color)) {
@@ -191,7 +192,7 @@ public class GameSession {
 		}
 	}
 	
-	private Function<Board<Move>, Move> getEngine(Color color) {
+	private Engine getEngine(Color color) {
 		if (Color.WHITE.equals(color)) {
 			return this.whiteEngine;
 		} else if (Color.BLACK.equals(color)) {
@@ -213,7 +214,7 @@ public class GameSession {
 
 	private void nextMove() {
 		final Color activeColor = game.getBoard().getActiveColor();
-		final Function<Board<Move>, Move> engine = getEngine(activeColor);
+		final Engine engine = getEngine(activeColor);
 		panel.getBoard().setManualMoveEnabled(engine==null);
 		if (engine!=null) {
 			log.debug("Engine detected for {}",activeColor);

@@ -1,13 +1,16 @@
 package com.fathzer.jchess.swing;
 
+import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.bot.Engine;
+import com.fathzer.jchess.bot.PlayParameters;
+import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.games.clock.Clock;
 
 import lombok.Getter;
@@ -20,17 +23,37 @@ public class Game {
 	});
 	
 	private class EngineTurn implements Runnable {
-		private final Function<Board<Move>, Move> engine;
+		private final Engine engine;
 		private final BiConsumer<Game, Move> moveConsumer;
 		
-		private EngineTurn(Function<Board<Move>, Move> engine, BiConsumer<Game,Move> moveConsumer) {
+		private EngineTurn(Engine engine, BiConsumer<Game,Move> moveConsumer) {
 			this.moveConsumer = moveConsumer;
 			this.engine = engine;
 		}
 		
 		@Override
 		public void run() {
-			Move move = engine.apply(board);
+			engine.setPosition(FENUtils.to(board), Collections.emptyList());
+			final long remainingTime = clock.getRemaining(clock.getPlaying());
+			final PlayParameters params = new PlayParameters() {
+				@Override
+				public long getRemainingMs() {
+					return remainingTime;
+				}
+				
+				@Override
+				public long getMovesToGo() {
+					// TODO Auto-generated method stub
+					return -1;
+				}
+				
+				@Override
+				public long getIncrementMs() {
+					// TODO Auto-generated method stub
+					return 0;
+				}
+			};
+			Move move = engine.play(null);
 			moveConsumer.accept(Game.this, move);
 		}
 	}
@@ -80,7 +103,7 @@ public class Game {
 		}
 	}
 
-	public void playEngine(Function<Board<Move>, Move> engine, BiConsumer<Game, Move> moveConsumer) {
+	public void playEngine(Engine engine, BiConsumer<Game, Move> moveConsumer) {
 		EXECUTOR.execute(new EngineTurn(engine, moveConsumer));
 	}
 	
