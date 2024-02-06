@@ -8,7 +8,7 @@ public abstract class Option<T> {
 	private final String name;
 	private T defaultValue;
 
-	Option(String name, T defaultValue) {
+	protected Option(String name, T defaultValue) {
 		if (name==null || defaultValue==null) {
 			throw new IllegalArgumentException();
 		}
@@ -20,7 +20,7 @@ public abstract class Option<T> {
 		return name;
 	}
 	
-	abstract Type getType();
+	public abstract Type getType();
 	
 	public T getDefaultValue() {
 		return defaultValue;

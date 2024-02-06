@@ -142,7 +142,7 @@ public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implement
 		}
 	}
 	
-	private static UCIMove toUCIMove(CoordinatesSystem cs, Move move) {
+	public static UCIMove toUCIMove(CoordinatesSystem cs, Move move) {
 		final String promotion = move.getPromotion()==null ? null : move.getPromotion().getNotation().toLowerCase();
 		return new UCIMove(cs.getAlgebraicNotation(move.getFrom()), cs.getAlgebraicNotation(move.getTo()), promotion);
 	}

@@ -9,9 +9,11 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.bot.Engine;
-import com.fathzer.jchess.bot.PlayParameters;
 import com.fathzer.jchess.fen.FENUtils;
+import com.fathzer.jchess.uci.JChessUCIEngine;
+import com.fathzer.jchess.uci.UCIMove;
 import com.fathzer.games.clock.Clock;
+import com.fathzer.games.clock.CountDownState;
 
 import lombok.Getter;
 
@@ -35,25 +37,8 @@ public class Game {
 		public void run() {
 			engine.setPosition(FENUtils.to(board), Collections.emptyList());
 			final long remainingTime = clock.getRemaining(clock.getPlaying());
-			final PlayParameters params = new PlayParameters() {
-				@Override
-				public long getRemainingMs() {
-					return remainingTime;
-				}
-				
-				@Override
-				public long getMovesToGo() {
-					// TODO Auto-generated method stub
-					return -1;
-				}
-				
-				@Override
-				public long getIncrementMs() {
-					// TODO Auto-generated method stub
-					return 0;
-				}
-			};
-			Move move = engine.play(null);
+			final CountDownState params = new CountDownState(remainingTime,0,-1); //TODO Needs increment
+			Move move = JChessUCIEngine.toMove(board, UCIMove.from(engine.play(params)));
 			moveConsumer.accept(Game.this, move);
 		}
 	}
