@@ -23,4 +23,9 @@ public class ComboOption extends Option<String> {
 	public Type getType() {
 		return Type.COMBO;
 	}
+
+	@Override
+	public boolean isValid(String value) {
+		return value!=null && values.contains(value);
+	}
 }

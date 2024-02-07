@@ -1,19 +1,20 @@
 package com.fathzer.jchess.bot;
 
-public abstract class Option<T> {
+import com.fathzer.util.Observable;
+
+public abstract class Option<T> extends Observable<T> {
 	public enum Type {
 		CHECK, SPIN, COMBO, BUTTON, STRING
 	}
 	
 	private final String name;
-	private T defaultValue;
 
 	protected Option(String name, T defaultValue) {
+		super(defaultValue);
 		if (name==null || defaultValue==null) {
 			throw new IllegalArgumentException();
 		}
 		this.name = name;
-		this.defaultValue = defaultValue;
 	}
 
 	public String getName() {
@@ -21,8 +22,13 @@ public abstract class Option<T> {
 	}
 	
 	public abstract Type getType();
+	protected abstract boolean isValid(T value);
 	
-	public T getDefaultValue() {
-		return defaultValue;
+	@Override
+	public void setValue(T value) {
+		if (!isValid(value)) {
+			throw new IllegalArgumentException();
+		}
+		super.setValue(value);
 	}
 }

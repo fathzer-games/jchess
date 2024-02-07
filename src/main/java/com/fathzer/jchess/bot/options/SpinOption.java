@@ -2,13 +2,13 @@ package com.fathzer.jchess.bot.options;
 
 import com.fathzer.jchess.bot.Option;
 
-public class SpinOption<N extends Number & Comparable<N>> extends Option<N> {
-	private final N min;
-	private final N max;
+public class SpinOption extends Option<Long> {
+	private final long min;
+	private final long max;
 	
-	public SpinOption(String name, N defaultValue, N min, N max) {
+	public SpinOption(String name, long defaultValue, long min, long max) {
 		super(name, defaultValue);
-		if (defaultValue.compareTo(min)<0 || defaultValue.compareTo(max)>0) {
+		if (defaultValue<min || defaultValue>max) {
 			throw new IllegalArgumentException("default ("+defaultValue+") is not between min ("+min+") and max("+max+")");
 		}
 		this.min = min;
@@ -20,11 +20,16 @@ public class SpinOption<N extends Number & Comparable<N>> extends Option<N> {
 		return Type.SPIN;
 	}
 
-	public N getMin() {
+	public long getMin() {
 		return min;
 	}
 
-	public N getMax() {
+	public long getMax() {
 		return max;
+	}
+
+	@Override
+	public boolean isValid(Long value) {
+		return min <= value && max >= value;
 	}
 }

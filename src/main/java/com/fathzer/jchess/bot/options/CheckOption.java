@@ -11,4 +11,9 @@ public class CheckOption extends Option<Boolean> {
 	public Type getType() {
 		return Type.CHECK;
 	}
+
+	@Override
+	public boolean isValid(Boolean value) {
+		return value!=null;
+	}
 }

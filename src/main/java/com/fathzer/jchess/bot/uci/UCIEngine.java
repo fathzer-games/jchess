@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 import com.fathzer.games.clock.CountDownState;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Option;
+import com.fathzer.jchess.bot.Option.Type;
 import com.fathzer.jchess.bot.Variant;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UCIEngine implements Closeable, Engine {
 	private static final String CHESS960_OPTION = "UCI_Chess960";
+	private static final String PONDER_OPTION = "Ponder";
+
 	private final Process process;
 	private final String name;
 	private final BufferedReader reader;
@@ -57,14 +60,31 @@ public class UCIEngine implements Closeable, Engine {
 			if (line.startsWith(namePrefix)) {
 				result = line.substring(namePrefix.length());
 			} else if (line.startsWith(optionPrefix)) {
-				final Option<?> option = OptionParser.get(line.substring(optionPrefix.length()).split(" "));
-				options.add(option);
+				final String[] tokens = line.substring(optionPrefix.length()).split(" ");
+				if (CHESS960_OPTION.equals(tokens[0])) {
+					is960Supported = true;
+				} else if (!PONDER_OPTION.equals(tokens[0])){
+					// Ponder is not supported yet
+					final Option<?> option = OptionParser.get(tokens);
+					option.addListener((prev, cur) -> setOption(option, cur));
+					options.add(option);
+				}
 			}
 		} while (!"uciok".equals(line));
 		if (result==null) {
 			throw new IOException("Engine has no name!");
 		}
 		return result;
+	}
+	
+	private void setOption(Option<?> option, Object value) {
+		final StringBuilder buf = new StringBuilder("setoption name ");
+		buf.append(option.getName());
+		if (Type.BUTTON!=option.getType()) {
+			buf.append(" value ");
+			buf.append(value);
+		}
+		write(buf.toString());
 	}
 	
 	private void write(String line) {

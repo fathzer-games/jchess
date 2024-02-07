@@ -11,7 +11,9 @@ import java.util.Map;
 
 import com.fathzer.games.clock.CountDownState;
 import com.fathzer.jchess.bot.Engine;
+import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.bot.Variant;
+import com.fathzer.jchess.bot.options.SpinOption;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +26,12 @@ public class EngineLoader {
 		final Map<String, Engine> engines = loadEngines(path);
 		engines.values().forEach(engine -> {
 			try {
+				for (Option<?> option : engine.getOptions()) {
+					if (option.getName().equals("depth")) {
+						System.out.println("Depth is currently "+option.getValue()+". Setting it to 2");
+						((SpinOption)option).setValue(2L);
+					}
+				}
 				engine.newGame(Variant.STANDARD);
 				engine.setPosition(START_FEN, Collections.emptyList());
 				engine.play(new CountDownState(180000, 3000, 0));

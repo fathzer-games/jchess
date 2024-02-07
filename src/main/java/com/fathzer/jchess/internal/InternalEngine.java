@@ -13,6 +13,7 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.ai.TT;
+import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
 import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Option;
@@ -27,6 +28,8 @@ import com.fathzer.jchess.uci.UCIMove;
 
 public class InternalEngine implements Engine {
 	private static final BasicTimeManager<Board<Move>> TIME_MANAGER = new BasicTimeManager<>(VuckovicSolakOracle.INSTANCE);
+	
+	private static final String SIMPLIFIED_EVAL_VALUE = "simplified";
 
 	private final JChessEngine engine;
 	private final List<Option<?>> options;
@@ -38,13 +41,25 @@ public class InternalEngine implements Engine {
 		this.engine.getDeepeningPolicy().setDeepenOnForced(false);
 		this.engine.setTranspositionTable(new TT(16, SizeUnit.MB));
 		this.board = null;
+		this.options = buildOptions();
+	}
+	
+	private List<Option<?>> buildOptions() {
 		final int threads = PhysicalCores.count()>=2 ? 2 : 1;
 		this.engine.setParallelism(threads);
-		this.options = Arrays.asList(
-				new ComboOption("evaluation", "simplified", Set.of("simplified","naive")),
-				new SpinOption<Long>("threads", (long)threads, 1L, (long)Runtime.getRuntime().availableProcessors()),
-				new SpinOption<Long>("maxtime", Long.MAX_VALUE, 1L, Long.MAX_VALUE),
-				new SpinOption<Long>("depth", 6L, 1L, 128L)
+		final ComboOption evalOption = new ComboOption("Evaluation", SIMPLIFIED_EVAL_VALUE, Set.of(SIMPLIFIED_EVAL_VALUE,"naive"));
+		evalOption.addListener((o,n) -> this.engine.setEvaluatorSupplier(SIMPLIFIED_EVAL_VALUE.equals(n)?SimplifiedEvaluator::new:NaiveEvaluator::new));
+		final SpinOption threadsOption = new SpinOption("Threads", threads, 1, Runtime.getRuntime().availableProcessors());
+		threadsOption.addListener((o,n)->this.engine.setParallelism(n.intValue()));
+		final SpinOption maxTimeOption = new SpinOption("maxtime", 30000, 100, 1800000);
+		maxTimeOption.addListener((o,n) -> this.engine.getDeepeningPolicy().setMaxTime(n));
+		final SpinOption depthOption = new SpinOption("depth", 6, 1, 128);
+		depthOption.addListener((o,n) -> this.engine.getDeepeningPolicy().setDepth(n.intValue()));
+		return Arrays.asList(
+				evalOption,
+				threadsOption,
+				maxTimeOption,
+				depthOption
 		);
 	}
 
@@ -81,7 +96,12 @@ public class InternalEngine implements Engine {
 		if (board==null) {
 			throw new IllegalStateException("No position set");
 		}
-		engine.getDeepeningPolicy().setMaxTime(TIME_MANAGER.getMaxTime(board, countDownState));
-		return JChessUCIEngine.toUCIMove(board.getCoordinatesSystem(), engine.apply(board)).toString();
+		final long maxTime = engine.getDeepeningPolicy().getMaxTime();
+		engine.getDeepeningPolicy().setMaxTime(Math.min(maxTime, TIME_MANAGER.getMaxTime(board, countDownState)));
+		try {
+			return JChessUCIEngine.toUCIMove(board.getCoordinatesSystem(), engine.apply(board)).toString();
+		} finally {
+			engine.getDeepeningPolicy().setMaxTime(maxTime);
+		}
 	}
 }

@@ -33,7 +33,7 @@ class OptionParser {
 			}
 			return new ComboOption(name, defaultValue, values);
 		});
-		PARSERS.put(Type.SPIN, (name, tokens) -> new SpinOption<Long>(name, Long.parseLong(tokens[4]), Long.parseLong(tokens[6]), Long.parseLong(tokens[8])));
+		PARSERS.put(Type.SPIN, (name, tokens) -> new SpinOption(name, Long.parseLong(tokens[4]), Long.parseLong(tokens[6]), Long.parseLong(tokens[8])));
 		PARSERS.put(Type.CHECK, (name, tokens) -> new CheckOption(name, Boolean.parseBoolean(tokens[4])));
 		PARSERS.put(Type.BUTTON, (name, tokens) -> new ButtonOption(name));
 		PARSERS.put(Type.STRING, (name, tokens) -> new StringOption(name, tokens[4]));
@@ -41,7 +41,7 @@ class OptionParser {
 	
 	static Option<?> get(String[] tokens) throws IOException {
 		final String optionName = tokens[0];
-		final Option.Type type = toType(tokens[2].toUpperCase());
+		final Type type = toType(tokens[2].toUpperCase());
 		try {
 			return PARSERS.get(type).apply(optionName, tokens);
 		} catch (IllegalArgumentException e) {

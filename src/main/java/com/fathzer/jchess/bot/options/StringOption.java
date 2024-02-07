@@ -14,4 +14,9 @@ public class StringOption extends Option<String> {
 	public Type getType() {
 		return Type.STRING;
 	}
+
+	@Override
+	public boolean isValid(String value) {
+		return value!=null;
+	}
 }
