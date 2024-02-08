@@ -3,7 +3,6 @@ package com.fathzer.jchess.bot.options;
 import com.fathzer.jchess.bot.Option;
 
 //TODO Is it usefull?
-//FIXME it will never inform listener as value of Void type can't change
 public class ButtonOption extends Option<Void> {
 	
 	public ButtonOption(String name) {
@@ -18,5 +17,10 @@ public class ButtonOption extends Option<Void> {
 	@Override
 	public boolean isValid(Void value) {
 		return true;
+	}
+
+	@Override
+	public void setValue(Void value) {
+		super.fireChange(value, value);
 	}
 }

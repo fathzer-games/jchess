@@ -11,7 +11,7 @@ public abstract class Option<T> extends Observable<T> {
 
 	protected Option(String name, T defaultValue) {
 		super(defaultValue);
-		if (name==null || defaultValue==null) {
+		if (name==null) {
 			throw new IllegalArgumentException();
 		}
 		this.name = name;

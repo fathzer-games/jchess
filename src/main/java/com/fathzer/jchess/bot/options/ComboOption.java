@@ -9,7 +9,7 @@ public class ComboOption extends Option<String> {
 	
 	public ComboOption(String name, String defaultValue, Set<String> values) {
 		super(name, defaultValue);
-		if (!values.contains(defaultValue) || values.isEmpty()) {
+		if (defaultValue==null || !values.contains(defaultValue)) {
 			throw new IllegalArgumentException();
 		}
 		this.values = values;

@@ -3,6 +3,7 @@ package com.fathzer.jchess.bot.options;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ class OptionsTest {
 	void testCombo() {
 		final Set<String> abSet = Set.of("a","b");
 		assertThrows(IllegalArgumentException.class, () -> new ComboOption("combo", "c", abSet));
+		assertThrows(IllegalArgumentException.class, () -> new ComboOption("combo", null, abSet));
 		assertThrows(IllegalArgumentException.class, () -> new ComboOption(null, "a", abSet));
 		final Option<String> combo = new ComboOption("combo", "a", Set.of("a","b"));
 		assertEquals("a", combo.getValue());
@@ -118,6 +120,17 @@ class OptionsTest {
 	
 	@Test
 	void testButton() {
-		fail("Not Yet Implemented");
+		assertThrows(IllegalArgumentException.class, () -> new ButtonOption(null));
+		final ButtonOption button = new ButtonOption("button");
+		final AtomicBoolean called = new AtomicBoolean();
+		OptionListener<Void> listener = new OptionListener<>() {
+			@Override
+			public void accept(Void a, Void b) {
+				called.set(true);
+			}
+		};
+		button.addListener(listener);
+		button.setValue(null);
+		assertTrue(called.get());
 	}
 }
