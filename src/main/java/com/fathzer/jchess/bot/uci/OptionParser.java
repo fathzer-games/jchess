@@ -1,8 +1,8 @@
 package com.fathzer.jchess.bot.uci;
 
-import java.io.IOException;
 import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -15,6 +15,8 @@ import com.fathzer.jchess.bot.options.SpinOption;
 import com.fathzer.jchess.bot.options.StringOption;
 
 class OptionParser {
+	static final String OPTION_PREFIX = "option name ";
+	
 	private static final EnumMap<Type, BiFunction<String, String[], Option<?>>> PARSERS = new EnumMap<>(Type.class);
 	
 	private OptionParser() {
@@ -33,27 +35,45 @@ class OptionParser {
 			}
 			return new ComboOption(name, defaultValue, values);
 		});
-		PARSERS.put(Type.SPIN, (name, tokens) -> new SpinOption(name, Long.parseLong(tokens[4]), Long.parseLong(tokens[6]), Long.parseLong(tokens[8])));
+		PARSERS.put(Type.SPIN, (name, tokens) -> new SpinOption(name, Long.parseLong(getAfter(name, tokens, "default")), Long.parseLong(getAfter(name, tokens, "min")), Long.parseLong(getAfter(name, tokens, "max"))));
 		PARSERS.put(Type.CHECK, (name, tokens) -> new CheckOption(name, Boolean.parseBoolean(tokens[4])));
 		PARSERS.put(Type.BUTTON, (name, tokens) -> new ButtonOption(name));
 		PARSERS.put(Type.STRING, (name, tokens) -> new StringOption(name, tokens[4]));
 	}
 	
-	static Option<?> get(String[] tokens) throws IOException {
-		final String optionName = tokens[0];
-		final Type type = toType(tokens[2].toUpperCase());
-		try {
-			return PARSERS.get(type).apply(optionName, tokens);
-		} catch (IllegalArgumentException e) {
-			throw new IOException(e);
+	private static String getAfter(String name, String[] tokens, String token) {
+		for (int i = 0; i < tokens.length; i++) {
+			if (token.equals(tokens[i])) {
+				if (i+1<tokens.length) {
+					return tokens[i+1];
+				}
+			}
 		}
+		throw new IllegalArgumentException("Option "+name+" does not have "+token);
 	}
 	
-	private static Type toType(String type) throws IOException {
-		try {
-			return Type.valueOf(type);
-		} catch (IllegalArgumentException e) {
-			throw new IOException("Unknown option type: "+type, e);
+	static Optional<Option<?>> parse(String optionString) {
+		if (!optionString.startsWith(OPTION_PREFIX)) {
+			return Optional.empty();
 		}
+		String current = optionString.substring(OPTION_PREFIX.length());
+		final String typeToken = " type ";
+		final int index = current.indexOf(typeToken);
+		if (index<0) {
+			throw new IllegalArgumentException("No option type declaration in "+optionString);
+		}
+		if (index==0) {
+			throw new IllegalArgumentException("No option name in "+optionString);
+		}
+		final String name = current.substring(0, index);
+		current = current.substring(name.length()+typeToken.length()).trim();
+		// FIXME
+		String[] tokens = current.split(" ");
+		return Optional.of(get(name, tokens));
+	}
+	
+	static Option<?> get(String optionName, String[] tokens) {
+		final Type type = Type.valueOf(tokens[0].toUpperCase());
+		return PARSERS.get(type).apply(optionName, tokens);
 	}
 }

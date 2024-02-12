@@ -1,4 +1,4 @@
-package com.fathzer.jchess.uci;
+package com.fathzer.jchess.bot.uci;
 
 import static org.junit.jupiter.api.Assertions.*;
 

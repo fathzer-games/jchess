@@ -14,6 +14,9 @@ import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.bot.Variant;
 import com.fathzer.jchess.bot.options.SpinOption;
+import com.fathzer.jchess.swing.settings.GameSettings;
+import com.fathzer.jchess.swing.settings.SettingsDialog;
+import com.fathzer.jchess.swing.settings.engine.EngineDialog;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,18 +28,22 @@ public class EngineLoader {
 		final Path path = Paths.get("data/engines.txt");
 		final Map<String, Engine> engines = loadEngines(path);
 		engines.values().forEach(engine -> {
+			final EngineDialog dialog = new EngineDialog(null, engine);
+			dialog.setVisible(true);
 			try {
-				for (Option<?> option : engine.getOptions()) {
-					if (option.getName().equals("depth")) {
-						System.out.println("Depth is currently "+option.getValue()+". Setting it to 2");
-						((SpinOption)option).setValue(2L);
-					}
+				if (dialog.getResult()!=null) {
+	//				for (Option<?> option : engine.getOptions()) {
+	//					if (option.getName().equals("depth")) {
+	//						System.out.println("Depth is currently "+option.getValue()+". Setting it to 2");
+	//						((SpinOption)option).setValue(2L);
+	//					}
+	//				}
+					engine.newGame(Variant.STANDARD);
+					engine.setPosition(START_FEN, Collections.emptyList());
+					engine.play(new CountDownState(180000, 3000, 0));
+					engine.setPosition(START_FEN, Collections.singletonList("e2e4"));
+					engine.play(new CountDownState(180000, 3000, 0));
 				}
-				engine.newGame(Variant.STANDARD);
-				engine.setPosition(START_FEN, Collections.emptyList());
-				engine.play(new CountDownState(180000, 3000, 0));
-				engine.setPosition(START_FEN, Collections.singletonList("e2e4"));
-				engine.play(new CountDownState(180000, 3000, 0));
 				((UCIEngine)engine).close();
 			} catch (IOException e) {
 				log.warn("Error while closing engine " +((UCIEngine)engine).getName(), e);
