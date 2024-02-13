@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.bot.Option;
+import com.fathzer.jchess.bot.options.ComboOption;
 import com.fathzer.jchess.bot.options.SpinOption;
 import com.fathzer.jchess.bot.options.StringOption;
 
@@ -31,8 +32,12 @@ class OptionParserTest {
 		assertEquals("Book Directory", option.getName());
 		assertEquals("C:\\Program Files (x86)\\Arena\\Engines\\Dragon", option.getValue());
 
-		
-		fail("Not yet implemented");
+		ooption = OptionParser.parse("option name x default a b var c var a b type combo");
+		assertTrue(ooption.isPresent());
+		ComboOption combo = (ComboOption) ooption.get();
+		assertEquals("x", combo.getName());
+		assertEquals("a b", combo.getValue());
+		assertTrue(combo.getValues().contains("c"));
 	}
 
 }
