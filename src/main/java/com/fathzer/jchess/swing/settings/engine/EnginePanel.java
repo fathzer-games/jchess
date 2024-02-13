@@ -3,6 +3,7 @@ package com.fathzer.jchess.swing.settings.engine;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -17,6 +18,7 @@ import com.fathzer.jchess.bot.options.StringOption;
 import com.fathzer.soft.ajlib.swing.widget.IntegerWidget;
 import com.fathzer.soft.ajlib.swing.widget.TextWidget;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -31,6 +33,7 @@ public class EnginePanel extends JPanel {
 	 */
 	public EnginePanel(List<Option<?>> options) {
 		setLayout(new GridBagLayout());
+		setBackground(Color.blue);
 		if (options==null) {
 			options = Collections.emptyList();
 		}
@@ -47,28 +50,34 @@ public class EnginePanel extends JPanel {
 
 	private void addComponent(Option<?> option, GridBagConstraints ct) {
 		if (option instanceof CheckOption check) {
+			ct.gridwidth = 2;
 			add(getCheck(check), ct);
 		} else if (option instanceof ButtonOption button) {
+			ct.gridwidth = 2;
 			add(getButton(button), ct);
 		} else {
-			add(new JLabel(option.getName()+": "),ct);
+			add(new JLabel(option.getName()+": "), ct);
 			ct.gridx++;
 			if (option instanceof ComboOption combo) {
-				add(getCombo(combo),ct);
+				add(getCombo(combo), ct);
 			} else if (option instanceof SpinOption spin) {
-				add(getSpin(spin),ct);
+				add(getSpin(spin), ct);
 			} else if (option instanceof StringOption string) {
-				add(getString(string),ct);
+				ct.weightx = 1;
+				add(getString(string), ct);
+				ct.weightx = 0;
 			} else {
 				throw new IllegalArgumentException("Type "+option.getType()+" is not supported");
 			}
 			ct.gridx--;
 		}
+		ct.gridwidth = 1;
 	}
 	
 	private Component getButton(ButtonOption option) {
-		// TODO Auto-generated method stub
-		return new JLabel("TODO");
+		final JButton button = new JButton(option.getName());
+		button.addActionListener(e -> option.setValue(null));
+		return button;
 	}
 
 	private Component getCheck(CheckOption option) {
@@ -91,7 +100,12 @@ public class EnginePanel extends JPanel {
 	private Component getSpin(SpinOption option) {
 		final IntegerWidget widget = new IntegerWidget(BigInteger.valueOf(option.getMin()), BigInteger.valueOf(option.getMax()));
 		widget.setValue(BigInteger.valueOf(option.getValue()));
-		widget.addActionListener(e -> option.setValue(widget.getValue().longValue()));
+		widget.addPropertyChangeListener(IntegerWidget.VALUE_PROPERTY, e -> {
+			final BigInteger value = widget.getValue();
+			if (value!=null) {
+				option.setValue(value.longValue());
+			}
+		});
 		widget.setColumns(getWidgetColumnCount(option));
 		return widget;
 	}
@@ -104,8 +118,7 @@ public class EnginePanel extends JPanel {
 	private Component getString(StringOption option) {
 		final TextWidget text = new TextWidget();
 		text.setText(option.getValue());
-		text.setColumns(10);
-		text.addActionListener(e -> System.out.println(text.getText()));
+		text.addPropertyChangeListener(TextWidget.TEXT_PROPERTY, e -> option.setValue(text.getText()));
 		return text;
 	}
 }

@@ -26,7 +26,7 @@ public class UCIEngine implements Closeable, Engine {
 	private static final String PONDER_OPTION = "Ponder";
 
 	private final Process process;
-	private final String name;
+	private String name;
 	private final BufferedReader reader;
 	private final BufferedWriter writer;
 	private final StdErrReader errorReader;
@@ -44,13 +44,15 @@ public class UCIEngine implements Closeable, Engine {
 		this.writer = process.outputWriter();
 		this.errorReader = new StdErrReader(process);
 		this.options = new ArrayList<>();
-		this.name = init();
+		init();
+		if (this.name==null) {
+			throw new IOException("Engine has no name!");
+		}
 	}
 	
-	private String init() throws IOException {
+	private void init() throws IOException {
 		this.write("uci");
 		String line;
-		String result = null;
 		do {
 			line = read();
 			if (line==null) {
@@ -58,7 +60,7 @@ public class UCIEngine implements Closeable, Engine {
 			}
 			final String namePrefix = "id name ";
 			if (line.startsWith(namePrefix)) {
-				result = line.substring(namePrefix.length());
+				this.name = line.substring(namePrefix.length());
 			} else {
 				final Optional<Option<?>> ooption = parseOption(line);
 				if (ooption.isPresent()) {
@@ -73,10 +75,6 @@ public class UCIEngine implements Closeable, Engine {
 				}
 			}
 		} while (!"uciok".equals(line));
-		if (result==null) {
-			throw new IOException("Engine has no name!");
-		}
-		return result;
 	}
 	
 	private Optional<Option<?>> parseOption(String line) throws IOException {
@@ -102,7 +100,7 @@ public class UCIEngine implements Closeable, Engine {
 			this.writer.write(line);
 			this.writer.newLine();
 			this.writer.flush();
-			log.info(">{}: {}", name, line);
+			log.info(">{}: {}", name==null?"?":name, line);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
