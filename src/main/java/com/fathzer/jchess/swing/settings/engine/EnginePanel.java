@@ -18,7 +18,6 @@ import com.fathzer.jchess.bot.options.StringOption;
 import com.fathzer.soft.ajlib.swing.widget.IntegerWidget;
 import com.fathzer.soft.ajlib.swing.widget.TextWidget;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -33,7 +32,6 @@ public class EnginePanel extends JPanel {
 	 */
 	public EnginePanel(List<Option<?>> options) {
 		setLayout(new GridBagLayout());
-		setBackground(Color.blue);
 		if (options==null) {
 			options = Collections.emptyList();
 		}
@@ -64,7 +62,9 @@ public class EnginePanel extends JPanel {
 				add(getSpin(spin), ct);
 			} else if (option instanceof StringOption string) {
 				ct.weightx = 1;
+				ct.fill = GridBagConstraints.HORIZONTAL;
 				add(getString(string), ct);
+				ct.fill = GridBagConstraints.NONE;
 				ct.weightx = 0;
 			} else {
 				throw new IllegalArgumentException("Type "+option.getType()+" is not supported");
