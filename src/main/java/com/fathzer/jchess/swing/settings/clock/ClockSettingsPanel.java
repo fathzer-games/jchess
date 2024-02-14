@@ -88,6 +88,4 @@ public class ClockSettingsPanel extends JPanel {
 			this.getComponent(i).setEnabled(enabled);
 		}
 	}
-
-	
 }

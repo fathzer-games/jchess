@@ -3,6 +3,8 @@ package com.fathzer.jchess.swing.settings;
 import javax.swing.JPanel;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
+
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 
 import com.fathzer.jchess.swing.settings.GameSettings.ColorSetting;
@@ -111,6 +113,8 @@ public class PlayerSelectionPanel extends JPanel {
 		}
 		colorComboBox.setSelectedIndex(0);
 		
+		int height = colorComboBox.getPreferredSize().height;
+		nameTxt.setPreferredSize(new Dimension(nameTxt.getPreferredSize().width, height));
 		typeCombo.setSelectedIndex(0);
 	}
 

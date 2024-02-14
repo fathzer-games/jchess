@@ -31,7 +31,7 @@ public class GameSettingsPanel extends JPanel {
 	/**
 	 * Create the panel.
 	 */
-	public GameSettingsPanel() {
+	private GameSettingsPanel() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWeights = new double[]{0.0, 1.0, 0.0, 1.0};
 		setLayout(gridBagLayout);
@@ -122,6 +122,7 @@ public class GameSettingsPanel extends JPanel {
 		timePanel.setLayout(timePanelGbl);
 		
 		timeControlCheckBox = new JCheckBox("Limit time");
+		timeControlCheckBox.setSelected(true);
 		GridBagConstraints timeControlCheckBoxGbc = new GridBagConstraints();
 		timeControlCheckBoxGbc.insets = new Insets(0, 0, 5, 0);
 		timeControlCheckBoxGbc.anchor = GridBagConstraints.WEST;
@@ -145,11 +146,20 @@ public class GameSettingsPanel extends JPanel {
 		timeDetailsPanelGbc.gridy = 2;
 		timePanel.add(timeDetailsPanel, timeDetailsPanelGbc);
 		
-		timeControlCheckBox.addActionListener(e -> {
+		timeControlCheckBox.addItemListener(e -> {
 			boolean enabled = timeControlCheckBox.isSelected();
 			timeDetailsPanel.setEnabled(enabled);
 			startAfterFirstMoveCheckBox.setEnabled(enabled);
 		});
 	}
-
+	
+	public GameSettingsPanel(GameSettings settings) {
+		this();
+		setSettings(settings);
+	}
+	
+	private void setSettings(GameSettings settings) {
+		boolean hasClock = settings.getClock()!=null;
+		this.timeControlCheckBox.setSelected(hasClock);
+	}
 }
