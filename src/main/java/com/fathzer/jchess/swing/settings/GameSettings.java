@@ -60,6 +60,10 @@ public class GameSettings {
 		}
 	}
 	
+	public enum PlayerType {
+		HUMAN, ENGINE;
+	}
+	
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Getter
