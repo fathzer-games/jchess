@@ -1,12 +1,12 @@
 package com.fathzer.jchess.swing.settings;
 
-import static com.fathzer.jchess.swing.settings.GameSettings.PlayerType;
-
 import javax.swing.JPanel;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
 
+import com.fathzer.jchess.swing.settings.GameSettings.ColorSetting;
+import com.fathzer.jchess.swing.settings.GameSettings.PlayerType;
 import com.fathzer.soft.ajlib.swing.widget.TextWidget;
 
 import java.awt.Insets;
@@ -16,58 +16,114 @@ public class PlayerSelectionPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
 	private JLabel nameLabel;
-	private TextWidget txtName;
+	private TextWidget nameTxt;
 	private JLabel typeLabel;
-	private JComboBox<PlayerType> comboBox;
+	private JComboBox<PlayerType> typeCombo;
+	private JComboBox<ColorSetting> colorComboBox;
+	private JLabel colorLabel;
+	private JLabel engineLabel;
+	private JComboBox<String> engineCombo;
 
 	/**
 	 * Create the panel.
 	 */
 	public PlayerSelectionPanel() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{0, 0, 0};
-		gridBagLayout.rowHeights = new int[]{0, 0, 0};
-		gridBagLayout.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		setLayout(gridBagLayout);
 		
 		typeLabel = new JLabel("Type: ");
 		GridBagConstraints typeLabelGbc = new GridBagConstraints();
-		typeLabelGbc.anchor = GridBagConstraints.EAST;
+		typeLabelGbc.anchor = GridBagConstraints.WEST;
 		typeLabelGbc.insets = new Insets(0, 0, 5, 5);
 		typeLabelGbc.gridx = 0;
 		typeLabelGbc.gridy = 0;
 		add(typeLabel, typeLabelGbc);
 		
-		comboBox = new JComboBox<>();
+		typeCombo = new JComboBox<>();
 		for (PlayerType type : PlayerType.values()) {
-			comboBox.addItem(type);
+			typeCombo.addItem(type);
 		}
-		comboBox.setSelectedIndex(0);
-		comboBox.setToolTipText("Select player's type. Engines can be added and configured in Engines panel");
-		GridBagConstraints comboBoxGridBagConstraints = new GridBagConstraints();
-		comboBoxGridBagConstraints.insets = new Insets(0, 0, 5, 0);
-		comboBoxGridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		comboBoxGridBagConstraints.gridx = 1;
-		comboBoxGridBagConstraints.gridy = 0;
-		add(comboBox, comboBoxGridBagConstraints);
+		typeCombo.addActionListener(e -> {
+			setType((PlayerType) typeCombo.getSelectedItem());
+		});
+		typeCombo.setToolTipText("Select player's type. Engines can be added and configured in Engines panel");
+		GridBagConstraints typeComboGbc = new GridBagConstraints();
+		typeComboGbc.anchor = GridBagConstraints.NORTHWEST;
+		typeComboGbc.insets = new Insets(0, 0, 5, 0);
+		typeComboGbc.gridx = 1;
+		typeComboGbc.gridy = 0;
+		add(typeCombo, typeComboGbc);
 		
 		nameLabel = new JLabel("Name: ");
 		GridBagConstraints nameLabelGbc = new GridBagConstraints();
-		nameLabelGbc.insets = new Insets(0, 0, 0, 5);
-		nameLabelGbc.anchor = GridBagConstraints.EAST;
+		nameLabelGbc.insets = new Insets(0, 0, 5, 0);
+		nameLabelGbc.anchor = GridBagConstraints.WEST;
 		nameLabelGbc.gridx = 0;
 		nameLabelGbc.gridy = 1;
 		add(nameLabel, nameLabelGbc);
 		
-		txtName = new TextWidget();
-		GridBagConstraints txtNameGridBagConstraints = new GridBagConstraints();
-		txtNameGridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		txtNameGridBagConstraints.gridx = 1;
-		txtNameGridBagConstraints.gridy = 1;
-		add(txtName, txtNameGridBagConstraints);
-		txtName.setColumns(10);
+		nameTxt = new TextWidget();
+		nameTxt.setColumns(15);
+		GridBagConstraints nameTxtGridBagConstraints = new GridBagConstraints();
+		nameTxtGridBagConstraints.insets = new Insets(0, 0, 5, 0);
+		nameTxtGridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+		nameTxtGridBagConstraints.gridx = 1;
+		nameTxtGridBagConstraints.gridy = 1;
+		add(nameTxt, nameTxtGridBagConstraints);
+		
+		engineLabel = new JLabel("Engine: ");
+		GridBagConstraints engineLabelGbc = new GridBagConstraints();
+		engineLabelGbc.insets = new Insets(0, 0, 0, 5);
+		engineLabelGbc.anchor = GridBagConstraints.WEST;
+		engineLabelGbc.gridx = 0;
+		engineLabelGbc.gridy = 2;
+		add(engineLabel, engineLabelGbc);
+		
+		engineCombo = new JComboBox<>();
+		//TODO
+		engineCombo.addItem("My cool engine");
+		engineCombo.addItem("An UCI engine");
+		engineCombo.setSelectedIndex(0);
+		//End of TODO
+		GridBagConstraints engineComboGbc = new GridBagConstraints();
+		engineComboGbc.insets = new Insets(0, 0, 5, 0);
+		engineComboGbc.anchor = GridBagConstraints.NORTHWEST;
+		engineComboGbc.gridx = 1;
+		engineComboGbc.gridy = 2;
+		add(engineCombo, engineComboGbc);
 
+		colorLabel = new JLabel("Color: ");
+		GridBagConstraints player1ColorLabelGbc = new GridBagConstraints();
+		player1ColorLabelGbc.anchor = GridBagConstraints.WEST;
+		player1ColorLabelGbc.insets = new Insets(0, 0, 0, 5);
+		player1ColorLabelGbc.gridx = 0;
+		player1ColorLabelGbc.gridy = 3;
+		add(colorLabel, player1ColorLabelGbc);
+		
+		colorComboBox = new JComboBox<>();
+		GridBagConstraints playercomboBoxGbc = new GridBagConstraints();
+		playercomboBoxGbc.anchor = GridBagConstraints.NORTHWEST;
+		playercomboBoxGbc.gridx = 1;
+		playercomboBoxGbc.gridy = 3;
+		add(colorComboBox, playercomboBoxGbc);
+		for (ColorSetting cs : ColorSetting.values()) {
+			colorComboBox.addItem(cs);
+		}
+		colorComboBox.setSelectedIndex(0);
+		
+		typeCombo.setSelectedIndex(0);
 	}
 
+	void setColorVisible(boolean visible) {
+		colorLabel.setVisible(visible);
+		colorComboBox.setVisible(visible);
+	}
+	
+	private void setType(PlayerType type) {
+		final boolean isHuman = type==PlayerType.HUMAN;
+		nameLabel.setVisible(isHuman);
+		nameTxt.setVisible(isHuman);
+		engineLabel.setVisible(!isHuman);
+		engineCombo.setVisible(!isHuman);
+	}
 }
