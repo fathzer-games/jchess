@@ -8,6 +8,8 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 
 import com.fathzer.jchess.swing.settings.GameSettings.ColorSetting;
+import com.fathzer.jchess.swing.settings.GameSettings.EngineSettings;
+import com.fathzer.jchess.swing.settings.GameSettings.PlayerSettings;
 import com.fathzer.jchess.swing.settings.GameSettings.PlayerType;
 import com.fathzer.soft.ajlib.swing.widget.TextWidget;
 
@@ -118,6 +120,9 @@ public class PlayerSelectionPanel extends JPanel {
 		typeCombo.setSelectedIndex(0);
 	}
 
+	public void setColor(ColorSetting player1Color) {
+		colorComboBox.setSelectedItem(player1Color);
+	}
 	void setColorVisible(boolean visible) {
 		colorLabel.setVisible(visible);
 		colorComboBox.setVisible(visible);
@@ -129,5 +134,21 @@ public class PlayerSelectionPanel extends JPanel {
 		nameTxt.setVisible(isHuman);
 		engineLabel.setVisible(!isHuman);
 		engineCombo.setVisible(!isHuman);
+	}
+
+	public void setSettings(PlayerSettings settings) {
+		final EngineSettings engine = settings.getEngine();
+		if (engine==null) {
+			typeCombo.setSelectedItem(PlayerType.HUMAN);
+			nameTxt.setText(settings.getName());
+		} else {
+			typeCombo.setSelectedItem(PlayerType.ENGINE);
+			engineCombo.setSelectedItem(engine.getName());
+		}
+	}
+
+	public PlayerSettings getSettings() {
+		//TODO
+		throw new UnsupportedOperationException();
 	}
 }

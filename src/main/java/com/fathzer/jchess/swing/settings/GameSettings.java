@@ -29,7 +29,7 @@ public class GameSettings {
 	}
 	
 	private static final Random RANDOM_GENERATOR = new Random();
-	private Variant variant = Variant.CHESS960;
+	private Variant variant = Variant.STANDARD;
 	private boolean tabletMode = true;
 	private boolean showPossibleMoves = true;
 	private boolean touchMove = false;
@@ -37,7 +37,7 @@ public class GameSettings {
 	private ClockSettings clock = null;
 	private PlayerSettings player1 = new PlayerSettings();
 	private ColorSetting player1Color = ColorSetting.RANDOM;
-	private PlayerSettings player2 = new PlayerSettings(null, new EngineSettings(), null);
+	private PlayerSettings player2 = new PlayerSettings();
 	
 	@Getter
 	@AllArgsConstructor

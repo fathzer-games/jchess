@@ -159,7 +159,19 @@ public class GameSettingsPanel extends JPanel {
 	}
 	
 	private void setSettings(GameSettings settings) {
-		boolean hasClock = settings.getClock()!=null;
+		final boolean hasClock = settings.getClock()!=null;
 		this.timeControlCheckBox.setSelected(hasClock);
+		this.startAfterFirstMoveCheckBox.setSelected(settings.isStartClockAfterFirstMove());
+		this.timeDetailsPanel.setSettings(settings.getClock());
+		
+		this.showMovesCheckBox.setSelected(settings.isShowPossibleMoves());
+		this.tabletModeCheckBox.setSelected(settings.isTabletMode());
+		this.touchMoveCheckBox.setSelected(settings.isTouchMove());
+		
+		this.variantCombo.setSelectedItem(settings.getVariant());
+		
+		this.player1Panel.setSettings(settings.getPlayer1());
+		this.player2Panel.setSettings(settings.getPlayer2());
+		this.player1Panel.setColor(settings.getPlayer1Color());
 	}
 }
