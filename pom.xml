@@ -46,10 +46,16 @@
 			<artifactId>ajlib</artifactId>
 			<version>0.3.15</version>
 		</dependency>
+		<!-- TODO remove this very fat dependency -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.14.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20240205</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>

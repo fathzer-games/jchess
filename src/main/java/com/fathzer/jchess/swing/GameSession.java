@@ -21,10 +21,10 @@ import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.lichess.DefaultOpenings;
-import com.fathzer.jchess.swing.settings.GameSettings;
-import com.fathzer.jchess.swing.settings.GameSettings.ColorSetting;
-import com.fathzer.jchess.swing.settings.GameSettings.EngineSettings;
-import com.fathzer.jchess.swing.settings.GameSettings.Variant;
+import com.fathzer.jchess.settings.GameSettings;
+import com.fathzer.jchess.settings.GameSettings.ColorSetting;
+import com.fathzer.jchess.settings.GameSettings.EngineSettings;
+import com.fathzer.jchess.settings.GameSettings.Variant;
 import com.fathzer.util.Observable;
 
 import lombok.extern.slf4j.Slf4j;

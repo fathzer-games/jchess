@@ -1,13 +1,15 @@
 package com.fathzer.jchess.swing.settings;
 
-import static com.fathzer.jchess.swing.settings.GameSettings.Variant;
-
 import javax.swing.JPanel;
 
+import com.fathzer.jchess.settings.GameSettings;
 import com.fathzer.jchess.swing.settings.clock.ClockSettingsPanel;
 
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
+
+import static com.fathzer.jchess.settings.GameSettings.Variant;
+
 import java.awt.GridBagConstraints;
 import javax.swing.JComboBox;
 import java.awt.Insets;
@@ -173,5 +175,9 @@ public class GameSettingsPanel extends JPanel {
 		this.player1Panel.setSettings(settings.getPlayer1());
 		this.player2Panel.setSettings(settings.getPlayer2());
 		this.player1Panel.setColor(settings.getPlayer1Color());
+	}
+	
+	public GameSettings getSettings() {
+		return new GameSettings();
 	}
 }

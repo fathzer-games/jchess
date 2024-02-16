@@ -7,10 +7,10 @@ import javax.swing.JLabel;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 
-import com.fathzer.jchess.swing.settings.GameSettings.ColorSetting;
-import com.fathzer.jchess.swing.settings.GameSettings.EngineSettings;
-import com.fathzer.jchess.swing.settings.GameSettings.PlayerSettings;
-import com.fathzer.jchess.swing.settings.GameSettings.PlayerType;
+import com.fathzer.jchess.settings.GameSettings.ColorSetting;
+import com.fathzer.jchess.settings.GameSettings.EngineSettings;
+import com.fathzer.jchess.settings.GameSettings.PlayerSettings;
+import com.fathzer.jchess.settings.GameSettings.PlayerType;
 import com.fathzer.soft.ajlib.swing.widget.TextWidget;
 
 import java.awt.Insets;

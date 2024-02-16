@@ -6,6 +6,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fathzer.jchess.settings.GameSettings;
 
 import java.awt.BorderLayout;
 import java.io.UncheckedIOException;

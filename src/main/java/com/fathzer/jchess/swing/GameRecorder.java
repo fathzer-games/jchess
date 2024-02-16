@@ -11,10 +11,10 @@ import com.fathzer.games.Color;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.pgn.PGNHeaders;
 import com.fathzer.jchess.pgn.PGNHeaders.Builder;
+import com.fathzer.jchess.settings.GameSettings;
+import com.fathzer.jchess.settings.GameSettings.PlayerSettings;
+import com.fathzer.jchess.settings.GameSettings.Variant;
 import com.fathzer.jchess.pgn.PGNWriter;
-import com.fathzer.jchess.swing.settings.GameSettings;
-import com.fathzer.jchess.swing.settings.GameSettings.PlayerSettings;
-import com.fathzer.jchess.swing.settings.GameSettings.Variant;
 
 import lombok.experimental.UtilityClass;
 

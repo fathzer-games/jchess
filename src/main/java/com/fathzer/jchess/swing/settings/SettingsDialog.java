@@ -8,6 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
+import com.fathzer.jchess.settings.GameSettings;
 import com.fathzer.soft.ajlib.swing.dialog.AbstractDialog;
 
 public class SettingsDialog extends AbstractDialog<GameSettings, GameSettings> {

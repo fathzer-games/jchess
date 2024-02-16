@@ -11,7 +11,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fathzer.jchess.swing.settings.GameSettings;
+import com.fathzer.jchess.settings.GameSettings;
 import com.fathzer.jchess.swing.settings.SettingsDialog;
 import com.fathzer.jchess.uci.JChessUCI;
 import com.fathzer.soft.ajlib.swing.framework.Application;
