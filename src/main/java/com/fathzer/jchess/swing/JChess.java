@@ -3,14 +3,17 @@ package com.fathzer.jchess.swing;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.settings.GameSettings;
 import com.fathzer.jchess.swing.settings.SettingsDialog;
 import com.fathzer.jchess.uci.JChessUCI;
@@ -84,6 +87,14 @@ public class JChess extends Application {
 				this.panel.setMenuVisible(true);
 			}
 		});
+		try {
+			EngineLoader.init();
+		} catch (IOException e) {
+			int result = JOptionPane.showConfirmDialog(null,"An error occured while reading the external engine configuration file (data/engines.json).\nWould you like to quit now?", "Engine configuration error",
+		               JOptionPane.YES_NO_OPTION,
+		               JOptionPane.ERROR_MESSAGE);
+			return result!=0;
+		}
 		return true;
 	}
 	

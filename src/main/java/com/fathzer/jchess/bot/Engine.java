@@ -1,10 +1,11 @@
 package com.fathzer.jchess.bot;
 
+import java.io.Closeable;
 import java.util.List;
 
 import com.fathzer.games.clock.CountDownState;
 
-public interface Engine {
+public interface Engine extends Closeable {
 	String getName();
 	
 	List<Option<?>> getOptions();

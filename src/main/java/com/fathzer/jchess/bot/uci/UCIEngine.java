@@ -2,11 +2,10 @@ package com.fathzer.jchess.bot.uci;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -16,17 +15,18 @@ import com.fathzer.games.clock.CountDownState;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.bot.Option.Type;
+import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.bot.Variant;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class UCIEngine implements Closeable, Engine {
+public class UCIEngine implements Engine {
 	private static final String CHESS960_OPTION = "UCI_Chess960";
 	private static final String PONDER_OPTION = "Ponder";
 
 	private final Process process;
-	private String name;
+	private final EngineData data;
 	private final BufferedReader reader;
 	private final BufferedWriter writer;
 	private final StdErrReader errorReader;
@@ -35,19 +35,16 @@ public class UCIEngine implements Closeable, Engine {
 	private boolean whiteToPlay;
 	private boolean positionSet;
 
-	public UCIEngine(String path) throws IOException {
-		log.info ("Launching process {}",path);
-		final ProcessBuilder processBuilder = new ProcessBuilder(path);
-		processBuilder.directory(Paths.get(path).toFile().getParentFile());
+	public UCIEngine(EngineData data) throws IOException {
+		log.info ("Launching process {}", Arrays.asList(data.getCommand()));
+		this.data = data;
+		final ProcessBuilder processBuilder = new ProcessBuilder(data.getCommand());
 		this.process = processBuilder.start();
 		this.reader = process.inputReader();
 		this.writer = process.outputWriter();
 		this.errorReader = new StdErrReader(process);
 		this.options = new ArrayList<>();
 		init();
-		if (this.name==null) {
-			throw new IOException("Engine has no name!");
-		}
 	}
 	
 	private void init() throws IOException {
@@ -58,20 +55,15 @@ public class UCIEngine implements Closeable, Engine {
 			if (line==null) {
 				break;
 			}
-			final String namePrefix = "id name ";
-			if (line.startsWith(namePrefix)) {
-				this.name = line.substring(namePrefix.length());
-			} else {
-				final Optional<Option<?>> ooption = parseOption(line);
-				if (ooption.isPresent()) {
-					Option<?> option = ooption.get();
-					if (CHESS960_OPTION.equals(option.getName())) {
-						is960Supported = true;
-					} else if (!PONDER_OPTION.equals(option.getName())) {
-						// Ponder is not supported yet
-						option.addListener((prev, cur) -> setOption(option, cur));
-						options.add(option);
-					}
+			final Optional<Option<?>> ooption = parseOption(line);
+			if (ooption.isPresent()) {
+				Option<?> option = ooption.get();
+				if (CHESS960_OPTION.equals(option.getName())) {
+					is960Supported = true;
+				} else if (!PONDER_OPTION.equals(option.getName())) {
+					// Ponder is not supported yet
+					option.addListener((prev, cur) -> setOption(option, cur));
+					options.add(option);
 				}
 			}
 		} while (!"uciok".equals(line));
@@ -100,7 +92,7 @@ public class UCIEngine implements Closeable, Engine {
 			this.writer.write(line);
 			this.writer.newLine();
 			this.writer.flush();
-			log.info(">{}: {}", name==null?"?":name, line);
+			log.info(">{}: {}", data.getName(), line);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -108,7 +100,7 @@ public class UCIEngine implements Closeable, Engine {
 	private String read() {
 		try {
 			final String line = reader.readLine();
-			log.info("<{} : {}", name==null?"?":name, line);
+			log.info("<{} : {}", data.getName(), line);
 			return line;
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
@@ -117,7 +109,7 @@ public class UCIEngine implements Closeable, Engine {
 	
 	@Override
 	public String getName() {
-		return this.name;
+		return this.data.getName();
 	}
 
 	@Override
@@ -208,9 +200,9 @@ public class UCIEngine implements Closeable, Engine {
 		this.errorReader.close();
 		try {
 			this.process.waitFor(5, TimeUnit.SECONDS);
-			log.info("{} UCI engine exited", name);
+			log.info("{} UCI engine exited", data.getName());
 		} catch (InterruptedException e) {
-			log.warn("Fail to gracefully close UCI engine {}, trying to destroy it", name);
+			log.warn("Fail to gracefully close UCI engine {}, trying to destroy it", data.getName());
 			this.process.destroy();
 			Thread.currentThread().interrupt();
 		}

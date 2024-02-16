@@ -104,4 +104,9 @@ public class InternalEngine implements Engine {
 			engine.getDeepeningPolicy().setMaxTime(maxTime);
 		}
 	}
+
+	@Override
+	public void close() {
+		// Nothing to do
+	}
 }
