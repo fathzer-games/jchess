@@ -1,5 +1,9 @@
 package com.fathzer.util;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -21,6 +25,12 @@ import org.json.JSONObject;
  */
 public class TinyJackson {
 	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	public @interface JsonIgnore {
+	    public boolean key() default true;
+	}
+	
 	private TinyJackson() {
 		super();
 	}
@@ -30,11 +40,13 @@ public class TinyJackson {
 			final T result = tClass.getConstructor().newInstance();
 			final Field[] fields = tClass.getDeclaredFields();
 			for (Field field : fields) {
-				final Class<?> attrClass = field.getType();
-				final String name = field.getName();
-				final Method method = tClass.getMethod(getSetMethodName(name), attrClass);
-				final Object value = getValue(json, attrClass, name);
-				method.invoke(result, value);
+				if (field.getAnnotation(JsonIgnore.class)==null) {
+					final Class<?> attrClass = field.getType();
+					final String name = field.getName();
+					final Method method = tClass.getMethod(getSetMethodName(name), attrClass);
+					final Object value = getValue(json, attrClass, name);
+					method.invoke(result, value);
+				}
 			}
 			return result;
 		} catch (ReflectiveOperationException | IllegalArgumentException e) {
@@ -128,17 +140,19 @@ public class TinyJackson {
 			final Class<?> tClass = obj.getClass();
 			final Field[] fields = tClass.getDeclaredFields();
 			for (Field field : fields) {
-				final Class<?> attrClass = field.getType();
-				final String name = field.getName();
-				final Method method = tClass.getMethod(getGetMethodName(field));
-				final Object attr = method.invoke(obj);
-				if (attrClass.equals(String.class) || attrClass.equals(boolean.class) || attrClass.equals(int.class) || attrClass.equals(long.class)
-						 || attrClass.equals(float.class) || attrClass.equals(double.class) || attrClass.equals(char.class)) {
-					result.put(name, attr);
-				} else if (attrClass.isArray()) {
-					result.put(name, toJSONArray((Object[])attr));
-				} else {
-					result.put(name, toJSONObject(attr));
+				if (field.getAnnotation(JsonIgnore.class)==null) {
+					final Class<?> attrClass = field.getType();
+					final String name = field.getName();
+					final Method method = tClass.getMethod(getGetMethodName(field));
+					final Object attr = method.invoke(obj);
+					if (attrClass.equals(String.class) || attrClass.equals(boolean.class) || attrClass.equals(int.class) || attrClass.equals(long.class)
+							 || attrClass.equals(float.class) || attrClass.equals(double.class) || attrClass.equals(char.class)) {
+						result.put(name, attr);
+					} else if (attrClass.isArray()) {
+						result.put(name, toJSONArray((Object[])attr));
+					} else {
+						result.put(name, toJSONObject(attr));
+					}
 				}
 			}
 		} catch (ReflectiveOperationException | IllegalArgumentException e) {

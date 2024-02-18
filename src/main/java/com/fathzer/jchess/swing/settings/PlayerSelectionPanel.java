@@ -3,21 +3,28 @@ package com.fathzer.jchess.swing.settings;
 import javax.swing.JPanel;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 
+import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.GameSettings.ColorSetting;
 import com.fathzer.jchess.settings.GameSettings.EngineSettings;
 import com.fathzer.jchess.settings.GameSettings.PlayerSettings;
 import com.fathzer.jchess.settings.GameSettings.PlayerType;
+import com.fathzer.soft.ajlib.swing.Utils;
 import com.fathzer.soft.ajlib.swing.widget.TextWidget;
 
 import java.awt.Insets;
+import java.util.List;
+import java.util.Objects;
+
 import javax.swing.JComboBox;
 
 public class PlayerSelectionPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
+	public static final String SELECTED_ENGINE_PROPERTY_NAME = "selected engine";
 	
 	private JLabel nameLabel;
 	private TextWidget nameTxt;
@@ -27,6 +34,8 @@ public class PlayerSelectionPanel extends JPanel {
 	private JLabel colorLabel;
 	private JLabel engineLabel;
 	private JComboBox<String> engineCombo;
+	
+	private String currentEngine;
 
 	/**
 	 * Create the panel.
@@ -47,9 +56,6 @@ public class PlayerSelectionPanel extends JPanel {
 		for (PlayerType type : PlayerType.values()) {
 			typeCombo.addItem(type);
 		}
-		typeCombo.addActionListener(e -> {
-			setType((PlayerType) typeCombo.getSelectedItem());
-		});
 		typeCombo.setToolTipText("Select player's type. Engines can be added and configured in Engines panel");
 		GridBagConstraints typeComboGbc = new GridBagConstraints();
 		typeComboGbc.anchor = GridBagConstraints.NORTHWEST;
@@ -84,11 +90,6 @@ public class PlayerSelectionPanel extends JPanel {
 		add(engineLabel, engineLabelGbc);
 		
 		engineCombo = new JComboBox<>();
-		//TODO
-		engineCombo.addItem("My cool engine");
-		engineCombo.addItem("An UCI engine");
-		engineCombo.setSelectedIndex(0);
-		//End of TODO
 		GridBagConstraints engineComboGbc = new GridBagConstraints();
 		engineComboGbc.insets = new Insets(0, 0, 5, 0);
 		engineComboGbc.anchor = GridBagConstraints.NORTHWEST;
@@ -115,9 +116,18 @@ public class PlayerSelectionPanel extends JPanel {
 		}
 		colorComboBox.setSelectedIndex(0);
 		
-		int height = colorComboBox.getPreferredSize().height;
-		nameTxt.setPreferredSize(new Dimension(nameTxt.getPreferredSize().width, height));
-		typeCombo.setSelectedIndex(0);
+		int height = engineCombo.getPreferredSize().height;
+		int width = nameTxt.getPreferredSize().width;
+		//TODO Should also use the label sizes to prevent problems 
+		nameTxt.setPreferredSize(new Dimension(width, height));
+		engineCombo.setPreferredSize(new Dimension(width, height));
+		
+		typeCombo.addActionListener(e -> {
+			setType((PlayerType) typeCombo.getSelectedItem());
+			updateSelectedEngine();
+		});
+
+		engineCombo.addItemListener(e -> updateSelectedEngine());
 	}
 
 	public void setColor(ColorSetting player1Color) {
@@ -130,19 +140,30 @@ public class PlayerSelectionPanel extends JPanel {
 	
 	private void setType(PlayerType type) {
 		final boolean isHuman = type==PlayerType.HUMAN;
+		if (!isHuman && engineCombo.getItemCount()==0) {
+			JOptionPane.showMessageDialog(Utils.getOwnerWindow(this), "Sorry, there's currently no engine started.\nPlease start an engine in '"+"Engines"+"' tab");
+			typeCombo.setSelectedItem(PlayerType.HUMAN);
+			return;
+		}
 		nameLabel.setVisible(isHuman);
 		nameTxt.setVisible(isHuman);
 		engineLabel.setVisible(!isHuman);
 		engineCombo.setVisible(!isHuman);
 	}
 
-	public void setSettings(PlayerSettings settings) {
+	public void setSettings(PlayerSettings settings, List<EngineData> engines) {
+		engines.forEach(e -> {
+			if (e.getEngine()!=null) {
+				engineCombo.addItem(e.getName());
+			}
+		});
 		final EngineSettings engine = settings.getEngine();
 		if (engine==null) {
 			typeCombo.setSelectedItem(PlayerType.HUMAN);
 			nameTxt.setText(settings.getName());
 		} else {
 			typeCombo.setSelectedItem(PlayerType.ENGINE);
+			System.out.println("Here !");
 			engineCombo.setSelectedItem(engine.getName());
 		}
 	}
@@ -150,5 +171,25 @@ public class PlayerSelectionPanel extends JPanel {
 	public PlayerSettings getSettings() {
 		//TODO
 		throw new UnsupportedOperationException();
+	}
+
+	public void engineStarted(EngineData engine) {
+		engineCombo.addItem(engine.getName());
+	}
+
+	public void engineStopped(EngineData engine) {
+		engineCombo.removeItem(engine.getName());
+		if (engineCombo.getItemCount()==0) {
+			typeCombo.setSelectedItem(PlayerType.HUMAN);
+		}
+	}
+	
+	private void updateSelectedEngine() {
+		String update = typeCombo.getSelectedItem()==PlayerType.HUMAN ? null : (String)engineCombo.getSelectedItem();
+		if (!Objects.equals(update, currentEngine)) {
+			final String old = currentEngine;
+			this.currentEngine = update;
+			firePropertyChange(SELECTED_ENGINE_PROPERTY_NAME, old, this.currentEngine);
+		}
 	}
 }

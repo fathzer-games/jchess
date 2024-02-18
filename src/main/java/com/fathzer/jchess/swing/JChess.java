@@ -15,7 +15,7 @@ import javax.swing.JOptionPane;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.settings.GameSettings;
-import com.fathzer.jchess.swing.settings.SettingsDialog;
+import com.fathzer.jchess.swing.settings.old.SettingsDialog;
 import com.fathzer.jchess.uci.JChessUCI;
 import com.fathzer.soft.ajlib.swing.framework.Application;
 import java.awt.Color;

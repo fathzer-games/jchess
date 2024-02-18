@@ -1,73 +1,43 @@
 package com.fathzer.jchess.swing.settings;
 
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
+import com.fathzer.jchess.settings.Context;
 import com.fathzer.jchess.settings.GameSettings;
 
 import java.awt.BorderLayout;
-import java.io.UncheckedIOException;
-import javax.swing.JScrollPane;
+import java.util.Collections;
 
 public class SettingsPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
-	public static final String VALID_SETTINGS_PROPERTY = "validSettings";
-	
-	private JTextArea textArea;
-	private transient GameSettings settings;
+
+	// Used by Window builder editor
+	@SuppressWarnings("unused")
+	private SettingsPanel() {
+		this(new Context(new GameSettings(), Collections.emptyList()));
+	}
 
 	/**
 	 * Create the panel.
 	 */
-	public SettingsPanel() {
+	public SettingsPanel(Context context) {
 		setLayout(new BorderLayout(0, 0));
-		textArea = new JTextArea();
-		textArea.getDocument().addDocumentListener(new DocumentListener() {
-			
-			@Override
-			public void removeUpdate(DocumentEvent e) {
-				textChanged(e);
-			}
-			
-			@Override
-			public void insertUpdate(DocumentEvent e) {
-				textChanged(e);
-			}
-			
-			@Override
-			public void changedUpdate(DocumentEvent e) {
-				textChanged(e);
+		final JTabbedPane tabbedPane = new JTabbedPane(SwingConstants.TOP);
+		add(tabbedPane);
+		final GameSettingsPanel gamePanel = new GameSettingsPanel(context);
+		tabbedPane.addTab("Game settings", gamePanel);
+		final ExternalEnginesPanel enginesPanel = new ExternalEnginesPanel(context.getEngines(), gamePanel::isEngineInUse);
+		tabbedPane.addTab("Engines", enginesPanel);
+		
+		enginesPanel.addPropertyChangeListener(ExternalEnginesPanel.STARTED_PROPERTY_NAME, e -> {
+			if (e.getOldValue()==null) {
+				gamePanel.engineStarted((EngineData)e.getNewValue());
+			} else {
+				gamePanel.engineStoped((EngineData)e.getOldValue());
 			}
 		});
-		JScrollPane scrollPane = new JScrollPane(textArea);
-		add(scrollPane);
-	}
-
-	private void textChanged(DocumentEvent e) {
-		final boolean old = this.settings!=null;
-		try {
-			this.settings = GameSettings.MAPPER.readValue(textArea.getText(), GameSettings.class);
-		} catch (JsonProcessingException e1) {
-			this.settings = null;
-		}
-		if (old != (this.settings!=null)) {
-			firePropertyChange(VALID_SETTINGS_PROPERTY, old, this.settings!=null);
-		}
-	}
-
-	public void setSettings(GameSettings settings) {
-		try {
-			this.textArea.setText(GameSettings.MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(settings));
-			this.settings = settings;
-		} catch (JsonProcessingException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
-
-	public GameSettings getSettings() {
-		return settings;
 	}
 }

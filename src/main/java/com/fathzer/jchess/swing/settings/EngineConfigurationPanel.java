@@ -1,4 +1,4 @@
-package com.fathzer.jchess.swing.settings.engine;
+package com.fathzer.jchess.swing.settings;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,13 +24,15 @@ import java.awt.Insets;
 import java.math.BigInteger;
 import java.awt.GridBagLayout;
 
-public class EnginePanel extends JPanel {
+/** A panel to configure an engine.
+ */
+class EngineConfigurationPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Create the panel.
 	 */
-	public EnginePanel(List<Option<?>> options) {
+	EngineConfigurationPanel(List<Option<?>> options) {
 		setLayout(new GridBagLayout());
 		if (options==null) {
 			options = Collections.emptyList();

@@ -5,32 +5,36 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.List;
 
 import org.json.JSONObject;
 
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.internal.InternalEngine;
 import com.fathzer.util.TinyJackson;
+import com.fathzer.util.TinyJackson.JsonIgnore;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class EngineLoader {
 	private static final Path PATH = Paths.get("data/engines.json");
-	private static Map<String, EngineData> data;
+	private static List<EngineData> data;
 	
 	private EngineLoader() {
 		super();
 	}
 	
 	public static void init() throws IOException {
-		final EngineData internal = new EngineData("jchess", null);
+		if (data!=null) {
+			return;
+		}
+		final EngineData internal = new EngineData("JChess", null, new InternalEngine());
 		final EngineData[] array;
 		IOException error = null;
 		if (!Files.exists(PATH)) {
@@ -45,36 +49,85 @@ public class EngineLoader {
 				error = e;
 			}
 			array = new EngineData[dummy.length+1];
-			System.arraycopy(dummy, 0, array, 0, dummy.length);
-			array[dummy.length] = internal;
+			array[0] = internal;
+			System.arraycopy(dummy, 0, array, 1, dummy.length);
 		}
-		data = Arrays.stream(array).collect(Collectors.toMap(EngineData::getName, Function.identity()));
+		data = Arrays.asList(array);
 		if (error!=null) {
 			throw error;
 		}
+		Runtime.getRuntime().addShutdownHook(new Thread(()-> shutdown()));
 	}
 
-	public static Map<String, EngineData> getEngines() {
+	private static void shutdown() {
+		data.forEach(e -> {
+			if (e.command!=null) {
+				// If not the internal engine
+				try {
+					e.stop();
+				} catch (IOException e1) {
+					log.error("An error occured while stopping "+e.getName()+" engine",e1);
+				}
+			}
+		});
+	}
+
+	public static List<EngineData> getEngines() {
 		if (data==null) {
 			throw new IllegalStateException("Loader is not inited");
 		}
 		return data;
 	}
 	
-	public static Engine buildEngine(EngineData data) throws IOException {
-		if (data.getCommand()==null) {
-			return new InternalEngine();
-		} else {
-			return new UCIEngine(data);
-		}
-	}
-	
-	@Getter
-	@Setter
 	@NoArgsConstructor
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class EngineData {
+		@Getter
+		@Setter
 		private String name;
+		@Getter
+		@Setter
 		private String[] command;
+		@JsonIgnore
+		private Engine engine;
+		
+		/** Gets the engine.
+		 * @return The engine or null if server is not started
+		 */
+		public Engine getEngine() {
+			return engine;
+		}
+
+		/** Starts the engine.
+		 * @return true if the engine was not started before calling this method
+		 * @throws IOException If something went wrong during server start
+		 */
+		public boolean start() throws IOException {
+			if (engine==null) {
+				if (command!=null) {
+					engine = new UCIEngine(this);
+				} else {
+					engine = new InternalEngine();
+				}
+				return true;
+			}
+			return false;
+		}
+		
+		/** Stops the engine.
+		 * @return true if the engine was not stopped before calling this method
+		 * @throws IOException If something went wrong during server stop
+		 */
+		public boolean stop() throws IOException {
+			if (engine!=null) {
+				try {
+					engine.close();
+					return true;
+				} finally {
+					engine = null;
+				}
+			}
+			return false;
+		}
 	}
 }

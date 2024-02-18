@@ -1,6 +1,13 @@
-#C:\Users\jeanm\Desktop\chesslib\uci.bat
-#"C:\Program Files\Java\jdk-17\bin"\java -DuciInitCommands=C:\Users\jeanm\Desktop\chesslib\uci.ini -jar C:\Users\jeanm\Desktop\chesslib\chesslib-uci-engine.jar  2>C:\Users\jeanm\Desktop\logchesslib.txt
-
-C:\Program Files\Java\jdk-17\bin\java -jar C:\Users\jeanm\Desktop\chesslib\chesslib-uci-engine.jar
-#C:/Program Files/Java/jdk-17/bin/java -jar C:\Users/jeanm/Desktop/chesslib/chesslib-uci-engine.jar
-#java -version
+{
+	"engines": [
+		{
+			"name": "Dragon",
+			"command": ["C:/Program Files (x86)/Arena/Engines/Dragon/Dragon_46.exe"]
+		},
+		{
+			"name": "ChesLib",
+			"command": ["C:/Program Files/Java/jdk-17/bin/java","-jar","C:/Users/jeanm/Desktop/chesslib/chesslib-uci-engine.jar"]
+		}
+		
+	]
+}

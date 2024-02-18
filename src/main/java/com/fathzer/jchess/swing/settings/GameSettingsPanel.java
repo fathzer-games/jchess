@@ -2,8 +2,9 @@ package com.fathzer.jchess.swing.settings;
 
 import javax.swing.JPanel;
 
+import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
+import com.fathzer.jchess.settings.Context;
 import com.fathzer.jchess.settings.GameSettings;
-import com.fathzer.jchess.swing.settings.clock.ClockSettingsPanel;
 
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
@@ -29,13 +30,15 @@ public class GameSettingsPanel extends JPanel {
 	private PlayerSelectionPanel player1Panel;
 	private PlayerSelectionPanel player2Panel;
 	private JCheckBox startAfterFirstMoveCheckBox;
+	
+	private String player1EngineName;
+	private String player2EngineName;
 
 	/**
 	 * Create the panel.
 	 */
 	private GameSettingsPanel() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWeights = new double[]{0.0, 1.0, 0.0, 1.0};
 		setLayout(gridBagLayout);
 		
 		JLabel variantLabel = new JLabel("Variant: ");
@@ -89,6 +92,8 @@ public class GameSettingsPanel extends JPanel {
 		player1Panel = new PlayerSelectionPanel();
 		player1Panel.setBorder(new TitledBorder(null, "Player 1", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagConstraints player1PanelGbc = new GridBagConstraints();
+		player1PanelGbc.weightx = 1.0;
+		player1PanelGbc.fill = GridBagConstraints.HORIZONTAL;
 		player1PanelGbc.anchor = GridBagConstraints.NORTHWEST;
 		player1PanelGbc.gridwidth = 2;
 		player1PanelGbc.insets = new Insets(0, 0, 5, 0);
@@ -100,6 +105,8 @@ public class GameSettingsPanel extends JPanel {
 		player2Panel.setColorVisible(false);
 		player2Panel.setBorder(new TitledBorder(null, "Player 2", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagConstraints player2PanelGbc = new GridBagConstraints();
+		player2PanelGbc.weightx = 1.0;
+		player2PanelGbc.fill = GridBagConstraints.HORIZONTAL;
 		player2PanelGbc.anchor = GridBagConstraints.NORTHWEST;
 		player2PanelGbc.gridwidth = 2;
 		player2PanelGbc.insets = new Insets(0, 0, 5, 0);
@@ -153,14 +160,22 @@ public class GameSettingsPanel extends JPanel {
 			timeDetailsPanel.setEnabled(enabled);
 			startAfterFirstMoveCheckBox.setEnabled(enabled);
 		});
+		
+		player1Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_ENGINE_PROPERTY_NAME, e -> {
+			player1EngineName = (String) e.getNewValue();
+		});
+		player2Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_ENGINE_PROPERTY_NAME, e -> {
+			player2EngineName = (String) e.getNewValue();
+		});
 	}
 	
-	public GameSettingsPanel(GameSettings settings) {
+	public GameSettingsPanel(Context settings) {
 		this();
 		setSettings(settings);
 	}
 	
-	private void setSettings(GameSettings settings) {
+	private void setSettings(Context context) {
+		final GameSettings settings = context.getSettings();
 		final boolean hasClock = settings.getClock()!=null;
 		this.timeControlCheckBox.setSelected(hasClock);
 		this.startAfterFirstMoveCheckBox.setSelected(settings.isStartClockAfterFirstMove());
@@ -172,12 +187,28 @@ public class GameSettingsPanel extends JPanel {
 		
 		this.variantCombo.setSelectedItem(settings.getVariant());
 		
-		this.player1Panel.setSettings(settings.getPlayer1());
-		this.player2Panel.setSettings(settings.getPlayer2());
+		this.player1Panel.setSettings(settings.getPlayer1(), context.getEngines());
+		this.player2Panel.setSettings(settings.getPlayer2(), context.getEngines());
 		this.player1Panel.setColor(settings.getPlayer1Color());
 	}
 	
 	public GameSettings getSettings() {
-		return new GameSettings();
+		throw new UnsupportedOperationException();
+//TODO		return new GameSettings();
+	}
+
+	public void engineStarted(EngineData engine) {
+		player1Panel.engineStarted(engine);
+		player2Panel.engineStarted(engine);
+	}
+
+	public void engineStoped(EngineData engine) {
+		player1Panel.engineStopped(engine);
+		player2Panel.engineStopped(engine);
+	}
+	
+	boolean isEngineInUse(EngineData engine) {
+		final String name = engine.getName();
+		return name.equals(player1EngineName) || name.equals(player2EngineName);
 	}
 }

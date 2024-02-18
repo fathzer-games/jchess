@@ -1,4 +1,4 @@
-package com.fathzer.jchess.swing.settings.clock;
+package com.fathzer.jchess.swing.settings;
 
 import javax.swing.JPanel;
 import java.awt.GridBagLayout;
