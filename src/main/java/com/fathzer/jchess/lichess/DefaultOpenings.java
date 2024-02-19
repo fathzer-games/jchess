@@ -3,27 +3,24 @@ package com.fathzer.jchess.lichess;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.zip.GZIPInputStream;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.MapType;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENUtils;
-import com.fathzer.jchess.movelibrary.LibraryMove;
-import com.fathzer.jchess.movelibrary.Proposal;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
 
 public class DefaultOpenings implements Function<Board<Move>, Move> {
 	private static final Random RND = new Random(); 
 	private static final String KNOWN = "/lichess/masters.json.gz";
-	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	public static final DefaultOpenings INSTANCE;
 	
@@ -35,16 +32,19 @@ public class DefaultOpenings implements Function<Board<Move>, Move> {
 		}
 	}
 
-	private final Map<String, Proposal> db;
+	private final JSONObject db;
 	
 	private DefaultOpenings() throws IOException {
 		this(() -> DefaultOpenings.class.getResourceAsStream(KNOWN), true);
 	}
 	
 	public DefaultOpenings(Supplier<InputStream> stream, boolean zipped) throws IOException {
+		db = readJSON(stream, zipped);
+	}
+	
+	private JSONObject readJSON(Supplier<InputStream> stream, boolean zipped) throws IOException {
 		try (InputStream in = zipped ? new GZIPInputStream(stream.get()) : stream.get()) {
-	        MapType mapType = MAPPER.getTypeFactory().constructMapType(HashMap.class, String.class, Proposal.class);
-			db = MAPPER.readValue(in, mapType);
+			return new JSONObject(new JSONTokener(in));
 		}
 	}
 	
@@ -56,11 +56,12 @@ public class DefaultOpenings implements Function<Board<Move>, Move> {
 
 	@Override
 	public Move apply(Board<Move> board) {
-		final Proposal opening = db.get(toFen(board));
-		if (opening==null || opening.getMoves().isEmpty()) {
+		final JSONObject opening = db.getJSONObject(toFen(board));
+		if (opening==null) {
 			return null;
 		}
-		final LibraryMove move = opening.getMoves().get(RND.nextInt(opening.getMoves().size()));
-		return JChessUCIEngine.toMove(board, UCIMove.from(move.getCoord()));
+		JSONArray moves = opening.getJSONArray("moves");
+		final JSONObject move = moves.getJSONObject(RND.nextInt(moves.length()));
+		return JChessUCIEngine.toMove(board, UCIMove.from(move.getString("coord")));
 	}
 }

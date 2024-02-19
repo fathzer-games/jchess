@@ -1,7 +1,7 @@
 package com.fathzer.jchess.swing;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.swing.JOptionPane;
@@ -17,14 +17,14 @@ import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
 import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
 import com.fathzer.jchess.bot.Engine;
+import com.fathzer.jchess.bot.uci.EngineLoader;
+import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.util.PhysicalCores;
-import com.fathzer.jchess.lichess.DefaultOpenings;
 import com.fathzer.jchess.settings.GameSettings;
 import com.fathzer.jchess.settings.GameSettings.ColorSetting;
 import com.fathzer.jchess.settings.GameSettings.EngineSettings;
-import com.fathzer.jchess.settings.GameSettings.Variant;
 import com.fathzer.util.Observable;
 
 import lombok.extern.slf4j.Slf4j;
@@ -114,17 +114,8 @@ public class GameSession {
 
 	private Clock buildClock() {
 		if (settings.getClock()!=null) {
-			final ClockSettings extraWhite;
-			final ClockSettings extraBlack;
-			if (Color.WHITE.equals(player1Color)) {
-				extraWhite = settings.getPlayer1().getExtraClock();
-				extraBlack = settings.getPlayer2().getExtraClock();
-			} else {
-				extraBlack = settings.getPlayer1().getExtraClock();
-				extraWhite = settings.getPlayer2().getExtraClock();
-			}
-			final ClockSettings common = settings.getClock();
-			final Clock clock = new Clock(extraWhite==null?common:extraWhite, extraBlack==null?common:extraBlack);
+			final ClockSettings common = settings.getClock().toClockSettings();
+			final Clock clock = new Clock(common);
 			clock.addStatusListener(this::timeUp);
 			clock.addClockListener(e -> log.debug("Clock {} state changes from {} to {}",e.getClock(), e.getPreviousState(), e.getNewState()));
 			if (settings.isStartClockAfterFirstMove()) {
@@ -136,20 +127,12 @@ public class GameSession {
 		}
 	}
 	
-	public Engine getEngine(Variant variant, EngineSettings settings) {
-		final JChessEngine engine;
+	public Engine getEngine(EngineSettings settings) {
 		if (settings==null) {
-			engine = null;
-		} else if (Variant.STANDARD.equals(variant)) {
-			engine = getEngine(settings.getLevel(), settings.getEvaluator());
-			engine.setOpenings(DefaultOpenings.INSTANCE);
-		} else if (Variant.CHESS960.equals(variant)) {
-			engine = getEngine(settings.getLevel(), settings.getEvaluator());
-			engine.setOpenings(null);
-		} else {
-			throw new IllegalArgumentException("The "+this+" variant does not support engine");
+			return null;
 		}
-		return engine;
+		final Optional<EngineData> found = EngineLoader.getEngines().stream().filter(e -> e.getEngine()!=null && e.getName().equals(settings.getName())).findAny();
+		return found.orElseThrow().getEngine();
 	}
 	
 	private JChessEngine getEngine(int level, String evaluatorName) {
@@ -207,8 +190,8 @@ public class GameSession {
 			this.gameCount = 0;
 			initGame();
 		}
-		setEngine(player1Color, getEngine(settings.getVariant(), settings.getPlayer1().getEngine()));
-		setEngine(player1Color.opposite(), getEngine(settings.getVariant(), settings.getPlayer2().getEngine()));
+		setEngine(player1Color, getEngine(settings.getPlayer1().getEngine()));
+		setEngine(player1Color.opposite(), getEngine(settings.getPlayer2().getEngine()));
 		setState(State.RUNNING);
 	}
 

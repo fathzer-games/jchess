@@ -4,7 +4,6 @@ import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
@@ -12,12 +11,17 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.fathzer.jchess.bot.uci.EngineLoader;
+import com.fathzer.jchess.settings.Context;
 import com.fathzer.jchess.settings.GameSettings;
-import com.fathzer.jchess.swing.settings.old.SettingsDialog;
+import com.fathzer.jchess.swing.settings.SettingsDialog;
 import com.fathzer.jchess.uci.JChessUCI;
 import com.fathzer.soft.ajlib.swing.framework.Application;
+import com.fathzer.util.TinyJackson;
+
 import java.awt.Color;
 
 public class JChess extends Application {
@@ -45,7 +49,8 @@ public class JChess extends Application {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				final SettingsDialog dialog = new SettingsDialog(getJFrame(), settings);
+				final Context context = new Context(settings, EngineLoader.getEngines());
+				final SettingsDialog dialog = new SettingsDialog(getJFrame(), context);
 				dialog.setVisible(true);
 				final GameSettings result = dialog.getResult();
 				if (result!=null) {
@@ -106,10 +111,10 @@ public class JChess extends Application {
 			preferences.remove(SETTINGS_PREF);
 		} else {
 			try {
-				String value = GameSettings.MAPPER.writeValueAsString(settings);
+				final String value = TinyJackson.toJSONObject(settings).toString();
 				preferences.put(SETTINGS_PREF, value);
-			} catch (JsonProcessingException e) {
-				throw new UncheckedIOException(e);
+			} catch (JSONException e) {
+				//TODO Log the error;
 			}
 		}
 	}
@@ -119,9 +124,10 @@ public class JChess extends Application {
 		super.restoreState();
 		final String value = getPreferences().get(SETTINGS_PREF, null);
 		try {
-			this.settings = value==null ? new GameSettings() : GameSettings.MAPPER.readValue(value, GameSettings.class);
-		} catch (JsonProcessingException e) {
-			throw new UncheckedIOException(e);
+			this.settings = value==null ? new GameSettings() : TinyJackson.toObject(new JSONObject(value), GameSettings.class);
+		} catch (JSONException e) {
+			this.settings = new GameSettings();
+			//TODO Log the error
 		}
 	}
 

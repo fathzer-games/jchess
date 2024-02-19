@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,7 +41,7 @@ public class TinyJackson {
 			final T result = tClass.getConstructor().newInstance();
 			final Field[] fields = tClass.getDeclaredFields();
 			for (Field field : fields) {
-				if (field.getAnnotation(JsonIgnore.class)==null) {
+				if (!Modifier.isStatic(field.getModifiers()) && field.getAnnotation(JsonIgnore.class)==null) {
 					final Class<?> attrClass = field.getType();
 					final String name = field.getName();
 					final Method method = tClass.getMethod(getSetMethodName(name), attrClass);
@@ -54,9 +55,14 @@ public class TinyJackson {
 		}
 	}
 	
-	private static Object getValue(JSONObject json, Class<?> attrClass, String name) {
+	private static Object getValue(JSONObject json, Class<?> attrClass, String name) throws ReflectiveOperationException, SecurityException {
+		if (json.has(name) && JSONObject.NULL.equals(json.get(name))) {
+			return null;
+		}
 		if (attrClass.isArray()) {
 			return toArray(json.getJSONArray(name), attrClass.getComponentType());
+		} else if (attrClass.isEnum()) {
+		    return attrClass.getMethod("valueOf", String.class).invoke(null, json.getString(name));
 		} else if (attrClass.equals(String.class)) {
 			return json.getString(name);
 		} else if (attrClass.equals(int.class)) {
@@ -89,7 +95,6 @@ public class TinyJackson {
 
 	private static Object getValue(JSONArray json, Class<?> attrClass, int index) {
 		if (attrClass.isArray()) {
-			//TODO To be tested
 			return toArray(json.getJSONArray(index), attrClass.getComponentType());
 		} else if (attrClass.equals(String.class)) {
 			return json.getString(index);
@@ -135,23 +140,33 @@ public class TinyJackson {
 	}
 	
 	public static JSONObject toJSONObject(Object obj) {
+		if (obj==null) {
+			throw new IllegalArgumentException("argument is null");
+		}
+		final Class<?> tClass = obj.getClass();
+		if (tClass.isEnum()) {
+			throw new IllegalArgumentException("Use obj.toString() on enums");
+		}
 		final JSONObject result = new JSONObject();
 		try {
-			final Class<?> tClass = obj.getClass();
 			final Field[] fields = tClass.getDeclaredFields();
 			for (Field field : fields) {
-				if (field.getAnnotation(JsonIgnore.class)==null) {
+				if (!Modifier.isStatic(field.getModifiers()) && field.getAnnotation(JsonIgnore.class)==null) {
 					final Class<?> attrClass = field.getType();
 					final String name = field.getName();
 					final Method method = tClass.getMethod(getGetMethodName(field));
 					final Object attr = method.invoke(obj);
-					if (attrClass.equals(String.class) || attrClass.equals(boolean.class) || attrClass.equals(int.class) || attrClass.equals(long.class)
+					if (attrClass.equals(boolean.class) || attrClass.equals(int.class) || attrClass.equals(long.class)
 							 || attrClass.equals(float.class) || attrClass.equals(double.class) || attrClass.equals(char.class)) {
 						result.put(name, attr);
+					} else if (attrClass.equals(String.class)) {
+						result.put(name, attr==null ? JSONObject.NULL : attr);
 					} else if (attrClass.isArray()) {
-						result.put(name, toJSONArray((Object[])attr));
+						result.put(name, attr==null ? JSONObject.NULL : toJSONArray((Object[])attr));
+					} else if (attrClass.isEnum()) {
+						result.put(name, attr==null ? JSONObject.NULL : attr.toString());
 					} else {
-						result.put(name, toJSONObject(attr));
+						result.put(name, attr==null ? JSONObject.NULL : toJSONObject(attr));
 					}
 				}
 			}

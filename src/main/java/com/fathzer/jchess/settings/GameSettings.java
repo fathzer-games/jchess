@@ -2,13 +2,13 @@ package com.fathzer.jchess.settings;
 
 import java.util.Random;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.json.JSONObject;
+
 import com.fathzer.games.Color;
 import com.fathzer.games.GameBuilder;
-import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
+import com.fathzer.util.TinyJackson;
 import com.fathzer.jchess.GameBuilders;
 
 import lombok.AllArgsConstructor;
@@ -20,21 +20,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GameSettings {
-	public static final ObjectMapper MAPPER = new ObjectMapper();
-	
-	static {
-		SimpleModule module = new SimpleModule();
-		module.addDeserializer(ClockSettings.class, new ClockSettingsDeserializer());
-		MAPPER.registerModule(module);
-	}
-	
 	private static final Random RANDOM_GENERATOR = new Random();
+	
 	private Variant variant = Variant.STANDARD;
 	private boolean tabletMode = true;
 	private boolean showPossibleMoves = true;
 	private boolean touchMove = false;
 	private boolean startClockAfterFirstMove = false;
-	private ClockSettings clock = null;
+	private BasicClockSettings clock = null;
 	private PlayerSettings player1 = new PlayerSettings();
 	private ColorSetting player1Color = ColorSetting.RANDOM;
 	private PlayerSettings player2 = new PlayerSettings();
@@ -67,15 +60,19 @@ public class GameSettings {
 	public static class PlayerSettings {
 		private String name = null;
 		private EngineSettings engine = null;
-		private ClockSettings extraClock = null;
 	}
 	
 	@NoArgsConstructor
 	@Getter
 	@Setter
 	public static class EngineSettings {
-		private String name = "jchess";
-		private int level = 6;
-		private String evaluator;
+		private String name;
+	}
+	
+	public static void main(String[] args) {
+		String json = "{\"variant\":\"STANDARD\",\"tabletMode\":true,\"showPossibleMoves\":true,\"touchMove\":false,\"startClockAfterFirstMove\":false,\"clock\":{\"initialTime\":180,\"increment\":2,\"movesNumberBeforeIncrement\":1,\"canAccumulate\":true,\"movesNumberBeforeNext\":2147483647,\"maxRemainingKept\":0,\"next\":null},\"player1\":{\"name\":null,\"engine\":null,\"extraClock\":null},\"player1Color\":\"RANDOM\",\"player2\":{\"name\":null,\"engine\":{\"name\":\"jchess\",\"level\":16,\"evaluator\":\"simple\"},\"extraClock\":null}}";
+		JSONObject jsonO = new JSONObject(json);
+		GameSettings settings = TinyJackson.toObject(jsonO, GameSettings.class);
+		System.out.println(settings);
 	}
 }

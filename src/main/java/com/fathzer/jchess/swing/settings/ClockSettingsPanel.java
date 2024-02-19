@@ -7,7 +7,7 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.math.BigInteger;
 
-import com.fathzer.games.clock.ClockSettings;
+import com.fathzer.jchess.settings.BasicClockSettings;
 import com.fathzer.soft.ajlib.swing.widget.IntegerWidget;
 
 public class ClockSettingsPanel extends JPanel {
@@ -90,7 +90,7 @@ public class ClockSettingsPanel extends JPanel {
 		}
 	}
 
-	public void setSettings(ClockSettings clock) {
+	public void setSettings(BasicClockSettings clock) {
 		if (clock==null) {
 			timeField.setValue((BigInteger)null);
 			incrementField.setValue((BigInteger)null);
@@ -102,7 +102,7 @@ public class ClockSettingsPanel extends JPanel {
 		}
 	}
 	
-	public ClockSettings getSettings() {
+	public BasicClockSettings getSettings() {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
 	}

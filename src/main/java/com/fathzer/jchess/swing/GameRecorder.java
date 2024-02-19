@@ -52,7 +52,7 @@ public class GameRecorder {
 		if (player.getName()!=null) {
 			return player.getName();
 		} else if (player.getEngine()!=null) {
-			return player.getEngine().getName()+"-"+player.getEngine().getLevel();
+			return player.getEngine().getName();
 		} else {
 			return "?";
 		}

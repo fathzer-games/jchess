@@ -10,7 +10,7 @@ import com.fathzer.jchess.settings.Context;
 import com.fathzer.jchess.settings.GameSettings;
 import com.fathzer.soft.ajlib.swing.dialog.AbstractDialog;
 
-public class SettingsDialog extends AbstractDialog<Context, Boolean> {
+public class SettingsDialog extends AbstractDialog<Context, GameSettings> {
 	private static final long serialVersionUID = 1L;
 
 	private SettingsPanel panel;
@@ -33,8 +33,8 @@ public class SettingsDialog extends AbstractDialog<Context, Boolean> {
 	}
 
 	@Override
-	protected Boolean buildResult() {
-		return true;
+	protected GameSettings buildResult() {
+		return null; //TODO
 	}
 //
 //	@Override
@@ -56,7 +56,7 @@ public class SettingsDialog extends AbstractDialog<Context, Boolean> {
 		final SettingsDialog dialog = new SettingsDialog(null, context);
 		do {
 			dialog.setVisible(true);
-			Boolean result = dialog.getResult();
+			Object result = dialog.getResult();
 			if (result==null) {
 				break;
 			}
