@@ -29,10 +29,10 @@ public class SettingsPanel extends JPanel {
 		add(tabbedPane);
 		final GameSettingsPanel gamePanel = new GameSettingsPanel(context);
 		tabbedPane.addTab("Game settings", gamePanel);
-		final ExternalEnginesPanel enginesPanel = new ExternalEnginesPanel(context.getEngines(), gamePanel::isEngineInUse);
+		final EnginesPanel enginesPanel = new EnginesPanel(context.getEngines(), gamePanel::isEngineInUse);
 		tabbedPane.addTab("Engines", enginesPanel);
 		
-		enginesPanel.addPropertyChangeListener(ExternalEnginesPanel.STARTED_PROPERTY_NAME, e -> {
+		enginesPanel.addPropertyChangeListener(EnginesPanel.STARTED_PROPERTY_NAME, e -> {
 			if (e.getOldValue()==null) {
 				gamePanel.engineStarted((EngineData)e.getNewValue());
 			} else {

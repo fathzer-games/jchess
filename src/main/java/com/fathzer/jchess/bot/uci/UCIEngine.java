@@ -16,7 +16,7 @@ import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.bot.Option.Type;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
-import com.fathzer.jchess.bot.Variant;
+import com.fathzer.jchess.settings.GameSettings.Variant;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -116,16 +116,21 @@ public class UCIEngine implements Engine {
 	public List<Option<?>> getOptions() {
 		return options;
 	}
+	
+	@Override
+	public boolean isSupported(Variant variant) {
+		return variant==Variant.STANDARD || (variant==Variant.CHESS960 && is960Supported);
+	}
 
 	@Override
 	public boolean newGame(Variant variant) {
 		positionSet = false;
-		if (variant==Variant.CHESS_960 && !is960Supported) {
+		if (variant==Variant.CHESS960 && !is960Supported) {
 			return false;
 		}
 		write("ucinewgame");
 		if (is960Supported) {
-			write("setoption name "+CHESS960_OPTION + " value "+(variant==Variant.CHESS_960));
+			write("setoption name "+CHESS960_OPTION + " value "+(variant==Variant.CHESS960));
 		}
 		write("isready");
 		return waitAnswer("readyok"::equals)!=null;

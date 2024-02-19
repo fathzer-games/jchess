@@ -5,6 +5,7 @@ import javax.swing.JPanel;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.Context;
 import com.fathzer.jchess.settings.GameSettings;
+import com.fathzer.jchess.swing.settings.PlayerSelectionPanel.Player;
 
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
@@ -14,6 +15,8 @@ import static com.fathzer.jchess.settings.GameSettings.Variant;
 import java.awt.GridBagConstraints;
 import javax.swing.JComboBox;
 import java.awt.Insets;
+import java.util.Objects;
+
 import javax.swing.JCheckBox;
 import javax.swing.border.TitledBorder;
 
@@ -31,8 +34,8 @@ public class GameSettingsPanel extends JPanel {
 	private PlayerSelectionPanel player2Panel;
 	private JCheckBox startAfterFirstMoveCheckBox;
 	
-	private String player1EngineName;
-	private String player2EngineName;
+	private transient Player player1;
+	private transient Player player2;
 
 	/**
 	 * Create the panel.
@@ -155,17 +158,23 @@ public class GameSettingsPanel extends JPanel {
 		timeDetailsPanelGbc.gridy = 2;
 		timePanel.add(timeDetailsPanel, timeDetailsPanelGbc);
 		
+		variantCombo.addActionListener(e -> {
+			final Variant variant = (Variant) variantCombo.getSelectedItem();
+			player1Panel.setVariant(variant);
+			player2Panel.setVariant(variant);
+		});
+		
 		timeControlCheckBox.addItemListener(e -> {
 			boolean enabled = timeControlCheckBox.isSelected();
 			timeDetailsPanel.setEnabled(enabled);
 			startAfterFirstMoveCheckBox.setEnabled(enabled);
 		});
 		
-		player1Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_ENGINE_PROPERTY_NAME, e -> {
-			player1EngineName = (String) e.getNewValue();
+		player1Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_PLAYER_PROPERTY_NAME, e -> {
+			player1 = (Player) e.getNewValue();
 		});
-		player2Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_ENGINE_PROPERTY_NAME, e -> {
-			player2EngineName = (String) e.getNewValue();
+		player2Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_PLAYER_PROPERTY_NAME, e -> {
+			player2 = (Player) e.getNewValue();
 		});
 	}
 	
@@ -187,8 +196,8 @@ public class GameSettingsPanel extends JPanel {
 		
 		this.variantCombo.setSelectedItem(settings.getVariant());
 		
-		this.player1Panel.setSettings(settings.getPlayer1(), context.getEngines());
-		this.player2Panel.setSettings(settings.getPlayer2(), context.getEngines());
+		this.player1Panel.setSettings(settings.getPlayer1(), context.getEngines(), settings.getVariant());
+		this.player2Panel.setSettings(settings.getPlayer2(), context.getEngines(), settings.getVariant());
 		this.player1Panel.setColor(settings.getPlayer1Color());
 	}
 	
@@ -208,7 +217,6 @@ public class GameSettingsPanel extends JPanel {
 	}
 	
 	boolean isEngineInUse(EngineData engine) {
-		final String name = engine.getName();
-		return name.equals(player1EngineName) || name.equals(player2EngineName);
+		return Objects.equals(engine, player1.engine) || Objects.equals(engine, player2.engine);
 	}
 }

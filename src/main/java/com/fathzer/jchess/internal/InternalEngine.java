@@ -17,11 +17,11 @@ import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
 import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Option;
-import com.fathzer.jchess.bot.Variant;
 import com.fathzer.jchess.bot.options.ComboOption;
 import com.fathzer.jchess.bot.options.SpinOption;
 import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.lichess.DefaultOpenings;
+import com.fathzer.jchess.settings.GameSettings.Variant;
 import com.fathzer.jchess.time.VuckovicSolakOracle;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
@@ -71,6 +71,11 @@ public class InternalEngine implements Engine {
 	@Override
 	public List<Option<?>> getOptions() {
 		return options;
+	}
+
+	@Override
+	public boolean isSupported(Variant variant) {
+		return true;
 	}
 
 	@Override

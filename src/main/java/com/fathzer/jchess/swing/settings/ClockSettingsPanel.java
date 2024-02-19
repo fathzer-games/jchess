@@ -46,7 +46,7 @@ public class ClockSettingsPanel extends JPanel {
 		add(timeField, timeFieldGbc);
 		timeField.setColumns(5);
 		
-		final JLabel incrementLabel = new JLabel("Increment (s): ");
+		final JLabel incrementLabel = new JLabel("Increment: ");
 		GridBagConstraints incrementLabelGbc = new GridBagConstraints();
 		incrementLabelGbc.anchor = GridBagConstraints.WEST;
 		incrementLabelGbc.insets = new Insets(0, 0, 5, 5);

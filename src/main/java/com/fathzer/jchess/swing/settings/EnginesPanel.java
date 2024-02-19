@@ -27,7 +27,7 @@ import java.util.function.Predicate;
 import java.awt.BorderLayout;
 import javax.swing.ListSelectionModel;
 
-public class ExternalEnginesPanel extends JPanel {
+public class EnginesPanel extends JPanel {
 	static final String STARTED_PROPERTY_NAME = "Started engines"; 
 	
 	private static final class Renderer extends DefaultListCellRenderer {
@@ -52,7 +52,7 @@ public class ExternalEnginesPanel extends JPanel {
 	private transient List<EngineData> data;
 	private Predicate<EngineData> isLocked;
 
-	private ExternalEnginesPanel() {
+	private EnginesPanel() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		setLayout(gridBagLayout);
 		
@@ -153,7 +153,7 @@ public class ExternalEnginesPanel extends JPanel {
 	/**
 	 * Create the panel.
 	 */
-	public ExternalEnginesPanel(List<EngineData> data, Predicate<EngineData> isLocked) {
+	public EnginesPanel(List<EngineData> data, Predicate<EngineData> isLocked) {
 		this();
 		this.data = data;
 		this.isLocked = isLocked;

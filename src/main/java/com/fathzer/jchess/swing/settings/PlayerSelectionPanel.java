@@ -3,39 +3,63 @@ package com.fathzer.jchess.swing.settings;
 import javax.swing.JPanel;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.GameSettings.ColorSetting;
 import com.fathzer.jchess.settings.GameSettings.EngineSettings;
 import com.fathzer.jchess.settings.GameSettings.PlayerSettings;
-import com.fathzer.jchess.settings.GameSettings.PlayerType;
-import com.fathzer.soft.ajlib.swing.Utils;
+import com.fathzer.jchess.settings.GameSettings.Variant;
 import com.fathzer.soft.ajlib.swing.widget.TextWidget;
 
 import java.awt.Insets;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.Objects;
 
 import javax.swing.JComboBox;
 
+/** A panel to select player.
+ * //TODO Does work well when variant changes. Maybe (not sure) we should keep the whole engine list in memory,
+ * maybe display all engines including those that does not support current variant, but disabling them
+ * (see last answer of https://stackoverflow.com/questions/23722706/how-to-disable-certain-items-in-a-jcombobox
+ * to have a combo box with disabled items.   
+ */
 public class PlayerSelectionPanel extends JPanel {
+	
+	static class Player {
+		EngineData engine;
+		String name;
+		
+		Player(String name) {
+			this.name = name;
+		}
+		
+		Player(EngineData engine) {
+			this.engine = engine;
+			this.name = engine.getName();
+		}
+
+		@Override
+		public String toString() {
+			return engine==null ? "Human" : engine.getName();
+		}
+	}
+	
 	private static final long serialVersionUID = 1L;
-	public static final String SELECTED_ENGINE_PROPERTY_NAME = "selected engine";
+	public static final String SELECTED_PLAYER_PROPERTY_NAME = "selected player";
 	
 	private JLabel nameLabel;
 	private TextWidget nameTxt;
 	private JLabel typeLabel;
-	private JComboBox<PlayerType> typeCombo;
+	private JComboBox<Player> whoCombo;
 	private JComboBox<ColorSetting> colorComboBox;
 	private JLabel colorLabel;
-	private JLabel engineLabel;
-	private JComboBox<String> engineCombo;
 	
-	private String currentEngine;
+	private transient Player currentPlayer;
+	private Variant currentVariant;
+	private final PropertyChangeListener nameListener;
 
 	/**
 	 * Create the panel.
@@ -44,7 +68,7 @@ public class PlayerSelectionPanel extends JPanel {
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		setLayout(gridBagLayout);
 		
-		typeLabel = new JLabel("Type: ");
+		typeLabel = new JLabel("Who: ");
 		GridBagConstraints typeLabelGbc = new GridBagConstraints();
 		typeLabelGbc.anchor = GridBagConstraints.WEST;
 		typeLabelGbc.insets = new Insets(0, 0, 5, 5);
@@ -52,17 +76,15 @@ public class PlayerSelectionPanel extends JPanel {
 		typeLabelGbc.gridy = 0;
 		add(typeLabel, typeLabelGbc);
 		
-		typeCombo = new JComboBox<>();
-		for (PlayerType type : PlayerType.values()) {
-			typeCombo.addItem(type);
-		}
-		typeCombo.setToolTipText("Select player's type. Engines can be added and configured in Engines panel");
-		GridBagConstraints typeComboGbc = new GridBagConstraints();
-		typeComboGbc.anchor = GridBagConstraints.NORTHWEST;
-		typeComboGbc.insets = new Insets(0, 0, 5, 0);
-		typeComboGbc.gridx = 1;
-		typeComboGbc.gridy = 0;
-		add(typeCombo, typeComboGbc);
+		whoCombo = new JComboBox<>();
+		whoCombo.addItem(new Player("Human being"));
+		whoCombo.setToolTipText("Select player. Engines can be added and configured in Engines panel");
+		GridBagConstraints whoComboGbc = new GridBagConstraints();
+		whoComboGbc.anchor = GridBagConstraints.NORTHWEST;
+		whoComboGbc.insets = new Insets(0, 0, 5, 0);
+		whoComboGbc.gridx = 1;
+		whoComboGbc.gridy = 0;
+		add(whoCombo, whoComboGbc);
 		
 		nameLabel = new JLabel("Name: ");
 		GridBagConstraints nameLabelGbc = new GridBagConstraints();
@@ -80,54 +102,29 @@ public class PlayerSelectionPanel extends JPanel {
 		nameTxtGridBagConstraints.gridx = 1;
 		nameTxtGridBagConstraints.gridy = 1;
 		add(nameTxt, nameTxtGridBagConstraints);
-		
-		engineLabel = new JLabel("Engine: ");
-		GridBagConstraints engineLabelGbc = new GridBagConstraints();
-		engineLabelGbc.insets = new Insets(0, 0, 0, 5);
-		engineLabelGbc.anchor = GridBagConstraints.WEST;
-		engineLabelGbc.gridx = 0;
-		engineLabelGbc.gridy = 2;
-		add(engineLabel, engineLabelGbc);
-		
-		engineCombo = new JComboBox<>();
-		GridBagConstraints engineComboGbc = new GridBagConstraints();
-		engineComboGbc.insets = new Insets(0, 0, 5, 0);
-		engineComboGbc.anchor = GridBagConstraints.NORTHWEST;
-		engineComboGbc.gridx = 1;
-		engineComboGbc.gridy = 2;
-		add(engineCombo, engineComboGbc);
 
 		colorLabel = new JLabel("Color: ");
 		GridBagConstraints player1ColorLabelGbc = new GridBagConstraints();
 		player1ColorLabelGbc.anchor = GridBagConstraints.WEST;
 		player1ColorLabelGbc.insets = new Insets(0, 0, 0, 5);
 		player1ColorLabelGbc.gridx = 0;
-		player1ColorLabelGbc.gridy = 3;
+		player1ColorLabelGbc.gridy = 2;
 		add(colorLabel, player1ColorLabelGbc);
 		
 		colorComboBox = new JComboBox<>();
 		GridBagConstraints playercomboBoxGbc = new GridBagConstraints();
 		playercomboBoxGbc.anchor = GridBagConstraints.NORTHWEST;
 		playercomboBoxGbc.gridx = 1;
-		playercomboBoxGbc.gridy = 3;
+		playercomboBoxGbc.gridy = 2;
 		add(colorComboBox, playercomboBoxGbc);
 		for (ColorSetting cs : ColorSetting.values()) {
 			colorComboBox.addItem(cs);
 		}
 		colorComboBox.setSelectedIndex(0);
 		
-		int height = engineCombo.getPreferredSize().height;
-		int width = nameTxt.getPreferredSize().width;
-		//TODO Should also use the label sizes to prevent problems 
-		nameTxt.setPreferredSize(new Dimension(width, height));
-		engineCombo.setPreferredSize(new Dimension(width, height));
-		
-		typeCombo.addActionListener(e -> {
-			setType((PlayerType) typeCombo.getSelectedItem());
-			updateSelectedEngine();
-		});
-
-		engineCombo.addItemListener(e -> updateSelectedEngine());
+		whoCombo.addActionListener(e -> updateSelectedPlayer());
+		nameListener = e->updatePlayerName();
+		nameTxt.addPropertyChangeListener(TextWidget.TEXT_PROPERTY, nameListener);
 	}
 
 	public void setColor(ColorSetting player1Color) {
@@ -138,33 +135,34 @@ public class PlayerSelectionPanel extends JPanel {
 		colorComboBox.setVisible(visible);
 	}
 	
-	private void setType(PlayerType type) {
-		final boolean isHuman = type==PlayerType.HUMAN;
-		if (!isHuman && engineCombo.getItemCount()==0) {
-			JOptionPane.showMessageDialog(Utils.getOwnerWindow(this), "Sorry, there's currently no engine started.\nPlease start an engine in '"+"Engines"+"' tab");
-			typeCombo.setSelectedItem(PlayerType.HUMAN);
-			return;
-		}
-		nameLabel.setVisible(isHuman);
-		nameTxt.setVisible(isHuman);
-		engineLabel.setVisible(!isHuman);
-		engineCombo.setVisible(!isHuman);
+	void setVariant(Variant variant) {
+		this.currentVariant = variant;
 	}
-
-	public void setSettings(PlayerSettings settings, List<EngineData> engines) {
+	
+	public void setSettings(PlayerSettings settings, List<EngineData> engines, Variant variant) {
+		this.currentVariant = variant;
+		whoCombo.removeAllItems();
+		final String name = settings.getName()==null ? "" : settings.getName();
+		whoCombo.addItem(new Player(name));
 		engines.forEach(e -> {
-			if (e.getEngine()!=null) {
-				engineCombo.addItem(e.getName());
+			if (e.getEngine()!=null && e.getEngine().isSupported(variant)) {
+				whoCombo.addItem(new Player(e));
 			}
 		});
 		final EngineSettings engine = settings.getEngine();
-		if (engine==null) {
-			typeCombo.setSelectedItem(PlayerType.HUMAN);
+		boolean found = false;
+		if (engine!=null) {
+			for (int i = 1; i < whoCombo.getItemCount(); i++) {
+				Player player = whoCombo.getItemAt(i);
+				if (player.name.equals(engine.getName()) && player.engine.getEngine().isSupported(variant)) {
+					found = true;
+					whoCombo.setSelectedIndex(i);
+				}
+			}
+		}
+		if (!found) {
+			whoCombo.setSelectedIndex(0);
 			nameTxt.setText(settings.getName());
-		} else {
-			typeCombo.setSelectedItem(PlayerType.ENGINE);
-			System.out.println("Here !");
-			engineCombo.setSelectedItem(engine.getName());
 		}
 	}
 
@@ -174,22 +172,41 @@ public class PlayerSelectionPanel extends JPanel {
 	}
 
 	public void engineStarted(EngineData engine) {
-		engineCombo.addItem(engine.getName());
+		if (engine.getEngine().isSupported(currentVariant)) {
+			whoCombo.addItem(new Player(engine));
+		}
 	}
 
 	public void engineStopped(EngineData engine) {
-		engineCombo.removeItem(engine.getName());
-		if (engineCombo.getItemCount()==0) {
-			typeCombo.setSelectedItem(PlayerType.HUMAN);
+		for (int i = 1; i < whoCombo.getItemCount(); i++) {
+			if (engine.getName().equals(whoCombo.getItemAt(i).name)) {
+				whoCombo.remove(i);
+				break;
+			}
 		}
 	}
 	
-	private void updateSelectedEngine() {
-		String update = typeCombo.getSelectedItem()==PlayerType.HUMAN ? null : (String)engineCombo.getSelectedItem();
-		if (!Objects.equals(update, currentEngine)) {
-			final String old = currentEngine;
-			this.currentEngine = update;
-			firePropertyChange(SELECTED_ENGINE_PROPERTY_NAME, old, this.currentEngine);
+	private void updateSelectedPlayer() {
+		Player update = (Player) whoCombo.getSelectedItem();
+		if (!Objects.equals(update, currentPlayer)) {
+			final boolean isHuman = update.engine==null;
+			nameTxt.setEnabled(isHuman);
+			nameTxt.setEditable(isHuman);
+			eventFreeSetName(isHuman ? update.name : update.engine.getName()+" ("+"bot"+")");
+			final Player old = currentPlayer;
+			this.currentPlayer = update;
+			firePropertyChange(SELECTED_PLAYER_PROPERTY_NAME, old, this.currentPlayer);
 		}
+	}
+	
+	private void updatePlayerName() {
+		System.out.println("name changed");
+		whoCombo.getItemAt(0).name = nameTxt.getText();
+	}
+	
+	private void eventFreeSetName(String name) {
+		nameTxt.removePropertyChangeListener(TextWidget.TEXT_PROPERTY, nameListener);
+		nameTxt.setText(name);
+		nameTxt.addPropertyChangeListener(TextWidget.TEXT_PROPERTY, nameListener);
 	}
 }
