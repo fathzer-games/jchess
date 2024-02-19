@@ -166,9 +166,21 @@ public class PlayerSelectionPanel extends JPanel {
 		}
 	}
 
-	public PlayerSettings getSettings() {
-		//TODO
-		throw new UnsupportedOperationException();
+	public PlayerSettings getPlayerSettings() {
+		final PlayerSettings result = new PlayerSettings();
+		final Player player = (Player) whoCombo.getSelectedItem();
+		if (player.engine==null) {
+			result.setName(player.name);
+		} else {
+			final EngineSettings engine = new EngineSettings();
+			engine.setName(player.engine.getName());
+			result.setEngine(engine);
+		}
+		return result;
+	}
+	
+	public ColorSetting getColorSetting() {
+		return (ColorSetting) colorComboBox.getSelectedItem();
 	}
 
 	public void engineStarted(EngineData engine) {

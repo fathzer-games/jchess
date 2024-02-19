@@ -103,7 +103,16 @@ public class ClockSettingsPanel extends JPanel {
 	}
 	
 	public BasicClockSettings getSettings() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		if (this.isEnabled() && this.timeField.getValue()!=null) {
+			final BasicClockSettings result = new BasicClockSettings();
+			result.setInitialTime(timeField.getValue().intValue());
+			if (this.incrementField.getValue()!=null) {
+				result.setIncrement(incrementField.getValue().intValue());
+				result.setMovesNumberBeforeIncrement(this.movesBeforeIncrementField.getValue()==null?1:this.movesBeforeIncrementField.getValue().intValue()); 
+			}
+			return result;
+		} else {
+			return null;
+		}
 	}
 }

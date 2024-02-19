@@ -14,40 +14,23 @@ public class SettingsDialog extends AbstractDialog<Context, GameSettings> {
 	private static final long serialVersionUID = 1L;
 
 	private SettingsPanel panel;
-	private boolean okEnabled;
 
 	public SettingsDialog(Window owner, Context data) {
 		super(owner, "Settings", data);
-		super.setResizable(true);
+		this.getCancelButton().setVisible(false);
+		this.getOkButton().setText("Close");
 	}
 
 	@Override
 	protected JPanel createCenterPane() {
 		this.panel = new SettingsPanel(data);
-//		panel.addPropertyChangeListener(SettingsPanel.VALID_SETTINGS_PROPERTY, e -> {
-//			this.okEnabled = (Boolean) e.getNewValue();
-//			updateOkButtonEnabled();
-//		});
-//		panel.setSettings(super.data);
 		return panel;
 	}
 
 	@Override
-	protected GameSettings buildResult() {
-		return null; //TODO
+	public GameSettings buildResult() {
+		return panel.getGameSettingsPanel().getSettings();
 	}
-//
-//	@Override
-//	protected JComponent createExtraComponent() {
-//		return new JButton(new AbstractAction("Default") {
-//			private static final long serialVersionUID = 1L;
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				panel.setSettings(new GameSettings());
-//			}
-//		});
-//	}
 	
 	public static void main(String[] args) throws IOException {
 		EngineLoader.init();

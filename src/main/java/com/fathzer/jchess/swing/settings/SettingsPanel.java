@@ -13,6 +13,8 @@ import java.util.Collections;
 
 public class SettingsPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
+	
+	private final GameSettingsPanel gamePanel;
 
 	// Used by Window builder editor
 	@SuppressWarnings("unused")
@@ -27,7 +29,7 @@ public class SettingsPanel extends JPanel {
 		setLayout(new BorderLayout(0, 0));
 		final JTabbedPane tabbedPane = new JTabbedPane(SwingConstants.TOP);
 		add(tabbedPane);
-		final GameSettingsPanel gamePanel = new GameSettingsPanel(context);
+		this.gamePanel = new GameSettingsPanel(context);
 		tabbedPane.addTab("Game settings", gamePanel);
 		final EnginesPanel enginesPanel = new EnginesPanel(context.getEngines(), gamePanel::isEngineInUse);
 		tabbedPane.addTab("Engines", enginesPanel);
@@ -39,5 +41,9 @@ public class SettingsPanel extends JPanel {
 				gamePanel.engineStoped((EngineData)e.getOldValue());
 			}
 		});
+	}
+	
+	GameSettingsPanel getGameSettingsPanel() {
+		return this.gamePanel;
 	}
 }

@@ -170,12 +170,8 @@ public class GameSettingsPanel extends JPanel {
 			startAfterFirstMoveCheckBox.setEnabled(enabled);
 		});
 		
-		player1Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_PLAYER_PROPERTY_NAME, e -> {
-			player1 = (Player) e.getNewValue();
-		});
-		player2Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_PLAYER_PROPERTY_NAME, e -> {
-			player2 = (Player) e.getNewValue();
-		});
+		player1Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_PLAYER_PROPERTY_NAME, e -> player1 = (Player) e.getNewValue());
+		player2Panel.addPropertyChangeListener(PlayerSelectionPanel.SELECTED_PLAYER_PROPERTY_NAME, e -> player2 = (Player) e.getNewValue());
 	}
 	
 	public GameSettingsPanel(Context settings) {
@@ -202,8 +198,19 @@ public class GameSettingsPanel extends JPanel {
 	}
 	
 	public GameSettings getSettings() {
-		throw new UnsupportedOperationException();
-//TODO		return new GameSettings();
+		final GameSettings result = new GameSettings();
+		result.setVariant((Variant) variantCombo.getSelectedItem());
+		result.setTabletMode(tabletModeCheckBox.isSelected());
+		result.setShowPossibleMoves(showMovesCheckBox.isSelected());
+		result.setTouchMove(touchMoveCheckBox.isSelected());
+		if (timeControlCheckBox.isSelected()) {
+			result.setStartClockAfterFirstMove(startAfterFirstMoveCheckBox.isSelected());
+			result.setClock(timeDetailsPanel.getSettings());
+		}
+		result.setPlayer1Color(player1Panel.getColorSetting());
+		result.setPlayer1(player1Panel.getPlayerSettings());
+		result.setPlayer2(player2Panel.getPlayerSettings());
+		return result;
 	}
 
 	public void engineStarted(EngineData engine) {
