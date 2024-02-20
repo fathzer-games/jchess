@@ -56,7 +56,7 @@ public class DefaultOpenings implements Function<Board<Move>, Move> {
 
 	@Override
 	public Move apply(Board<Move> board) {
-		final JSONObject opening = db.getJSONObject(toFen(board));
+		final JSONObject opening = db.optJSONObject(toFen(board));
 		if (opening==null) {
 			return null;
 		}

@@ -4,6 +4,8 @@ import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
@@ -15,8 +17,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.fathzer.jchess.bot.uci.EngineLoader;
+import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.Context;
 import com.fathzer.jchess.settings.GameSettings;
+import com.fathzer.jchess.settings.GameSettings.PlayerSettings;
 import com.fathzer.jchess.swing.settings.SettingsDialog;
 import com.fathzer.jchess.uci.JChessUCI;
 import com.fathzer.soft.ajlib.swing.framework.Application;
@@ -85,13 +89,6 @@ public class JChess extends Application {
 
 	@Override
 	protected boolean onStart() {
-		this.game = new GameSession(panel.getGamePanel(), settings);
-		this.game.addListener((o,n) -> {
-			if (GameSession.State.ENDED.equals(n)) {
-				this.startAction.setEnabled(true);
-				this.panel.setMenuVisible(true);
-			}
-		});
 		try {
 			EngineLoader.init();
 		} catch (IOException e) {
@@ -100,7 +97,48 @@ public class JChess extends Application {
 		               JOptionPane.ERROR_MESSAGE);
 			return result!=0;
 		}
+		fixSettings();
+		this.game = new GameSession(panel.getGamePanel(), settings);
+		this.game.addListener((o,n) -> {
+			if (GameSession.State.ENDED.equals(n)) {
+				this.startAction.setEnabled(true);
+				this.panel.setMenuVisible(true);
+			}
+		});
 		return true;
+	}
+	
+	/** Fixes incompatibilities between settings and available engines and starts used engines.
+	 */
+	private void fixSettings() {
+		final List<EngineData> engines = EngineLoader.getEngines();
+		fixSettings(settings.getPlayer1(), engines);
+		fixSettings(settings.getPlayer2(), engines);
+	}
+	
+	private void fixSettings(PlayerSettings player, List<EngineData> engines) {
+		final String engineName = player.getEngine()!=null ? player.getEngine().getName() : null;
+		if (engineName!=null && !engineName.isBlank()) {
+			final Optional<EngineData> engine = engines.stream().filter(e -> engineName.equals(e.getName())).findFirst();
+			boolean ok = false;
+			if (engine.isPresent()) {
+				// Ensure engine is started
+				if (engine.get().getEngine()!=null) {
+					ok = true;
+				} else {
+					try {
+						engine.get().start();
+						ok = true;
+					} catch (IOException e) {
+						// TODO Log the error?
+					}
+				}
+			}
+			if (!ok) {
+				// Engine does not exists or can't start, switch to human player
+				player.setEngine(null);
+			}
+		}
 	}
 	
 	@Override
