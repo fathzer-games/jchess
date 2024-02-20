@@ -110,6 +110,7 @@ public class GameSession {
 		panel.setClock(game.getClock());
 		panel.getBoard().setBoard(game.getBoard());
 		panel.getBoard().setManualMoveEnabled(false);
+		setScore();
 	}
 
 	private Clock buildClock() {
@@ -135,7 +136,7 @@ public class GameSession {
 		return found.orElseThrow().getEngine();
 	}
 	
-	private JChessEngine getEngine(int level, String evaluatorName) {
+	private JChessEngine getEngine(int level, String evaluatorName) { //TODO Remove
 		final Supplier<Evaluator<Move, Board<Move>>> evaluator = "simple".equals(evaluatorName) ? SimplifiedEvaluator::new : NaiveEvaluator::new;
 		final JChessEngine engine = new JChessEngine(evaluator, level);
 		final int threads;
@@ -234,11 +235,15 @@ public class GameSession {
 			// Game is ended
 			endOfGame(status);
 		} else {
-			final NaiveEvaluator ev = new NaiveEvaluator();
-			ev.init(game.getBoard());
-			panel.setScore(ev.evaluateAsWhite(game.getBoard()));
+			setScore();
 			nextMove();
 		}
+	}
+	
+	private void setScore() {
+		final NaiveEvaluator ev = new NaiveEvaluator();
+		ev.init(game.getBoard());
+		panel.setScore(ev.evaluateAsWhite(game.getBoard())/100);
 	}
 
 	/** This method is called when clock emits a time up event.

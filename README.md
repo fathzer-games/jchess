@@ -16,9 +16,8 @@ Java 11+ to run the application and mvn to build it.
 
 # Known bugs
 - Engine lists in player settings are not updated when variant changes.
-- The displayed score is mutiplied per 100.
-- The score + resign icon are not initialized at the same time as the board.
-- The depth of internal engine is always set to 2
+- The internal engine received a negative remaining time
+- The time increment is never passed to UCI engine (see Game.EngineTurn class)
 
 # TODO
 - Allow engine settings to be defined in engines.json.
