@@ -56,11 +56,16 @@ public class DefaultOpenings implements Function<Board<Move>, Move> {
 
 	@Override
 	public Move apply(Board<Move> board) {
-		final JSONObject opening = db.optJSONObject(toFen(board));
+		final String fen = toFen(board);
+		final JSONObject opening = db.optJSONObject(fen);
 		if (opening==null) {
 			return null;
 		}
-		JSONArray moves = opening.getJSONArray("moves");
+		final JSONArray moves = opening.getJSONArray("moves");
+		if (moves.isEmpty()) {
+			System.out.println("Strange, moves is empty for fen "+fen); //TODO
+			return null;
+		}
 		final JSONObject move = moves.getJSONObject(RND.nextInt(moves.length()));
 		return JChessUCIEngine.toMove(board, UCIMove.from(move.getString("coord")));
 	}

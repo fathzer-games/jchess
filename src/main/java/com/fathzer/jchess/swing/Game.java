@@ -37,7 +37,7 @@ public class Game {
 		public void run() {
 			engine.setPosition(FENUtils.to(board), Collections.emptyList());
 			final long remainingTime = clock.getRemaining(clock.getPlaying());
-			final CountDownState params = new CountDownState(remainingTime,0,-1); //TODO Needs increment
+			final CountDownState params = new CountDownState(remainingTime,0,0); //TODO Needs increment
 			Move move = JChessUCIEngine.toMove(board, UCIMove.from(engine.play(params)));
 			moveConsumer.accept(Game.this, move);
 		}

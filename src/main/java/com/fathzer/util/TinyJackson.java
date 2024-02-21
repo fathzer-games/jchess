@@ -19,7 +19,7 @@ import org.json.JSONObject;
  * <br>This class, adds bean parsing to the org.json library. Additionally, it provides you with method to convert beans and arrays
  * to JSONObject and JSONArray (json.org ones have strange naming convention: for instance an object's attribute named 'aChar' is transformed
  * in a JSON attribute named 'AChar'. 
- * <br><br>Current limitations:
+ * <br><br>Current limitations:<ul>
  * <li>All attributes of bean should be present in JSON</li>
  * <li>The following types are not supported as bean's attributes: byte, short</li>
  * </ul>
