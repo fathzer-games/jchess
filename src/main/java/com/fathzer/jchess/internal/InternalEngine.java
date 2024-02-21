@@ -1,8 +1,9 @@
 package com.fathzer.jchess.internal;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.ai.time.BasicTimeManager;
@@ -18,7 +19,6 @@ import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.bot.options.ComboOption;
-import com.fathzer.jchess.bot.options.SpinOption;
 import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.lichess.DefaultOpenings;
 import com.fathzer.jchess.settings.GameSettings.Variant;
@@ -27,9 +27,14 @@ import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
 
 public class InternalEngine implements Engine {
+	private static final long MILLIS_IN_SECONDS = 1000L;
 	private static final BasicTimeManager<Board<Move>> TIME_MANAGER = new BasicTimeManager<>(VuckovicSolakOracle.INSTANCE);
 	
-	private static final String SIMPLIFIED_EVAL_VALUE = "simplified";
+	private static final String LEVEL_BABY_VALUE = "Baby";
+	private static final String LEVEL_KID_VALUE = "Kid";
+	private static final String LEVEL_TEEN_VALUE = "Teenager";
+	private static final String LEVEL_ADULT_VALUE = "Adult";
+	private static final String LEVEL_BEST_VALUE = "Best";
 
 	private final JChessEngine engine;
 	private final List<Option<?>> options;
@@ -45,22 +50,34 @@ public class InternalEngine implements Engine {
 	}
 	
 	private List<Option<?>> buildOptions() {
-		final int threads = PhysicalCores.count()>=2 ? 2 : 1;
-		this.engine.setParallelism(threads);
-		final ComboOption evalOption = new ComboOption("Evaluation", SIMPLIFIED_EVAL_VALUE, Set.of(SIMPLIFIED_EVAL_VALUE,"naive"));
-		evalOption.addListener((o,n) -> this.engine.setEvaluatorSupplier(SIMPLIFIED_EVAL_VALUE.equals(n)?SimplifiedEvaluator::new:NaiveEvaluator::new));
-		final SpinOption threadsOption = new SpinOption("Threads", threads, 1, Runtime.getRuntime().availableProcessors());
-		threadsOption.addListener((o,n)->this.engine.setParallelism(n.intValue()));
-		final SpinOption maxTimeOption = new SpinOption("maxtime", 30000, 100, 1800000);
-		maxTimeOption.addListener((o,n) -> this.engine.getDeepeningPolicy().setMaxTime(n));
-		final SpinOption depthOption = new SpinOption("depth", 6, 1, 128);
-		depthOption.addListener((o,n) -> this.engine.getDeepeningPolicy().setDepth(n.intValue()));
-		return Arrays.asList(
-				evalOption,
-				threadsOption,
-				maxTimeOption,
-				depthOption
-		);
+		final ComboOption level = new ComboOption("Level",LEVEL_BEST_VALUE, new LinkedHashSet<>(Arrays.asList(LEVEL_BABY_VALUE,LEVEL_KID_VALUE,LEVEL_TEEN_VALUE,LEVEL_ADULT_VALUE,LEVEL_BEST_VALUE)));
+		level.addListener((o,n) -> setLevel(n));
+		return Collections.singletonList(level);
+	}
+	
+	private void setLevel(String level) {
+		final boolean naive = LEVEL_BABY_VALUE.equals(level) || LEVEL_KID_VALUE.equals(level);
+		engine.setParallelism(PhysicalCores.count()<2 || naive ? 1 : 2);
+		engine.setEvaluatorSupplier(naive ? NaiveEvaluator::new : SimplifiedEvaluator::new);
+		long maxTime = Long.MAX_VALUE;
+		int depth;
+		if (LEVEL_BABY_VALUE.equals(level)) {
+			depth = 2;
+		} else if (LEVEL_KID_VALUE.equals(level)) {
+			depth = 4;
+		} else if (LEVEL_TEEN_VALUE.equals(level)) {
+			depth = 6;
+		} else if (LEVEL_ADULT_VALUE.equals(level)) {
+			depth = 8;
+			maxTime = 10*MILLIS_IN_SECONDS;
+		} else if (LEVEL_BEST_VALUE.equals(level)) {
+			depth = 14;
+			maxTime = 30*MILLIS_IN_SECONDS;
+		} else {
+			throw new IllegalArgumentException();
+		}
+		engine.getDeepeningPolicy().setDepth(depth);
+		engine.getDeepeningPolicy().setMaxTime(maxTime);
 	}
 
 	@Override

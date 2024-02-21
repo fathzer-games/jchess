@@ -2,7 +2,6 @@ package com.fathzer.jchess.swing;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -10,18 +9,14 @@ import javax.swing.SwingUtilities;
 import com.fathzer.games.Color;
 import com.fathzer.games.GameBuilder;
 import com.fathzer.games.Status;
-import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
-import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
-import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.settings.GameSettings;
 import com.fathzer.jchess.settings.GameSettings.ColorSetting;
 import com.fathzer.jchess.settings.GameSettings.EngineSettings;
@@ -31,8 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GameSession {
-	private static final long MILLIS_IN_SECONDS = 1000L;
-
 	public enum State {
 		CREATED, PAUSED, RUNNING, ENDED
 	}
@@ -134,30 +127,6 @@ public class GameSession {
 		}
 		final Optional<EngineData> found = EngineLoader.getEngines().stream().filter(e -> e.getEngine()!=null && e.getName().equals(settings.getName())).findAny();
 		return found.orElseThrow().getEngine();
-	}
-	
-	private JChessEngine getEngine(int level, String evaluatorName) { //TODO Remove
-		final Supplier<Evaluator<Move, Board<Move>>> evaluator = "simple".equals(evaluatorName) ? SimplifiedEvaluator::new : NaiveEvaluator::new;
-		final JChessEngine engine = new JChessEngine(evaluator, level);
-		final int threads;
-		final long maxTime;
-		final boolean hasMoreThan1Core = PhysicalCores.count()>=2;
-		if (level <= 6) {
-			threads = 1;
-			maxTime = Long.MAX_VALUE;
-		} else if (level<=8) {
-			threads = 1;
-			maxTime = 10*MILLIS_IN_SECONDS;
-		} else if (level<=10) {
-			threads = hasMoreThan1Core ? 2 : 1;
-			maxTime = 15*MILLIS_IN_SECONDS;
-		} else {
-			threads = hasMoreThan1Core ? 2 : 1;
-			maxTime = 30*MILLIS_IN_SECONDS;
-		}
-		engine.setParallelism(threads);
-		engine.getDeepeningPolicy().setMaxTime(maxTime);
-		return engine;
 	}
 
 	private boolean onlyHumans() {

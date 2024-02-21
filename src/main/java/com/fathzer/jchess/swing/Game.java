@@ -35,6 +35,7 @@ public class Game {
 		
 		@Override
 		public void run() {
+			//FIXME Passing fen with no moves breaks the draw by repetition detection!
 			engine.setPosition(FENUtils.to(board), Collections.emptyList());
 			final long remainingTime = clock.getRemaining(clock.getPlaying());
 			final CountDownState params = new CountDownState(remainingTime,0,0); //TODO Needs increment
