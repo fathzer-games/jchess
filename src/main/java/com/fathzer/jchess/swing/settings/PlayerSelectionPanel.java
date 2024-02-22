@@ -59,7 +59,7 @@ public class PlayerSelectionPanel extends JPanel {
 	
 	private transient Player currentPlayer;
 	private Variant currentVariant;
-	private final PropertyChangeListener nameListener;
+	private final transient PropertyChangeListener nameListener;
 
 	/**
 	 * Create the panel.
