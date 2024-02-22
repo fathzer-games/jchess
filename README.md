@@ -15,8 +15,7 @@ Java 11+ to run the application and mvn to build it.
 ```java -Duci=true -jar ./target/jchess.jar```
 
 # Known bugs
-- Sometimes, the PGN gives the wrong winner
-- The time increment is never passed to UCI engine (see Game.EngineTurn class)
+- The program hangs if clock is not set
 - Engine lists in player settings are not updated when variant changes.
 
 # TODO

@@ -13,6 +13,7 @@ import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
 import com.fathzer.games.clock.Clock;
+import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.clock.CountDownState;
 
 import lombok.Getter;
@@ -39,7 +40,10 @@ public class Game {
 			engine.setPosition(FENUtils.to(history.getStartBoard()), history.getMoves().stream().map(m -> JChessUCIEngine.toUCIMove(cs, m)).
 					map(UCIMove::toString).toList());
 			final long remainingTime = clock.getRemaining(clock.getPlaying());
-			final CountDownState params = new CountDownState(remainingTime,0,0); //TODO Needs increment
+			final ClockSettings clockSettings = clock.getCurrentSettings(clock.getPlaying());
+			final int increment = clockSettings.getIncrement()>0 ? clockSettings.getIncrement()/clockSettings.getMovesNumberBeforeIncrement() : 0;
+			final int movesToGo = clock.getRemainingMovesBeforeNext(clock.getPlaying());
+			final CountDownState params = new CountDownState(remainingTime, increment, movesToGo);
 			Move move = JChessUCIEngine.toMove(board, UCIMove.from(engine.play(params)));
 			moveConsumer.accept(Game.this, move);
 		}
