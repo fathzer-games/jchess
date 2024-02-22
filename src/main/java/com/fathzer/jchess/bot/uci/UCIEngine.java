@@ -153,6 +153,9 @@ public class UCIEngine implements Engine {
 	@Override
 	public void setPosition(String fen, List<String> moves) {
 		whiteToPlay = "w".equals(fen.split(" ")[1]);
+		if (moves.size()%2!=0) {
+			whiteToPlay = !whiteToPlay;
+		}
 		final StringBuilder builder = new StringBuilder("position fen "+fen);
 		if (!moves.isEmpty()) {
 			builder.append(" moves");
@@ -160,7 +163,6 @@ public class UCIEngine implements Engine {
 				builder.append(" ");
 				builder.append(move);
 			}
-			whiteToPlay = !whiteToPlay;
 		}
 		write(builder.toString());
 		positionSet = true;

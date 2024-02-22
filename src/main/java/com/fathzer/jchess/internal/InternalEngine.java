@@ -47,6 +47,7 @@ public class InternalEngine implements Engine {
 		this.engine.setTranspositionTable(new TT(16, SizeUnit.MB));
 		this.board = null;
 		this.options = buildOptions();
+		setLevel(LEVEL_BEST_VALUE);
 	}
 	
 	private List<Option<?>> buildOptions() {

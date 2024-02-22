@@ -1,11 +1,11 @@
 package com.fathzer.jchess.swing;
 
-import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.bot.Engine;
@@ -18,7 +18,7 @@ import com.fathzer.games.clock.CountDownState;
 import lombok.Getter;
 
 public class Game {
-	private static final Executor EXECUTOR = Executors.newSingleThreadExecutor((r) -> {
+	private static final Executor EXECUTOR = Executors.newSingleThreadExecutor(r -> {
 	    Thread t = Executors.defaultThreadFactory().newThread(r);
 	    t.setDaemon(true);
 	    return t;
@@ -35,8 +35,9 @@ public class Game {
 		
 		@Override
 		public void run() {
-			//FIXME Passing fen with no moves breaks the draw by repetition detection!
-			engine.setPosition(FENUtils.to(board), Collections.emptyList());
+			final CoordinatesSystem cs = board.getCoordinatesSystem();
+			engine.setPosition(FENUtils.to(history.getStartBoard()), history.getMoves().stream().map(m -> JChessUCIEngine.toUCIMove(cs, m)).
+					map(UCIMove::toString).toList());
 			final long remainingTime = clock.getRemaining(clock.getPlaying());
 			final CountDownState params = new CountDownState(remainingTime,0,0); //TODO Needs increment
 			Move move = JChessUCIEngine.toMove(board, UCIMove.from(engine.play(params)));

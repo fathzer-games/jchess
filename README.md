@@ -15,7 +15,7 @@ Java 11+ to run the application and mvn to build it.
 ```java -Duci=true -jar ./target/jchess.jar```
 
 # Known bugs
-- Passing fen with no moves breaks the draw by repetition detection!
+- Sometimes, the PGN gives the wrong winner
 - The time increment is never passed to UCI engine (see Game.EngineTurn class)
 - Engine lists in player settings are not updated when variant changes.
 
