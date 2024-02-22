@@ -10,6 +10,8 @@ import com.fathzer.games.Color;
 import com.fathzer.games.GameBuilder;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.Game;
+import com.fathzer.jchess.GameRecorder;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
 import com.fathzer.jchess.bot.Engine;

@@ -1,13 +1,9 @@
-package com.fathzer.jchess.swing;
+package com.fathzer.jchess;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 
-import com.fathzer.jchess.Board;
-import com.fathzer.jchess.CoordinatesSystem;
-import com.fathzer.jchess.GameHistory;
-import com.fathzer.jchess.Move;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.uci.JChessUCIEngine;
@@ -77,7 +73,7 @@ public class Game {
 		this.paused = true;
 	}
 	
-	void setStartClockAfterFirstMove(boolean afterFirst) {
+	public void setStartClockAfterFirstMove(boolean afterFirst) {
 		this.startClockAfterFirstMove = afterFirst;
 	}
 	

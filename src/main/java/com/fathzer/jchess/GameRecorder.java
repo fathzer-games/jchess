@@ -1,4 +1,4 @@
-package com.fathzer.jchess.swing;
+package com.fathzer.jchess;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -8,7 +8,6 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 
 import com.fathzer.games.Color;
-import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.pgn.PGNHeaders;
 import com.fathzer.jchess.pgn.PGNHeaders.Builder;
 import com.fathzer.jchess.settings.GameSettings;

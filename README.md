@@ -20,7 +20,7 @@ Java 11+ to run the application and mvn to build it.
 # TODO
 - Remove the empty moves proposal in masters.json.gz resource (and find why they are there)
 - Allow engine settings to be defined in engines.json.
-- Alert user when two external engines have the same name or add an interface to create engine.
+- Alert user when two external engines have the same name or add an interface to create engines.
 - Implement a way to play again on missclick.
 - Implement game loading and move backward/forward in the game.
 - Use com.fathzer.jchess.gui.GameGUI interface or delete it.

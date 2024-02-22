@@ -111,9 +111,7 @@ public class PlayerPanel extends JPanel {
 			clockLabel.setText(" ");
 		} else {
 			refreshClock();
-			clock.addClockListener(e -> {
-				setRefresh(e.getNewState()==ClockState.COUNTING && clock.getPlaying()==playerColor);
-			});
+			clock.addClockListener(e -> setRefresh(e.getNewState()==ClockState.COUNTING && clock.getPlaying()==playerColor));
 		}
 	}
 	
