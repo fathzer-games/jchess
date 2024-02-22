@@ -106,11 +106,6 @@ public class UCIEngine implements Engine {
 			throw new UncheckedIOException(e);
 		}
 	}
-	
-	@Override
-	public String getName() {
-		return this.data.getName();
-	}
 
 	@Override
 	public List<Option<?>> getOptions() {
@@ -173,21 +168,24 @@ public class UCIEngine implements Engine {
 		if (!positionSet) {
 			throw new IllegalStateException("No position defined");
 		}
-		final StringBuilder command = new StringBuilder("go ");
-		final char prefix = whiteToPlay ? 'w' : 'b';
-		command.append(prefix);
-		command.append("time ");
-		command.append(params.getRemainingMs());
-		if (params.getIncrementMs()>0) {
-			command.append(" ");
+		final StringBuilder command = new StringBuilder("go");
+		if (params!=null) {
+			command.append(' ');
+			final char prefix = whiteToPlay ? 'w' : 'b';
 			command.append(prefix);
-			command.append("inc ");
-			command.append(params.getIncrementMs());
-		}
-		if (params.getMovesToGo()>0) {
-			command.append(" ");
-			command.append("movestogo ");
-			command.append(params.getMovesToGo());
+			command.append("time ");
+			command.append(params.getRemainingMs());
+			if (params.getIncrementMs()>0) {
+				command.append(" ");
+				command.append(prefix);
+				command.append("inc ");
+				command.append(params.getIncrementMs());
+			}
+			if (params.getMovesToGo()>0) {
+				command.append(" ");
+				command.append("movestogo ");
+				command.append(params.getMovesToGo());
+			}
 		}
 		write (command.toString());
 		var bestMovePrefix = "bestmove ";

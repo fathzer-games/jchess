@@ -39,11 +39,16 @@ public class Game {
 			final CoordinatesSystem cs = board.getCoordinatesSystem();
 			engine.setPosition(FENUtils.to(history.getStartBoard()), history.getMoves().stream().map(m -> JChessUCIEngine.toUCIMove(cs, m)).
 					map(UCIMove::toString).toList());
-			final long remainingTime = clock.getRemaining(clock.getPlaying());
-			final ClockSettings clockSettings = clock.getCurrentSettings(clock.getPlaying());
-			final int increment = clockSettings.getIncrement()>0 ? clockSettings.getIncrement()/clockSettings.getMovesNumberBeforeIncrement() : 0;
-			final int movesToGo = clock.getRemainingMovesBeforeNext(clock.getPlaying());
-			final CountDownState params = new CountDownState(remainingTime, increment, movesToGo);
+			final CountDownState params;
+			if (clock==null) {
+				params = null;
+			} else {
+				final long remainingTime = clock.getRemaining(clock.getPlaying());
+				final ClockSettings clockSettings = clock.getCurrentSettings(clock.getPlaying());
+				final int increment = clockSettings.getIncrement()>0 ? clockSettings.getIncrement()/clockSettings.getMovesNumberBeforeIncrement() : 0;
+				final int movesToGo = clock.getRemainingMovesBeforeNext(clock.getPlaying());
+				params = new CountDownState(remainingTime, increment, movesToGo);
+			}
 			Move move = JChessUCIEngine.toMove(board, UCIMove.from(engine.play(params)));
 			moveConsumer.accept(Game.this, move);
 		}

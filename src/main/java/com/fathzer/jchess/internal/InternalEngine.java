@@ -82,11 +82,6 @@ public class InternalEngine implements Engine {
 	}
 
 	@Override
-	public String getName() {
-		return "Internal";
-	}
-
-	@Override
 	public List<Option<?>> getOptions() {
 		return options;
 	}
@@ -120,7 +115,9 @@ public class InternalEngine implements Engine {
 			throw new IllegalStateException("No position set");
 		}
 		final long maxTime = engine.getDeepeningPolicy().getMaxTime();
-		engine.getDeepeningPolicy().setMaxTime(Math.min(maxTime, TIME_MANAGER.getMaxTime(board, countDownState)));
+		if (countDownState!=null) {
+			engine.getDeepeningPolicy().setMaxTime(Math.min(maxTime, TIME_MANAGER.getMaxTime(board, countDownState)));
+		}
 		try {
 			return JChessUCIEngine.toUCIMove(board.getCoordinatesSystem(), engine.apply(board)).toString();
 		} finally {
