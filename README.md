@@ -17,7 +17,6 @@ Java 11+ to run the application and mvn to build it.
 # Known bugs
 
 # TODO
-- Remove the empty moves proposal in masters.json.gz resource (and find why they are there)
 - Allow engine settings to be defined in engines.json.
 - Alert user when two external engines have the same name or add an interface to create engines.
 - Implement a way to play again on missclick.

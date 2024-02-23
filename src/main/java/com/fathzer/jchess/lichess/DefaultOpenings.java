@@ -20,7 +20,7 @@ import com.fathzer.jchess.uci.UCIMove;
 
 public class DefaultOpenings implements Function<Board<Move>, Move> {
 	private static final Random RND = new Random(); 
-	private static final String KNOWN = "/lichess/masters.json.gz";
+	private static final String KNOWN = "/lichess/masters-shrink-full.json.gz";
 
 	public static final DefaultOpenings INSTANCE;
 	
@@ -57,16 +57,15 @@ public class DefaultOpenings implements Function<Board<Move>, Move> {
 	@Override
 	public Move apply(Board<Move> board) {
 		final String fen = toFen(board);
-		final JSONObject opening = db.optJSONObject(fen);
-		if (opening==null) {
+		final JSONArray moves = db.optJSONArray(fen);
+		if (moves==null) {
 			return null;
 		}
-		final JSONArray moves = opening.getJSONArray("moves");
 		if (moves.isEmpty()) {
 			System.out.println("Strange, moves is empty for fen "+fen); //TODO
 			return null;
 		}
-		final JSONObject move = moves.getJSONObject(RND.nextInt(moves.length()));
-		return JChessUCIEngine.toMove(board, UCIMove.from(move.getString("coord")));
+		final String move = moves.getString(RND.nextInt(moves.length()));
+		return JChessUCIEngine.toMove(board, UCIMove.from(move));
 	}
 }
