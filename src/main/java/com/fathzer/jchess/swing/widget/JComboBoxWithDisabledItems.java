@@ -1,8 +1,8 @@
 package com.fathzer.jchess.swing.widget;
+
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.function.Predicate;
 
 public class JComboBoxWithDisabledItems<E> extends JComboBox<E> {
 	private static final long serialVersionUID = 1L;
@@ -14,11 +14,8 @@ public class JComboBoxWithDisabledItems<E> extends JComboBox<E> {
 
         super.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
             final Component component = baseRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (getCastedModel().disabledItems.contains(value)) {
-                if (isSelected) {
-                    component.setBackground(UIManager.getColor("ComboBox.background"));
-                }
-                component.setForeground(UIManager.getColor("Label.disabledForeground"));
+            if (!getCastedModel().isEnabled.test(value)) {
+                component.setEnabled(false);
             }
             return component;
         });
@@ -33,8 +30,8 @@ public class JComboBoxWithDisabledItems<E> extends JComboBox<E> {
         this.baseRenderer = renderer;
     }
 
-    public void setDisabledItems(Set<E> disabledItems) {
-        getCastedModel().setDisabledItems(disabledItems);
+    public void setEnabledItems(Predicate<E> isEnabled) {
+        getCastedModel().isEnabled = isEnabled;
     }
 
     public void setAllowDisabledItemSelection(boolean allowDisabledItemSelection) {
@@ -45,24 +42,20 @@ public class JComboBoxWithDisabledItems<E> extends JComboBox<E> {
     private static final class DisabledItemComboBoxModel<E> extends DefaultComboBoxModel<E> {
 		private static final long serialVersionUID = 1L;
 
-		private final transient Set<E> disabledItems;
+		private transient Predicate<E> isEnabled;
         private boolean allowDisabledItemSelection;
         
         private DisabledItemComboBoxModel() {
-            disabledItems = new HashSet<>();
+            isEnabled = i->true;
             allowDisabledItemSelection = false;
         }
 
-        @Override
+        @SuppressWarnings("unchecked")
+		@Override
         public void setSelectedItem(Object anObject) {
-            if (allowDisabledItemSelection || !disabledItems.contains(anObject)) {
+            if (allowDisabledItemSelection || isEnabled.test((E) anObject)) {
                 super.setSelectedItem(anObject);
             }
-        }
-
-        private void setDisabledItems(Set<E> disabledItems) {
-            this.disabledItems.clear();
-            this.disabledItems.addAll(disabledItems);
         }
 
         private void setAllowDisabledItemSelection(boolean allowDisabledItemSelection) {
