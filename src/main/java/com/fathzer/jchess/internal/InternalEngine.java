@@ -94,6 +94,7 @@ public class InternalEngine implements Engine {
 	@Override
 	public boolean newGame(Variant variant) {
 		board = null;
+		engine.setOpenings(variant==Variant.STANDARD ? DefaultOpenings.INSTANCE : null);
 		return true;
 	}
 
