@@ -140,10 +140,14 @@ public class PlayerSelectionPanel extends JPanel {
 	void setVariant(Variant variant) {
 		if (variant!=this.currentVariant) {
 			this.currentVariant = variant;
-			final Player player = (Player) whoCombo.getSelectedItem();
-			if (!isEnabled(player)) {
-				whoCombo.setSelectedIndex(0);
-			}
+			checkSelected();
+		}
+	}
+
+	private void checkSelected() {
+		final Player player = (Player) whoCombo.getSelectedItem();
+		if (!isEnabled(player)) {
+			whoCombo.setSelectedIndex(0);
 		}
 	}
 	
@@ -194,18 +198,11 @@ public class PlayerSelectionPanel extends JPanel {
 	}
 
 	public void engineStarted(EngineData engine) {
-		if (engine.getEngine().isSupported(currentVariant)) {
-			whoCombo.addItem(new Player(engine));
-		}
+		//TODO Nothing to be done
 	}
 
 	public void engineStopped(EngineData engine) {
-		for (int i = 1; i < whoCombo.getItemCount(); i++) {
-			if (engine.getName().equals(whoCombo.getItemAt(i).name)) {
-				whoCombo.remove(i);
-				break;
-			}
-		}
+		checkSelected();
 	}
 	
 	private void updateSelectedPlayer() {

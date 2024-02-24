@@ -5,7 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONObject;
 
@@ -51,12 +53,28 @@ public class EngineLoader {
 			array = new EngineData[dummy.length+1];
 			array[0] = internal;
 			System.arraycopy(dummy, 0, array, 1, dummy.length);
+			deDuplicateNames(array);
 		}
 		data = Arrays.asList(array);
 		if (error!=null) {
 			throw error;
 		}
 		Runtime.getRuntime().addShutdownHook(new Thread(()-> shutdown()));
+	}
+	
+	private static void deDuplicateNames(EngineData[] engines) {
+		final Set<String> names = new HashSet<>();
+		Arrays.stream(engines).forEach(e -> e.name = deDuplicate(e.getName(), names));
+	}
+
+	private static String deDuplicate(String name, Set<String> names) {
+		String candidate = name;
+		int i = 0;
+		while (!names.add(candidate)) {
+			i++;
+			candidate = name + " (" + i + ')';
+		}
+		return candidate;
 	}
 
 	private static void shutdown() {

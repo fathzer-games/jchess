@@ -30,7 +30,6 @@ public class GameRecorder {
 			// Add white and black names
 			new PGNWriter().getPGN(builder.build(), history).forEach(out::println);
 			out.flush();
-			System.out.println("pgn written to "+Path.of("./data/pgn", PGNWriter.DATE_FORMAT.format(LocalDate.now())+".txt")); //TODO
 		}
 	}
 

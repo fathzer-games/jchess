@@ -8,19 +8,37 @@ Java 11+ to run the application and mvn to build it.
 
 ```mvn package```
 
+## How to launch the UCI engine
+```java -Duci=true -jar ./target/jchess.jar```
+
 ## How to launch the swing application
 ```java ./target/jchess.jar```
 
-## How to launch the UCI engine
-```java -Duci=true -jar ./target/jchess.jar```
+## How to add external engines to the engines list
+Add a json file in the *data* folder using the following example:
+
+```json
+{
+"engines": [
+	{
+		"name": "Dragon",
+		"command": ["C:/Program Files (x86)/Arena/Engines/Dragon/Dragon_46.exe"]
+	},
+	{
+		"name": "ChesLib",
+		"command": ["C:/Program Files/Java/jdk-17/bin/java","-jar","C:/Users/me/git/chesslib-uci-engine/target/chesslib-uci-engine.jar"]
+	}
+]}
+```
+
+Please note that engines should have different names, if not, only the first engine will have its original name, next will have a changed names (the original name followed by a suffix). The name *JChess* is reserved for the internal engine; If it is used for an external engine, this engine name will have a suffix like duplicated ones.
 
 # Known bugs
 
 # TODO
-- Allow engine settings to be defined in engines.json.
-- Alert user when two external engines have the same name or add an interface to create engines.
+- Allow engine settings to be defined in engines.json or save engine settings in preferences.
 - Implement a way to play again on missclick.
 - Implement PGN game loading
 - Implement move backward/forward in the game.
 - Use com.fathzer.jchess.gui.GameGUI interface or delete it.
-- Externalize perfT data (I think it's more than the half of the package size for a very limited usage).
+- Externalize perfT data in order to reduce the package size?

@@ -61,10 +61,6 @@ public class DefaultOpenings implements Function<Board<Move>, Move> {
 		if (moves==null) {
 			return null;
 		}
-		if (moves.isEmpty()) {
-			System.out.println("Strange, moves is empty for fen "+fen); //TODO
-			return null;
-		}
 		final String move = moves.getString(RND.nextInt(moves.length()));
 		return JChessUCIEngine.toMove(board, UCIMove.from(move));
 	}
