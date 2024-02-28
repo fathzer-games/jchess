@@ -36,7 +36,8 @@ public class EngineLoader {
 		if (data!=null) {
 			return;
 		}
-		final EngineData internal = new EngineData("JChess", null, new InternalEngine());
+		final InternalEngine engine = new InternalEngine();
+		final EngineData internal = new EngineData(engine.getName(), null, engine);
 		final EngineData[] array;
 		IOException error = null;
 		if (!Files.exists(PATH)) {

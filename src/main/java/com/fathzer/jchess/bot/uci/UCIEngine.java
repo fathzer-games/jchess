@@ -2,6 +2,7 @@ package com.fathzer.jchess.bot.uci;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.bot.Option.Type;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.GameSettings.Variant;
+import com.fathzer.util.ProcessExitDetector;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,15 +36,30 @@ public class UCIEngine implements Engine {
 	private boolean is960Supported;
 	private boolean whiteToPlay;
 	private boolean positionSet;
+	private boolean expectedRunning;
 
 	public UCIEngine(EngineData data) throws IOException {
 		log.info ("Launching process {}", Arrays.asList(data.getCommand()));
 		this.data = data;
 		final ProcessBuilder processBuilder = new ProcessBuilder(data.getCommand());
 		this.process = processBuilder.start();
+		this.expectedRunning = true;
 		this.reader = process.inputReader();
 		this.writer = process.outputWriter();
 		this.errorReader = new StdErrReader(process);
+		new ProcessExitDetector(process, p -> {
+			if (expectedRunning) {
+				expectedRunning = false;
+				log.warn("{} UCI engine exited unexpectedly with code {}", data.getName(), p.exitValue());
+				try {
+					closeStreams();
+				} catch (IOException e) {
+					log.error("The following error occured while closing streams of "+data.getName()+" UCI engine");
+				}
+			} else {
+				log.info("{} UCI engine exited with code {}", data.getName(), p.exitValue());
+			}
+		}).start(true);
 		this.options = new ArrayList<>();
 		init();
 	}
@@ -53,7 +70,7 @@ public class UCIEngine implements Engine {
 		do {
 			line = read();
 			if (line==null) {
-				break;
+				throw new EOFException();
 			}
 			final Optional<Option<?>> ooption = parseOption(line);
 			if (ooption.isPresent()) {
@@ -62,7 +79,13 @@ public class UCIEngine implements Engine {
 					is960Supported = true;
 				} else if (!PONDER_OPTION.equals(option.getName())) {
 					// Ponder is not supported yet
-					option.addListener((prev, cur) -> setOption(option, cur));
+					option.addListener((prev, cur) -> {
+						try {
+							setOption(option, cur);
+						} catch (IOException e) {
+							throw new UncheckedIOException(e);
+						}
+					});
 					options.add(option);
 				}
 			}
@@ -77,7 +100,7 @@ public class UCIEngine implements Engine {
 		}
 	}
 	
-	private void setOption(Option<?> option, Object value) {
+	private void setOption(Option<?> option, Object value) throws IOException {
 		final StringBuilder buf = new StringBuilder("setoption name ");
 		buf.append(option.getName());
 		if (Type.BUTTON!=option.getType()) {
@@ -87,24 +110,16 @@ public class UCIEngine implements Engine {
 		write(buf.toString());
 	}
 	
-	private void write(String line) {
-		try {
-			this.writer.write(line);
-			this.writer.newLine();
-			this.writer.flush();
-			log.info(">{}: {}", data.getName(), line);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
+	private void write(String line) throws IOException {
+		this.writer.write(line);
+		this.writer.newLine();
+		this.writer.flush();
+		log.info(">{}: {}", data.getName(), line);
 	}
-	private String read() {
-		try {
-			final String line = reader.readLine();
-			log.info("<{} : {}", data.getName(), line);
-			return line;
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
+	private String read() throws IOException {
+		final String line = reader.readLine();
+		log.info("<{} : {}", data.getName(), line);
+		return line;
 	}
 
 	@Override
@@ -118,7 +133,7 @@ public class UCIEngine implements Engine {
 	}
 
 	@Override
-	public boolean newGame(Variant variant) {
+	public boolean newGame(Variant variant) throws IOException {
 		positionSet = false;
 		if (variant==Variant.CHESS960 && !is960Supported) {
 			return false;
@@ -135,18 +150,19 @@ public class UCIEngine implements Engine {
 	 * @param answerValidator a predicate that checks the lines returned by engine. 
 	 * @return The line that is considered valid, null if no valid line is returned
 	 * and the engine closed its output.
+	 * @throws IOException If communication with engine fails
 	 */
-	private String waitAnswer(Predicate<String> answerValidator) {
+	private String waitAnswer(Predicate<String> answerValidator) throws IOException {
 		for (String line = read(); line!=null; line=read()) {
 			if (answerValidator.test(line)) {
 				return line;
 			}
 		}
-		return null;
+		throw new EOFException();
 	}
 
 	@Override
-	public void setPosition(String fen, List<String> moves) {
+	public void setPosition(String fen, List<String> moves) throws IOException {
 		whiteToPlay = "w".equals(fen.split(" ")[1]);
 		if (moves.size()%2!=0) {
 			whiteToPlay = !whiteToPlay;
@@ -164,7 +180,7 @@ public class UCIEngine implements Engine {
 	}
 
 	@Override
-	public String play(CountDownState params) {
+	public String getMove(CountDownState params) throws IOException {
 		if (!positionSet) {
 			throw new IllegalStateException("No position defined");
 		}
@@ -190,26 +206,34 @@ public class UCIEngine implements Engine {
 		write (command.toString());
 		var bestMovePrefix = "bestmove ";
 		final String answer = waitAnswer(s -> s.startsWith(bestMovePrefix));
-		if (answer!=null) {
-			return answer.substring(bestMovePrefix.length());
-		} else {
-			return null;
-		}
+		return answer.substring(bestMovePrefix.length());
 	}
 
 	@Override
 	public void close() throws IOException {
+		if (!expectedRunning) {
+			return;
+		}
+		expectedRunning = false;
 		this.write("quit");
-		this.reader.close();
-		this.writer.close();
-		this.errorReader.close();
+		closeStreams();
 		try {
 			this.process.waitFor(5, TimeUnit.SECONDS);
-			log.info("{} UCI engine exited", data.getName());
 		} catch (InterruptedException e) {
 			log.warn("Fail to gracefully close UCI engine {}, trying to destroy it", data.getName());
 			this.process.destroy();
 			Thread.currentThread().interrupt();
 		}
+	}
+
+	private void closeStreams() throws IOException {
+		this.reader.close();
+		this.writer.close();
+		this.errorReader.close();
+	}
+
+	@Override
+	public String getName() {
+		return data.getName();
 	}
 }

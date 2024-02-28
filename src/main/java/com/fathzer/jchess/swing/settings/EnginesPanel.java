@@ -172,7 +172,7 @@ public class EnginesPanel extends JPanel {
 			firePropertyChange(STARTED_PROPERTY_NAME, null, engine);
 			refreshLists();
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(Utils.getOwnerWindow(this), "An exception occurred while startting "+engine.getName()+" engine", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(Utils.getOwnerWindow(this), "An error occurred while starting "+engine.getName()+" engine", "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

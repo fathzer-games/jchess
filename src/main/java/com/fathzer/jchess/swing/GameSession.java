@@ -173,7 +173,10 @@ public class GameSession {
 		panel.getBoard().setManualMoveEnabled(engine==null);
 		if (engine!=null) {
 			log.debug("Engine detected for {}",activeColor);
-			game.playEngine(engine, this::play);
+			game.playEngine(engine, this::play, e -> {
+				log.error("Error while communicating with "+engine.getName()+" engine", e);
+				SwingUtilities.invokeLater(() -> onEngineError(engine));
+			});
 		}
 	}
 	
@@ -245,6 +248,12 @@ public class GameSession {
 		} else {
 			setState(State.RUNNING);
 		}
+	}
+	
+	private void onEngineError(Engine engine) {
+		JOptionPane.showMessageDialog(panel, "An error occured while communicating with the "+engine.getName()+" engine. Assuming it resigns", "Error", JOptionPane.ERROR_MESSAGE);
+		final Status status = Color.WHITE.equals(game.getBoard().getActiveColor()) ? Status.BLACK_WON : Status.WHITE_WON;
+		endOfGame(status);
 	}
 
 	private void endOfGame(final Status status) {

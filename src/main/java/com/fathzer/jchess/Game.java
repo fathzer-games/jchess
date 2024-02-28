@@ -1,8 +1,10 @@
 package com.fathzer.jchess;
 
+import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.fen.FENUtils;
@@ -20,35 +22,6 @@ public class Game {
 	    t.setDaemon(true);
 	    return t;
 	});
-	
-	private class EngineTurn implements Runnable {
-		private final Engine engine;
-		private final BiConsumer<Game, Move> moveConsumer;
-		
-		private EngineTurn(Engine engine, BiConsumer<Game,Move> moveConsumer) {
-			this.moveConsumer = moveConsumer;
-			this.engine = engine;
-		}
-		
-		@Override
-		public void run() {
-			final CoordinatesSystem cs = board.getCoordinatesSystem();
-			engine.setPosition(FENUtils.to(history.getStartBoard()), history.getMoves().stream().map(m -> JChessUCIEngine.toUCIMove(cs, m)).
-					map(UCIMove::toString).toList());
-			final CountDownState params;
-			if (clock==null) {
-				params = null;
-			} else {
-				final long remainingTime = clock.getRemaining(clock.getPlaying());
-				final ClockSettings clockSettings = clock.getCurrentSettings(clock.getPlaying());
-				final int increment = clockSettings.getIncrement()>0 ? clockSettings.getIncrement()/clockSettings.getMovesNumberBeforeIncrement() : 0;
-				final int movesToGo = clock.getRemainingMovesBeforeNext(clock.getPlaying());
-				params = new CountDownState(remainingTime, increment, movesToGo);
-			}
-			Move move = JChessUCIEngine.toMove(board, UCIMove.from(engine.play(params)));
-			moveConsumer.accept(Game.this, move);
-		}
-	}
 	
 	@Getter
 	private final Board<Move> board;
@@ -94,9 +67,32 @@ public class Game {
 			}
 		}
 	}
+	
+	private Move getMove(Engine engine) throws IOException {
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
+		engine.setPosition(FENUtils.to(history.getStartBoard()), history.getMoves().stream().map(m -> JChessUCIEngine.toUCIMove(cs, m)).
+				map(UCIMove::toString).toList());
+		final CountDownState params;
+		if (clock==null) {
+			params = null;
+		} else {
+			final long remainingTime = clock.getRemaining(clock.getPlaying());
+			final ClockSettings clockSettings = clock.getCurrentSettings(clock.getPlaying());
+			final int increment = clockSettings.getIncrement()>0 ? clockSettings.getIncrement()/clockSettings.getMovesNumberBeforeIncrement() : 0;
+			final int movesToGo = clock.getRemainingMovesBeforeNext(clock.getPlaying());
+			params = new CountDownState(remainingTime, increment, movesToGo);
+		}
+		return JChessUCIEngine.toMove(board, UCIMove.from(engine.getMove(params)));
+	}
 
-	public void playEngine(Engine engine, BiConsumer<Game, Move> moveConsumer) {
-		EXECUTOR.execute(new EngineTurn(engine, moveConsumer));
+	public void playEngine(Engine engine, BiConsumer<Game, Move> moveConsumer, Consumer<Exception> errorManager) {
+		EXECUTOR.execute(() -> {
+			try {
+				moveConsumer.accept(this, getMove(engine));
+			} catch (IOException e) {
+				errorManager.accept(e);
+			}
+		});
 	}
 	
 	public void onMove(Move move) {

@@ -27,6 +27,7 @@ import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
 
 public class InternalEngine implements Engine {
+	private static final String NAME = "JChess";
 	private static final long MILLIS_IN_SECONDS = 1000L;
 	private static final BasicTimeManager<Board<Move>> TIME_MANAGER = new BasicTimeManager<>(VuckovicSolakOracle.INSTANCE);
 	
@@ -111,7 +112,7 @@ public class InternalEngine implements Engine {
 	}
 
 	@Override
-	public String play(CountDownState countDownState) {
+	public String getMove(CountDownState countDownState) {
 		if (board==null) {
 			throw new IllegalStateException("No position set");
 		}
@@ -129,5 +130,10 @@ public class InternalEngine implements Engine {
 	@Override
 	public void close() {
 		// Nothing to do
+	}
+
+	@Override
+	public String getName() {
+		return NAME;
 	}
 }
