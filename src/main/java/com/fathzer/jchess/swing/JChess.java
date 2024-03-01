@@ -95,7 +95,9 @@ public class JChess extends Application {
 			int result = JOptionPane.showConfirmDialog(null,"An error occured while reading the external engine configuration file (data/engines.json).\nWould you like to quit now?", "Engine configuration error",
 		               JOptionPane.YES_NO_OPTION,
 		               JOptionPane.ERROR_MESSAGE);
-			return result!=0;
+			if (result==0) {
+				return false;
+			}
 		}
 		fixSettings();
 		this.game = new GameSession(panel.getGamePanel(), settings);

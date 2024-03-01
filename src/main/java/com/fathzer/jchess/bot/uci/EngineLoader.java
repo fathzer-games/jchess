@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.fathzer.jchess.bot.Engine;
@@ -46,7 +47,7 @@ public class EngineLoader {
 		} else {
 			EngineData[] dummy;
 			try {
-				dummy = TinyJackson.toArray(new JSONObject(Files.readString(PATH)).getJSONArray("engines"), EngineData.class);
+				dummy = readExternalEnginesData();
 			} catch (IOException e) {
 				dummy = new EngineData[0];
 				error = e;
@@ -57,10 +58,18 @@ public class EngineLoader {
 			deDuplicateNames(array);
 		}
 		data = Arrays.asList(array);
+		Runtime.getRuntime().addShutdownHook(new Thread(()-> shutdown()));
 		if (error!=null) {
 			throw error;
 		}
-		Runtime.getRuntime().addShutdownHook(new Thread(()-> shutdown()));
+	}
+
+	private static EngineData[] readExternalEnginesData() throws IOException {
+		try {
+			return TinyJackson.toArray(new JSONObject(Files.readString(PATH)).getJSONArray("engines"), EngineData.class);
+		} catch (JSONException e) {
+			throw new IOException(e);
+		}
 	}
 	
 	private static void deDuplicateNames(EngineData[] engines) {
