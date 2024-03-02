@@ -12,7 +12,7 @@ Java 11+ to run the application and mvn to build it.
 ```java -Duci=true -jar ./target/jchess.jar```
 
 ## How to launch the swing application
-```java ./target/jchess.jar```
+```java -jar ./target/jchess.jar```
 
 ## How to add external [UCI](https://gist.github.com/DOBRO/2592c6dad754ba67e6dcaec8c90165bf) engines to the engines list
 Add a json file in the *data* folder using the following example:
@@ -34,6 +34,7 @@ Add a json file in the *data* folder using the following example:
 Please note that engines should have different names, if not, only the first engine will have its original name, next will have a changed names (the original name followed by a suffix). The name *JChess* is reserved for the internal engine; If it is used for an external engine, this engine name will have a suffix like duplicated ones.
 
 # Known bugs
+- When a engine used in player settings hangs, it leaves settings in a wrong state with no possibility to fix it; The application should be restarted.
 
 # TODO
 - Allow engine settings to be defined in engines.json or save engine settings in preferences.
