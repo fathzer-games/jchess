@@ -15,7 +15,7 @@ Java 11+ to run the application and mvn to build it.
 ```java -jar ./target/jchess.jar```
 
 ## How to add external [UCI](https://gist.github.com/DOBRO/2592c6dad754ba67e6dcaec8c90165bf) engines to the engines list
-Add a json file in the *data* folder using the following example:
+Add a json file named *engines.json* in the *data* folder using the following example:
 
 ```json
 {
