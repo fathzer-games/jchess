@@ -3,14 +3,7 @@ package com.fathzer.jchess.lichess;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.util.Random;
-import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.zip.GZIPInputStream;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
@@ -18,9 +11,8 @@ import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
 
-public class DefaultOpenings implements Function<Board<Move>, Move> {
-	private static final Random RND = new Random(); 
-	private static final String KNOWN = "/lichess/masters-shrink-full.json.gz";
+public class DefaultOpenings extends AbstractDefaultOpenings<Move, Board<Move>> {
+	private static final String KNOWN = "/lichess/masters-shrink.json.gz";
 
 	public static final DefaultOpenings INSTANCE;
 	
@@ -32,36 +24,21 @@ public class DefaultOpenings implements Function<Board<Move>, Move> {
 		}
 	}
 
-	private final JSONObject db;
-	
 	private DefaultOpenings() throws IOException {
 		this(() -> DefaultOpenings.class.getResourceAsStream(KNOWN), true);
 	}
 	
 	public DefaultOpenings(Supplier<InputStream> stream, boolean zipped) throws IOException {
-		db = readJSON(stream, zipped);
+		super(stream, zipped);
 	}
 	
-	private JSONObject readJSON(Supplier<InputStream> stream, boolean zipped) throws IOException {
-		try (InputStream in = zipped ? new GZIPInputStream(stream.get()) : stream.get()) {
-			return new JSONObject(new JSONTokener(in));
-		}
-	}
-	
-	private String toFen(Board<Move> board) {
-		String fen = FENUtils.to(board);
-		int index = fen.lastIndexOf(' ', fen.lastIndexOf(' ')-1);
-		return fen.substring(0, index);
+	@Override
+	protected Move fromUCI(Board<Move> board, String move) {
+		return JChessUCIEngine.toMove(board, UCIMove.from(move));
 	}
 
 	@Override
-	public Move apply(Board<Move> board) {
-		final String fen = toFen(board);
-		final JSONArray moves = db.optJSONArray(fen);
-		if (moves==null) {
-			return null;
-		}
-		final String move = moves.getString(RND.nextInt(moves.length()));
-		return JChessUCIEngine.toMove(board, UCIMove.from(move));
+	protected String toXFEN(Board<Move> board) {
+		return FENUtils.to(board);
 	}
 }
