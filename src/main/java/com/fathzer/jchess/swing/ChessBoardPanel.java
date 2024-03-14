@@ -22,6 +22,8 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
+/** A Swing panel that represents a chess board.
+ */
 public class ChessBoardPanel extends JPanel implements MouseListener {
 	private static final long serialVersionUID = 1L;
 	public static final String SELECTION = "Selection";
@@ -50,6 +52,9 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	private boolean manualMoves = true;
 	private boolean showPossibleMoves = true;
 	private boolean touchMove = true;
+	private boolean showCoordinates = true;
+	private Color whiteColor = new Color(255,200,100);
+    private Color blackColor = new Color(150,50,30);
 	
     static {
     	try {
@@ -90,6 +95,11 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     	this.repaint();
     }
     
+    public void setCellColors(Color whiteColor, Color blackColor) {
+		this.whiteColor = whiteColor;
+        this.blackColor = blackColor;
+    }
+    
     public void setShowPossibleMoves(boolean display) {
     	this.showPossibleMoves = display;
     	this.repaint();
@@ -117,7 +127,11 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     	}
     }
     
-    public void setUpsideDownColor(com.fathzer.games.Color color) {
+	public void setShowCoordinates(boolean showCoordinates) {
+		this.showCoordinates = showCoordinates;
+	}
+	
+	public void setUpsideDownColor(com.fathzer.games.Color color) {
     	this.invertedColor = color;
     }
     
@@ -224,14 +238,27 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 		this.sprites.draw(g);
 	}
 	protected void drawBoard(Graphics g) {
-		final Color white = new Color(255,200,100);
-        final Color black = new Color(150,50,30);
         for (int row=0;row<dimension.getHeight();row++) {
             for (int col=0;col<dimension.getWidth();col++) {
-        		g.setColor((row+col)%2==0 ? white : black);
+        		g.setColor((row+col)%2==0 ? whiteColor : blackColor);
                 g.fillRect(offsetX+col*squareSize, offsetY+row*squareSize, squareSize, squareSize);
             }
         }
+		if (showCoordinates) {
+	        int fontHeight = g.getFontMetrics().getAscent();
+        	for (int row=0;row<dimension.getHeight();row++) {
+        		final String coordinate = Integer.toString(reverted ? row+1 : dimension.getHeight()-row);
+        		int width = g.getFontMetrics().stringWidth(coordinate);
+        		g.setColor(row%2==0 ? whiteColor : blackColor);
+                g.drawString(coordinate, offsetX+dimension.getWidth()*squareSize-width-2,offsetY+row*squareSize+fontHeight); 
+        	}
+        	fontHeight = g.getFontMetrics().getDescent();
+        	for (int col=0;col<dimension.getWidth();col++) {
+        		final String coordinate = Character.toString(reverted ? 'a' + dimension.getWidth() - col -1 : 'a'+col);
+        		g.setColor(col%2==0 ? whiteColor : blackColor);
+                g.drawString(coordinate, offsetX+col*squareSize+2,offsetY+dimension.getHeight()*squareSize-fontHeight); 
+        	}
+		}
 	}
 	
 	protected void drawSelection(Graphics g) {

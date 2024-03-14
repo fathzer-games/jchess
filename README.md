@@ -2,7 +2,7 @@
 A Swing chess application and a UCI engine based on [JChess-core](https://github.com/fathzer-games/jchess-core).
 
 ## Requirements
-Java 11+ to run the application and mvn to build it.
+Java 17+ to run the application and mvn to build it.
 
 ## How to compile the project
 
