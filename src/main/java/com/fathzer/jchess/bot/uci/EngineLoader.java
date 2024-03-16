@@ -17,7 +17,6 @@ import com.fathzer.jchess.internal.InternalEngine;
 import com.fathzer.util.TinyJackson;
 import com.fathzer.util.TinyJackson.JsonIgnore;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -108,7 +107,7 @@ public class EngineLoader {
 	}
 	
 	@NoArgsConstructor
-	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor
 	public static class EngineData {
 		@Getter
 		@Setter
