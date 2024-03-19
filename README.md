@@ -46,7 +46,6 @@ If you specify a value for the *gameCount* system property while starting the ap
 
 # Known bugs
 - When a engine that is used in player settings hangs, it leaves settings in a wrong state with no possibility to fix it; The application should be restarted.
-- When a human looses against an engine because its allocated time is elapsed, and it decides to continue the game, the bot never moves again (it receives a negative time counter ... which is strange).
 
 # TODO
 - Allow engine settings to be defined in engines.json or save engine settings in preferences.
