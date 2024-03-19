@@ -41,6 +41,7 @@ public class GameSession {
 	private Color player1Color;
 	private Observable<State> state;
 	private Game game;
+	private long lastMoveTime = 0;
 
 	public GameSession(GamePanel panel, GameSettings settings) {
 		this.panel = panel;
@@ -106,6 +107,7 @@ public class GameSession {
 		panel.getBoard().setBoard(game.getBoard());
 		panel.getBoard().setManualMoveEnabled(false);
 		setScore();
+		lastMoveTime = System.currentTimeMillis();
 	}
 
 	private Clock buildClock() {
@@ -204,13 +206,16 @@ public class GameSession {
 	private void onMove(Move move) {
 		panel.repaint();
 		this.game.onMove(move);
+//TODO		think(5000);
 		final Status status = panel.getBoard().getStatus();
 		if (!Status.PLAYING.equals(status)) {
 			// Game is ended
 			endOfGame(status);
 		} else {
 			setScore();
-			nextMove();
+			if (getState()==State.RUNNING) {
+				nextMove();
+			}
 		}
 	}
 	
@@ -219,6 +224,32 @@ public class GameSession {
 		ev.init(game.getBoard());
 		panel.setScore(ev.evaluateAsWhite(game.getBoard())/100);
 	}
+	
+	// This makes, always when two bots are competing, and sometime when human plays against a bot,
+	// closing the window not exiting the application (and not closing the engine's process)
+	//TODO Should be investigated
+	@SuppressWarnings("unused")
+	private void think(long thinkTime) {
+		final long remaining = thinkTime - (System.currentTimeMillis() - lastMoveTime);
+		if (remaining>0) {
+			game.pause();
+			SwingUtilities.invokeLater(() -> {
+				System.out.println("Will wait for "+remaining+"ms");
+				try {
+					synchronized (this) {
+						this.wait(remaining);
+					}
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				lastMoveTime = System.currentTimeMillis();
+				game.start();
+			});
+		} else {
+			lastMoveTime = System.currentTimeMillis();
+		}
+	}
+
 
 	/** This method is called when clock emits a time up event.
 	 * <br>Please note that this method could be invoked on a thread that is not the Swing event thread. 
@@ -264,9 +295,16 @@ public class GameSession {
 		} catch (Exception e) {
 			log.error("An error occured while writing pgn",e);
 		}
-		final String revenge = "Revenge";
-		int choice = JOptionPane.showOptionDialog(panel, getMessage(status), "End of game", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {revenge,"Enough for today"}, revenge);
-		if (choice==0) {
+		final Integer toPlay = Integer.getInteger("gameCount");
+		boolean makeRevenge;
+		if (toPlay==null) {
+			final String revenge = "Revenge";
+			int choice = JOptionPane.showOptionDialog(panel, getMessage(status), "End of game", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {revenge,"Enough for today"}, revenge);
+			makeRevenge = choice==0;
+		} else {
+			makeRevenge = gameCount+1<toPlay;
+		}
+		if (makeRevenge) {
 			doRevenge();
 		} else {
 			setState(State.ENDED);

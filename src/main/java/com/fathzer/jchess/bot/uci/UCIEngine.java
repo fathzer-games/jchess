@@ -39,10 +39,11 @@ public class UCIEngine implements Engine {
 	private boolean expectedRunning;
 
 	public UCIEngine(EngineData data) throws IOException {
-		log.info ("Launching process {}", Arrays.asList(data.getCommand()));
+		log.info ("Launching engine {} with {}", data.getName(), Arrays.asList(data.getCommand()));
 		this.data = data;
 		final ProcessBuilder processBuilder = new ProcessBuilder(data.getCommand());
 		this.process = processBuilder.start();
+		log.info("Engine {} process id is {}", data.getName(), process.pid());
 		this.expectedRunning = true;
 		this.reader = process.inputReader();
 		this.writer = process.outputWriter();
