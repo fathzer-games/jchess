@@ -14,7 +14,7 @@ Java 17+ to run the application and mvn to build it.
 ## How to launch the swing application
 ```java -jar ./target/jchess.jar```
 
-## Where are the pgn of games saved?
+## Where are the pgn of the games played saved?
 The application saves the pgn of games in ```./data/pgn```. THis folder will contain one file per day.
 
 ## How to add external [UCI](https://gist.github.com/DOBRO/2592c6dad754ba67e6dcaec8c90165bf) engines to the engines list
@@ -39,7 +39,7 @@ Please note that engines should have different names, if not, only the first eng
 # Tips and hints
 Warning, the tips in this section may not be maintained... Use it at your own risk.
 
-## How to make multiple games between two engines.
+## How to make multiple games between two engines?
 By default, at the end of a game, the user is asked for making a revenge or ends playing.
 If you specify a value for the *gameCount* system property while starting the application. The application will make *gameCount* games without asking the user if it want to continue.
 
