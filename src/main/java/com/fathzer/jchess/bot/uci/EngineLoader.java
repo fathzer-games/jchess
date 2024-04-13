@@ -5,17 +5,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.fathzer.jchess.bot.Engine;
+import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.internal.InternalEngine;
 import com.fathzer.util.TinyJackson;
 import com.fathzer.util.TinyJackson.JsonIgnore;
+import com.fathzer.util.TinyJackson.JsonOptional;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,7 +42,7 @@ public class EngineLoader {
 			return;
 		}
 		final InternalEngine engine = new InternalEngine();
-		final EngineData internal = new EngineData(engine.getName(), null, engine);
+		final EngineData internal = new EngineData(engine.getName(), null, Collections.emptyMap(), engine);
 		final EngineData[] array;
 		IOException error = null;
 		if (!Files.exists(PATH)) {
@@ -115,6 +120,10 @@ public class EngineLoader {
 		@Getter
 		@Setter
 		private String[] command;
+		@Getter
+		@Setter
+		@JsonOptional
+		private Map<String,String> options;
 		@JsonIgnore
 		private Engine engine;
 		
@@ -133,12 +142,26 @@ public class EngineLoader {
 			if (engine==null) {
 				if (command!=null) {
 					engine = new UCIEngine(this);
+					if (options!=null) {
+						for (String optionName : options.keySet()) {
+							final Optional<Option<?>> option = engine.getOptions().stream().filter(o -> o.getName().equals(optionName)).findAny();
+							if (option.isEmpty()) {
+								throw new IOException("Engine "+name+" has no "+optionName+" option");
+							}
+							final Option<?> theOption = option.get();
+							setValue(theOption, options.get(optionName));
+						}
+					}
 				} else {
 					engine = new InternalEngine();
 				}
 				return true;
 			}
 			return false;
+		}
+		
+		private <T> void setValue(Option<T> option, String value) {
+			option.setValue(option.toValue(value));
 		}
 		
 		/** Stops the engine.

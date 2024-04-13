@@ -8,6 +8,13 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,6 +39,13 @@ public class TinyJackson {
 	    public boolean key() default true;
 	}
 	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	public @interface JsonOptional {
+	    public boolean key() default true;
+	}
+	
+
 	private TinyJackson() {
 		super();
 	}
@@ -44,8 +58,17 @@ public class TinyJackson {
 				if (!Modifier.isStatic(field.getModifiers()) && field.getAnnotation(JsonIgnore.class)==null) {
 					final Class<?> attrClass = field.getType();
 					final String name = field.getName();
+					final List<Class<?>> genericParameterClasses = new ArrayList<>();
+					if (attrClass.getTypeParameters().length>0) {
+						// We have a generic type
+			            final ParameterizedType genericType = (ParameterizedType)field.getGenericType();
+						final Type[] args = genericType.getActualTypeArguments();
+						for(Type type : args) {
+			            	genericParameterClasses.add(Class.forName(type.getTypeName()));
+			            }
+					}
 					final Method method = tClass.getMethod(getSetMethodName(name), attrClass);
-					final Object value = getValue(json, attrClass, name);
+					final Object value = getValue(json, attrClass, genericParameterClasses, name, field.getAnnotation(JsonOptional.class)!=null);
 					method.invoke(result, value);
 				}
 			}
@@ -55,8 +78,8 @@ public class TinyJackson {
 		}
 	}
 	
-	private static Object getValue(JSONObject json, Class<?> attrClass, String name) throws ReflectiveOperationException, SecurityException {
-		if (json.has(name) && JSONObject.NULL.equals(json.get(name))) {
+	private static Object getValue(JSONObject json, Class<?> attrClass, List<Class<?>> genericParameterClasses, String name, boolean optional) throws ReflectiveOperationException, SecurityException {
+		if (json.has(name) && JSONObject.NULL.equals(json.get(name)) || (optional && !json.has(name))) {
 			return null;
 		}
 		if (attrClass.isArray()) {
@@ -87,10 +110,23 @@ public class TinyJackson {
 			} else {
 				throw new IllegalArgumentException("Unexpected type "+obj.getClass()+" for char attribute "+name);
 			}
+		} else if (attrClass.isAssignableFrom(Map.class)) {
+			if (!genericParameterClasses.get(0).equals(String.class)) {
+				throw new IllegalArgumentException("Map attribute "+name+" does not have String as key type");
+			}
+			return toMap(json.getJSONObject(name), genericParameterClasses.get(1));
 		} else {
 			// java object
 			return toObject(json.getJSONObject(name), attrClass);
 		}
+	}
+	
+	private static <T> Map<String, T> toMap(JSONObject obj, Class<T> valueClass) throws ReflectiveOperationException, SecurityException {
+		final Map<String, T> result = new HashMap<>();
+		for (String key : obj.keySet()) {
+			result.put(key, (T) getValue(obj, valueClass, Collections.emptyList(), key, false));
+		}
+		return result;
 	}
 
 	private static Object getValue(JSONArray json, Class<?> attrClass, int index) {

@@ -32,4 +32,9 @@ public class SpinOption extends Option<Long> {
 	public boolean isValid(Long value) {
 		return min <= value && max >= value;
 	}
+
+	@Override
+	public Long toValue(String value) {
+		return Long.valueOf(value);
+	}
 }

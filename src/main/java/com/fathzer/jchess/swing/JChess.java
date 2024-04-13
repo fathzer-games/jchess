@@ -15,6 +15,7 @@ import javax.swing.JOptionPane;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.LoggerFactory;
 
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
@@ -92,6 +93,7 @@ public class JChess extends Application {
 		try {
 			EngineLoader.init();
 		} catch (IOException e) {
+			LoggerFactory.getLogger(JChess.class).error("An error occured while reading the external engine configuration file (data/engines.json)", e);
 			int result = JOptionPane.showConfirmDialog(null,"An error occured while reading the external engine configuration file (data/engines.json).\nWould you like to quit now?", "Engine configuration error",
 		               JOptionPane.YES_NO_OPTION,
 		               JOptionPane.ERROR_MESSAGE);

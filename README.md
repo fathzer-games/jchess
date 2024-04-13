@@ -36,6 +36,23 @@ Add a json file named *engines.json* in the *data* folder using the following ex
 
 Please note that engines should have different names, if not, only the first engine will have its original name, next will have a changed names (the original name followed by a suffix). The name *JChess* is reserved for the internal engine; If it is used for an external engine, this engine name will have a suffix like duplicated ones.
 
+### Initialize engine with UCI options
+You can set options in `engine.json` file, by adding a map *optionName* to *optionValue* in the `options` attribute of an engine.  
+Here is an example:
+```json
+{
+"engines": [
+	{
+		"name": "ChesLib",
+		"command": ["C:/Program Files/Java/jdk-17/bin/java","-jar","C:/Users/me/git/chesslib-uci-engine/target/chesslib-uci-engine.jar"],
+		"options": {
+			"maxtime":"5000"
+		}
+	}
+]}
+```
+Please note options values should always be a string, even to set a spin option (with integer values).
+
 # Tips and hints
 Warning, the tips in this section may not be maintained... Use it at your own risk.
 
@@ -48,8 +65,7 @@ If you specify a value for the *gameCount* system property while starting the ap
 - When a engine that is used in player settings hangs, it leaves settings in a wrong state with no possibility to fix it; The application should be restarted.
 
 # TODO
-- Allow engine settings to be defined in engines.json or save engine settings in preferences.
-- PGN should contain 
+- PGN should contain time settings
 - Implement a way to play again on missclick.
 - Implement PGN game loading
 - Implement move backward/forward in the game.

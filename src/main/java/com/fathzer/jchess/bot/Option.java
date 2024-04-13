@@ -24,6 +24,8 @@ public abstract class Option<T> extends Observable<T> {
 	public abstract Type getType();
 	protected abstract boolean isValid(T value);
 	
+	public abstract T toValue(String value);
+	
 	@Override
 	public void setValue(T value) {
 		if (!isValid(value)) {

@@ -19,4 +19,9 @@ public class StringOption extends Option<String> {
 	public boolean isValid(String value) {
 		return value!=null;
 	}
+
+	@Override
+	public String toValue(String value) {
+		return value;
+	}
 }

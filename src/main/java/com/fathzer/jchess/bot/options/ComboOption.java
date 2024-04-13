@@ -28,4 +28,9 @@ public class ComboOption extends Option<String> {
 	public boolean isValid(String value) {
 		return value!=null && values.contains(value);
 	}
+
+	@Override
+	public String toValue(String value) {
+		return value;
+	}
 }

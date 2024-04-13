@@ -22,4 +22,9 @@ public class ButtonOption extends Option<Void> {
 	public void setValue(Void value) {
 		super.fireChange(value, value);
 	}
+
+	@Override
+	public Void toValue(String value) {
+		return null;
+	}
 }

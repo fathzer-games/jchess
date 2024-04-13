@@ -16,4 +16,9 @@ public class CheckOption extends Option<Boolean> {
 	public boolean isValid(Boolean value) {
 		return value!=null;
 	}
+
+	@Override
+	public Boolean toValue(String value) {
+		return Boolean.valueOf(value);
+	}
 }
