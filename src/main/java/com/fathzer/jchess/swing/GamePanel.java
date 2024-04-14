@@ -6,6 +6,7 @@ import javax.swing.JPanel;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.clock.Clock;
+import com.fathzer.jchess.Score;
 
 import lombok.Getter;
 
@@ -64,11 +65,21 @@ public class GamePanel extends JPanel {
 		}
 	}
 	
-	public void setScore(int whiteScore) {
+	public void setEvaluation(int whiteScore) {
 		if (player1Color!=Color.WHITE) {
 			whiteScore = -whiteScore;
 		}
-		player1.setScore(whiteScore);
-		player2.setScore(-whiteScore);
+		player1.setEvaluation(whiteScore);
+		player2.setEvaluation(-whiteScore);
+	}
+
+	public void setScore(Score score) {
+		if (score.getGameCount()==0) {
+			player1.clearScore();
+			player2.clearScore();
+		} else {
+			player1.setScore(score.getPlayerScore(true));
+			player2.setScore(score.getPlayerScore(false));
+		}
 	}
 }

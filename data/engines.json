@@ -17,10 +17,7 @@
 		},
 		{
 			"name": "ChesLib-hb",
-			"command": ["C:/Program Files/Java/jdk-17/bin/java","-DopeningsUrl=C:/Users/jeanm/git/chesslib-uci-engine/data/masters-shrink.json.gz","-jar","C:/Users/jeanm/git/chesslib-uci-engine/target/chesslib-uci-engine.jar"],
-			"options": {
-				"evaluation":"naive"
-			}
+			"command": ["C:/Program Files/Java/jdk-17/bin/java","-DopeningsUrl=C:/Users/jeanm/git/chesslib-uci-engine/data/masters-shrink.json.gz","-jar","C:/Users/jeanm/git/chesslib-uci-engine/target/chesslib-uci-engine.jar"]
 		}
 	]
 }

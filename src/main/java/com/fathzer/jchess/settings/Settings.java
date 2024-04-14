@@ -1,14 +1,11 @@
 package com.fathzer.jchess.settings;
 
 import java.util.Random;
-
-import org.json.JSONObject;
+import java.util.function.Supplier;
 
 import com.fathzer.games.Color;
-import com.fathzer.games.GameBuilder;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
-import com.fathzer.util.TinyJackson;
 import com.fathzer.jchess.GameBuilders;
 
 import lombok.AllArgsConstructor;
@@ -19,7 +16,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class GameSettings {
+public class Settings {
 	private static final Random RANDOM_GENERATOR = new Random();
 	
 	private Variant variant = Variant.STANDARD;
@@ -32,11 +29,18 @@ public class GameSettings {
 	private ColorSetting player1Color = ColorSetting.RANDOM;
 	private PlayerSettings player2 = new PlayerSettings();
 	
-	@Getter
+
 	@AllArgsConstructor
 	public enum Variant {
 		STANDARD(GameBuilders.STANDARD), CHESS960(GameBuilders.CHESS960);
-		private GameBuilder<Board<Move>> rules;
+		private final Supplier<Board<Move>> rules;
+
+		/** Gets a Supplier that can create a new game.
+		 * <br>Typically, it is able to create the representation of a new game (for example, a chess board at the beginning of the game)
+		 */
+		public Supplier<Board<Move>> getRules() {
+			return rules;
+		}
 	}
 	
 	public enum ColorSetting {
@@ -67,12 +71,5 @@ public class GameSettings {
 	@Setter
 	public static class EngineSettings {
 		private String name;
-	}
-	
-	public static void main(String[] args) {
-		String json = "{\"variant\":\"STANDARD\",\"tabletMode\":true,\"showPossibleMoves\":true,\"touchMove\":false,\"startClockAfterFirstMove\":false,\"clock\":{\"initialTime\":180,\"increment\":2,\"movesNumberBeforeIncrement\":1,\"canAccumulate\":true,\"movesNumberBeforeNext\":2147483647,\"maxRemainingKept\":0,\"next\":null},\"player1\":{\"name\":null,\"engine\":null,\"extraClock\":null},\"player1Color\":\"RANDOM\",\"player2\":{\"name\":null,\"engine\":{\"name\":\"jchess\",\"level\":16,\"evaluator\":\"simple\"},\"extraClock\":null}}";
-		JSONObject jsonO = new JSONObject(json);
-		GameSettings settings = TinyJackson.toObject(jsonO, GameSettings.class);
-		System.out.println(settings);
 	}
 }

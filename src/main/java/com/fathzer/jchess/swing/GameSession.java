@@ -7,21 +7,20 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.fathzer.games.Color;
-import com.fathzer.games.GameBuilder;
 import com.fathzer.games.Status;
-import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Game;
 import com.fathzer.jchess.GameRecorder;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.Score;
 import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
-import com.fathzer.jchess.settings.GameSettings;
-import com.fathzer.jchess.settings.GameSettings.ColorSetting;
-import com.fathzer.jchess.settings.GameSettings.EngineSettings;
+import com.fathzer.jchess.settings.Settings;
+import com.fathzer.jchess.settings.Settings.ColorSetting;
+import com.fathzer.jchess.settings.Settings.EngineSettings;
 import com.fathzer.util.Observable;
 
 import lombok.extern.slf4j.Slf4j;
@@ -33,24 +32,23 @@ public class GameSession {
 	}
 	
 	private final GamePanel panel;
-	private GameBuilder<Board<Move>> rules;
-	private GameSettings settings;
+	private Settings settings;
 	private Engine whiteEngine;
 	private Engine blackEngine;
-	private int gameCount;
+	private Score score;
 	private Color player1Color;
 	private Observable<State> state;
 	private Game game;
 	private long lastMoveTime = 0;
 
-	public GameSession(GamePanel panel, GameSettings settings) {
+	public GameSession(GamePanel panel, Settings settings) {
 		this.panel = panel;
 		this.state = new Observable<>(State.CREATED);
 		state.addListener(this::onStateChanged);
 		panel.getBoard().addPropertyChangeListener(ChessBoardPanel.TARGET, evt -> onMove((Move) evt.getNewValue()));
 		panel.setResignationHandler(this::resign);
+		score = new Score();
 		setSettings(settings);
-		gameCount = 0;
 	}
 	
 	private void onStateChanged(State old, State current) {
@@ -77,12 +75,13 @@ public class GameSession {
 	
 	private void doRevenge() {
 		final Color previous1 = player1Color;
-		if (ColorSetting.RANDOM.equals(settings.getPlayer1Color()) && gameCount%2!=0) {
+		if (ColorSetting.RANDOM.equals(settings.getPlayer1Color()) && score.getGameCount()%2==0) {
+			System.out.println("Choosing random color");
 			player1Color = settings.getPlayer1Color().getColor();
 		} else {
+			System.out.println("Choosing opposite color");
 			player1Color = player1Color.opposite();
 		}
-		gameCount++;
 		panel.getBoard().setReverted(Color.BLACK.equals(player1Color));
 		if (!previous1.equals(player1Color)) {
 			// Switch engines color
@@ -100,13 +99,14 @@ public class GameSession {
 	}
 	
 	private void initGame() {
-		this.game = new Game(rules.newGame(), buildClock());
+		this.game = new Game(settings.getVariant().getRules().get(), buildClock());
 		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
 		panel.setPlayer1Color(player1Color);
 		panel.setClock(game.getClock());
 		panel.getBoard().setBoard(game.getBoard());
 		panel.getBoard().setManualMoveEnabled(false);
-		setScore();
+		score.newGame();
+		setEvaluation();
 		lastMoveTime = System.currentTimeMillis();
 	}
 
@@ -161,8 +161,9 @@ public class GameSession {
 	
 	public void start() {
 		if (State.ENDED.equals(getState())) {
-			this.gameCount = 0;
+			this.score.reset();
 			initGame();
+			panel.setScore(this.score);
 		}
 		setEngine(player1Color, getEngine(settings.getPlayer1().getEngine()));
 		setEngine(player1Color.opposite(), getEngine(settings.getPlayer2().getEngine()));
@@ -212,17 +213,17 @@ public class GameSession {
 			// Game is ended
 			endOfGame(status);
 		} else {
-			setScore();
+			setEvaluation();
 			if (getState()==State.RUNNING) {
 				nextMove();
 			}
 		}
 	}
 	
-	private void setScore() {
+	private void setEvaluation() {
 		final NaiveEvaluator ev = new NaiveEvaluator();
 		ev.init(game.getBoard());
-		panel.setScore(ev.evaluateAsWhite(game.getBoard())/100);
+		panel.setEvaluation(ev.evaluateAsWhite(game.getBoard())/100);
 	}
 	
 	// This makes, always when two bots are competing, and sometime when human plays against a bot,
@@ -291,10 +292,11 @@ public class GameSession {
 		setState(State.PAUSED);
 		log.debug("End of game,  state: {}", getState());
 		try {
-			GameRecorder.record(this.settings, this.player1Color, this.game.getHistory());
+			GameRecorder.commit(this.settings, this.player1Color, this.game.getHistory());
 		} catch (Exception e) {
 			log.error("An error occured while writing pgn",e);
 		}
+		updateScores(status);
 		final Integer toPlay = Integer.getInteger("gameCount");
 		boolean makeRevenge;
 		if (toPlay==null) {
@@ -302,13 +304,22 @@ public class GameSession {
 			int choice = JOptionPane.showOptionDialog(panel, getMessage(status), "End of game", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {revenge,"Enough for today"}, revenge);
 			makeRevenge = choice==0;
 		} else {
-			makeRevenge = gameCount+1<toPlay;
+			makeRevenge = score.getGameCount()+1<toPlay;
 		}
 		if (makeRevenge) {
 			doRevenge();
 		} else {
 			setState(State.ENDED);
 		}
+	}
+	
+	private void updateScores(Status status) {
+		if (Status.DRAW.equals(status)) {
+			score.draw();
+		} else {
+			score.win(status.winner()==player1Color);
+		}
+		panel.setScore(score);
 	}
 	
 	private String getMessage(Status status) {
@@ -327,13 +338,12 @@ public class GameSession {
 		setState(State.PAUSED);
 	}
 
-	public void setSettings(GameSettings settings) {
+	public void setSettings(Settings settings) {
 		if (State.RUNNING.equals(getState()) || State.PAUSED.equals(getState())) {
 			throw new IllegalStateException("Can't change the game settings during the game");
 		}
 		this.settings = settings;
-		this.rules = settings.getVariant().getRules();
-		panel.getBoard().setChessRules(rules);
+		panel.getBoard().setChessRules(settings.getVariant().getRules());
 		panel.setPlayer1Human(settings.getPlayer1().getEngine()==null);
 		panel.setPlayer2Human(settings.getPlayer2().getEngine()==null);
 		panel.getBoard().setShowPossibleMoves(settings.isShowPossibleMoves());
@@ -345,6 +355,7 @@ public class GameSession {
 		} else {
 			panel.getBoard().setUpsideDownColor(null);
 		}
+		score.reset();
 		initGame();
 	}
 }

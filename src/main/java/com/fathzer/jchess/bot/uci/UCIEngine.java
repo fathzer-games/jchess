@@ -17,7 +17,7 @@ import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.bot.Option.Type;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
-import com.fathzer.jchess.settings.GameSettings.Variant;
+import com.fathzer.jchess.settings.Settings.Variant;
 import com.fathzer.util.ProcessExitDetector;
 
 import lombok.extern.slf4j.Slf4j;

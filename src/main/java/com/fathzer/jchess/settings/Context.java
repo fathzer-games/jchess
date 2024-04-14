@@ -10,6 +10,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class Context {
-	private GameSettings settings;
+	private Settings settings;
 	private List<EngineData> engines;
 }

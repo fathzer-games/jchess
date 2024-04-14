@@ -23,6 +23,7 @@ import javax.swing.JButton;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.text.DecimalFormat;
 
 public class PlayerPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -43,6 +44,9 @@ public class PlayerPanel extends JPanel {
 	@Setter
 	private transient Consumer<com.fathzer.games.Color> resignationHandler; 
 
+	private int evaluation = 0;
+	private double score = -1.0;
+	
 	/**
 	 * Create the panel.
 	 */
@@ -137,15 +141,42 @@ public class PlayerPanel extends JPanel {
 		this.whiteFlag.setVisible(visible);
 	}
 	
-	public void setScore(int score) {
-		final String text;
-		if (score==0) {
-			text = " ";
-		} else if (score>0) {
-			text = "+"+score;
-		} else {
-			text = Integer.toString(score);
+	public void setEvaluation(int evaluation) {
+		this.evaluation = evaluation;
+		setScoreLabel();
+	}
+	
+	private void setScoreLabel() {
+		final StringBuilder text = new StringBuilder();
+		if (Math.signum(score)>=0) {
+			text.append('[');
+			synchronized (this) {
+				text.append(SCORE_FORMAT.format(score));
+			}
+			text.append("]");
 		}
-		this.scoreLabel.setText(text);
+		if (evaluation!=0) {
+			if (text.length()>0) {
+				text.append(' ');
+			}
+			if (evaluation>0) {
+				text.append('+').append(evaluation);
+			} else {
+				text.append(evaluation);
+			}
+		}
+		this.scoreLabel.setText(text.length()>0 ? text.toString() : " ");
+	}
+
+	private static final DecimalFormat SCORE_FORMAT = new DecimalFormat("#.##");
+
+	public void setScore(double playerScore) {
+		this.score = playerScore;
+		setScoreLabel();
+	}
+	
+	public void clearScore() {
+		this.score = -1.0;
+		setScoreLabel();
 	}
 }

@@ -6,7 +6,7 @@ import javax.swing.SwingConstants;
 
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.Context;
-import com.fathzer.jchess.settings.GameSettings;
+import com.fathzer.jchess.settings.Settings;
 
 import java.awt.BorderLayout;
 import java.util.Collections;
@@ -19,7 +19,7 @@ public class SettingsPanel extends JPanel {
 	// Used by Window builder editor
 	@SuppressWarnings("unused")
 	private SettingsPanel() {
-		this(new Context(new GameSettings(), Collections.emptyList()));
+		this(new Context(new Settings(), Collections.emptyList()));
 	}
 
 	/**

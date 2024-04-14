@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.Context;
-import com.fathzer.jchess.settings.GameSettings;
-import com.fathzer.jchess.settings.GameSettings.PlayerSettings;
+import com.fathzer.jchess.settings.Settings;
+import com.fathzer.jchess.settings.Settings.PlayerSettings;
 import com.fathzer.jchess.swing.settings.SettingsDialog;
 import com.fathzer.jchess.uci.JChessUCI;
 import com.fathzer.soft.ajlib.swing.framework.Application;
@@ -33,7 +33,7 @@ public class JChess extends Application {
 	private static final String SETTINGS_PREF = "gameSettings";
 
 	private final JChessPanel panel;
-	private GameSettings settings;
+	private Settings settings;
 	private AbstractAction startAction;
 	private AbstractAction settingsAction;
 	private GameSession game;
@@ -57,7 +57,7 @@ public class JChess extends Application {
 				final Context context = new Context(settings, EngineLoader.getEngines());
 				final SettingsDialog dialog = new SettingsDialog(getJFrame(), context);
 				dialog.setVisible(true);
-				final GameSettings result = dialog.getResult();
+				final Settings result = dialog.getResult();
 				if (result!=null) {
 					settings = result;
 					game.setSettings(settings);
@@ -166,9 +166,9 @@ public class JChess extends Application {
 		super.restoreState();
 		final String value = getPreferences().get(SETTINGS_PREF, null);
 		try {
-			this.settings = value==null ? new GameSettings() : TinyJackson.toObject(new JSONObject(value), GameSettings.class);
+			this.settings = value==null ? new Settings() : TinyJackson.toObject(new JSONObject(value), Settings.class);
 		} catch (JSONException e) {
-			this.settings = new GameSettings();
+			this.settings = new Settings();
 			//TODO Log the error
 		}
 	}

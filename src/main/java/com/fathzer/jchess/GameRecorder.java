@@ -10,16 +10,16 @@ import java.time.LocalDate;
 import com.fathzer.games.Color;
 import com.fathzer.jchess.pgn.PGNHeaders;
 import com.fathzer.jchess.pgn.PGNHeaders.Builder;
-import com.fathzer.jchess.settings.GameSettings;
-import com.fathzer.jchess.settings.GameSettings.PlayerSettings;
-import com.fathzer.jchess.settings.GameSettings.Variant;
+import com.fathzer.jchess.settings.Settings;
+import com.fathzer.jchess.settings.Settings.PlayerSettings;
+import com.fathzer.jchess.settings.Settings.Variant;
 import com.fathzer.jchess.pgn.PGNWriter;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class GameRecorder {
-	public static void record(GameSettings settings, Color player1Color, GameHistory history) throws IOException {
+	public static void commit(Settings settings, Color player1Color, GameHistory history) throws IOException {
 		try (PrintWriter out=out()) {
 			final Builder builder = new PGNHeaders.Builder();
 			builder.setWhiteName(who(settings, player1Color, Color.WHITE));
@@ -45,7 +45,7 @@ public class GameRecorder {
 		return printer;
 	}
 	
-	private static String who(GameSettings settings, Color player1Color, Color color) {
+	private static String who(Settings settings, Color player1Color, Color color) {
 		final PlayerSettings player = player1Color==color ? settings.getPlayer1() : settings.getPlayer2();
 		if (player.getName()!=null) {
 			return player.getName();

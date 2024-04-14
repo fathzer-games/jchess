@@ -7,10 +7,10 @@ import javax.swing.JPanel;
 
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.settings.Context;
-import com.fathzer.jchess.settings.GameSettings;
+import com.fathzer.jchess.settings.Settings;
 import com.fathzer.soft.ajlib.swing.dialog.AbstractDialog;
 
-public class SettingsDialog extends AbstractDialog<Context, GameSettings> {
+public class SettingsDialog extends AbstractDialog<Context, Settings> {
 	private static final long serialVersionUID = 1L;
 
 	private SettingsPanel panel;
@@ -28,13 +28,13 @@ public class SettingsDialog extends AbstractDialog<Context, GameSettings> {
 	}
 
 	@Override
-	public GameSettings buildResult() {
+	public Settings buildResult() {
 		return panel.getGameSettingsPanel().getSettings();
 	}
 	
 	public static void main(String[] args) throws IOException {
 		EngineLoader.init();
-		Context context = new Context(new GameSettings(), EngineLoader.getEngines());
+		Context context = new Context(new Settings(), EngineLoader.getEngines());
 		
 		final SettingsDialog dialog = new SettingsDialog(null, context);
 		do {

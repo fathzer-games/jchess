@@ -21,7 +21,7 @@ import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.bot.options.ComboOption;
 import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.lichess.DefaultOpenings;
-import com.fathzer.jchess.settings.GameSettings.Variant;
+import com.fathzer.jchess.settings.Settings.Variant;
 import com.fathzer.jchess.time.VuckovicSolakOracle;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;

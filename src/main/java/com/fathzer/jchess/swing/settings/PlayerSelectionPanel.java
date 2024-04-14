@@ -7,10 +7,10 @@ import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
 
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
-import com.fathzer.jchess.settings.GameSettings.ColorSetting;
-import com.fathzer.jchess.settings.GameSettings.EngineSettings;
-import com.fathzer.jchess.settings.GameSettings.PlayerSettings;
-import com.fathzer.jchess.settings.GameSettings.Variant;
+import com.fathzer.jchess.settings.Settings.ColorSetting;
+import com.fathzer.jchess.settings.Settings.EngineSettings;
+import com.fathzer.jchess.settings.Settings.PlayerSettings;
+import com.fathzer.jchess.settings.Settings.Variant;
 import com.fathzer.jchess.swing.widget.JComboBoxWithDisabledItems;
 import com.fathzer.soft.ajlib.swing.widget.TextWidget;
 

@@ -4,13 +4,13 @@ import javax.swing.JPanel;
 
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.Context;
-import com.fathzer.jchess.settings.GameSettings;
+import com.fathzer.jchess.settings.Settings;
 import com.fathzer.jchess.swing.settings.PlayerSelectionPanel.Player;
 
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 
-import static com.fathzer.jchess.settings.GameSettings.Variant;
+import static com.fathzer.jchess.settings.Settings.Variant;
 
 import java.awt.GridBagConstraints;
 import javax.swing.JComboBox;
@@ -180,7 +180,7 @@ public class GameSettingsPanel extends JPanel {
 	}
 	
 	private void setSettings(Context context) {
-		final GameSettings settings = context.getSettings();
+		final Settings settings = context.getSettings();
 		final boolean hasClock = settings.getClock()!=null;
 		this.timeControlCheckBox.setSelected(hasClock);
 		this.startAfterFirstMoveCheckBox.setSelected(settings.isStartClockAfterFirstMove());
@@ -197,8 +197,8 @@ public class GameSettingsPanel extends JPanel {
 		this.player1Panel.setColor(settings.getPlayer1Color());
 	}
 	
-	public GameSettings getSettings() {
-		final GameSettings result = new GameSettings();
+	public Settings getSettings() {
+		final Settings result = new Settings();
 		result.setVariant((Variant) variantCombo.getSelectedItem());
 		result.setTabletMode(tabletModeCheckBox.isSelected());
 		result.setShowPossibleMoves(showMovesCheckBox.isSelected());

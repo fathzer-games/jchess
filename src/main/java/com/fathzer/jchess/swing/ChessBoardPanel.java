@@ -7,13 +7,13 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-import com.fathzer.games.GameBuilder;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
@@ -35,7 +35,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	
 	private final transient com.fathzer.jchess.Dimension dimension;
     private final transient SpriteMover sprites;
-	private transient GameBuilder<Board<Move>> rules;
+	private transient Supplier<Board<Move>> rules;
 	private int selected;
 	private boolean reverted;
     private transient Board<Move> board;
@@ -89,7 +89,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     	this.repaint();
     }
     
-    public void setChessRules(GameBuilder<Board<Move>> rules) {
+    public void setChessRules(Supplier<Board<Move>> rules) {
     	this.rules = rules;
     	this.updatePossibleMoves();
     	this.repaint();
