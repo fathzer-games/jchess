@@ -205,13 +205,13 @@ public class GameSession {
 	private void onMove(Move move) {
 		panel.repaint();
 		this.game.onMove(move);
+		setEvaluation();
 //TODO		think(5000);
 		final Status status = panel.getBoard().getStatus();
 		if (!Status.PLAYING.equals(status)) {
 			// Game is ended
 			endOfGame(status);
 		} else {
-			setEvaluation();
 			if (getState()==State.RUNNING) {
 				nextMove();
 			}
