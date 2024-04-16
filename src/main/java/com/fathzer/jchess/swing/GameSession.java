@@ -259,12 +259,15 @@ public class GameSession {
 	}
 	
 	private void doTimeUp(Status status) {
-		this.setState(State.PAUSED);
-		if (JOptionPane.showConfirmDialog(panel, getMessage(status)+" Do you want to continue game without clock?","Time is up",JOptionPane.YES_NO_OPTION)==0) {
-			this.setState(State.RUNNING);
-		} else {
-			endOfGame(status);
+		if (getTournamentGamesCount()==0) {
+			// If we are not in tournament mode, propose to continue without clock
+			this.setState(State.PAUSED);
+			if (JOptionPane.showConfirmDialog(panel, getMessage(status)+" Do you want to continue game without clock?","Time is up",JOptionPane.YES_NO_OPTION)==0) {
+				this.setState(State.RUNNING);
+				return;
+			}
 		}
+		endOfGame(status);
 	}
 	
 	private void resign(Color color) {
@@ -278,6 +281,10 @@ public class GameSession {
 		} else {
 			setState(State.RUNNING);
 		}
+	}
+	
+	private int getTournamentGamesCount() {
+		return Integer.getInteger("gameCount",0);
 	}
 	
 	private void onEngineError(Engine engine) {
@@ -295,9 +302,9 @@ public class GameSession {
 			log.error("An error occured while writing pgn",e);
 		}
 		updateScores(status);
-		final Integer toPlay = Integer.getInteger("gameCount");
+		final int toPlay = getTournamentGamesCount();
 		boolean makeRevenge;
-		if (toPlay==null) {
+		if (toPlay==0) {
 			final String revenge = "Revenge";
 			int choice = JOptionPane.showOptionDialog(panel, getMessage(status), "End of game", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {revenge,"Enough for today"}, revenge);
 			makeRevenge = choice==0;
