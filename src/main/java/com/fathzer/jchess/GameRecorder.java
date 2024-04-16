@@ -34,7 +34,7 @@ public class GameRecorder {
 	}
 
 	private static PrintWriter out() throws IOException {
-		final Path file = Path.of("./data/pgn", PGNWriter.DATE_FORMAT.format(LocalDate.now())+".txt");
+		final Path file = Path.of("./data/pgn", PGNWriter.DATE_FORMAT.format(LocalDate.now())+".pgn");
 		Files.createDirectories(file.getParent());
 		final PrintWriter printer = new PrintWriter(Files.newBufferedWriter(file, StandardOpenOption.CREATE, StandardOpenOption.APPEND));
 		if (Files.size(file)!=0) {
