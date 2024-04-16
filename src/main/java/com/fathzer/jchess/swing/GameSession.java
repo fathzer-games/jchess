@@ -76,10 +76,8 @@ public class GameSession {
 	private void doRevenge() {
 		final Color previous1 = player1Color;
 		if (ColorSetting.RANDOM.equals(settings.getPlayer1Color()) && score.getGameCount()%2==0) {
-			System.out.println("Choosing random color");
 			player1Color = settings.getPlayer1Color().getColor();
 		} else {
-			System.out.println("Choosing opposite color");
 			player1Color = player1Color.opposite();
 		}
 		panel.getBoard().setReverted(Color.BLACK.equals(player1Color));
@@ -304,7 +302,7 @@ public class GameSession {
 			int choice = JOptionPane.showOptionDialog(panel, getMessage(status), "End of game", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {revenge,"Enough for today"}, revenge);
 			makeRevenge = choice==0;
 		} else {
-			makeRevenge = score.getGameCount()+1<toPlay;
+			makeRevenge = score.getGameCount()<toPlay;
 		}
 		if (makeRevenge) {
 			doRevenge();
