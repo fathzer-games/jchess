@@ -79,7 +79,7 @@ public class Game {
 		} else {
 			final long remainingTime = clock.getRemaining(clock.getPlaying());
 			final ClockSettings clockSettings = clock.getCurrentSettings(clock.getPlaying());
-			final int increment = clockSettings.getIncrement()>0 ? clockSettings.getIncrement()/clockSettings.getMovesNumberBeforeIncrement() : 0;
+			final int increment = clockSettings.getIncrement()>0 ? clockSettings.getIncrement()*1000/clockSettings.getMovesNumberBeforeIncrement() : 0;
 			final int movesToGo = clock.getRemainingMovesBeforeNext(clock.getPlaying());
 			params = new CountDownState(remainingTime, increment, movesToGo);
 		}
