@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator.MoveConfidence;
+import com.fathzer.games.ai.iterativedeepening.SearchHistory;
 import com.fathzer.games.ai.time.BasicTimeManager;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.clock.CountDownState;
@@ -121,7 +122,8 @@ public class InternalEngine implements Engine {
 			engine.getDeepeningPolicy().setMaxTime(Math.min(maxTime, TIME_MANAGER.getMaxTime(board, countDownState)));
 		}
 		try {
-			return JChessUCIEngine.toUCIMove(board.getCoordinatesSystem(), engine.apply(board)).toString();
+			final SearchHistory<Move> history = engine.getBestMoves(board);
+			return JChessUCIEngine.toUCIMove(board.getCoordinatesSystem(), history.getBestMove(JChessUCIEngine.buildSelector(board)).getContent()).toString();
 		} finally {
 			engine.getDeepeningPolicy().setMaxTime(maxTime);
 		}

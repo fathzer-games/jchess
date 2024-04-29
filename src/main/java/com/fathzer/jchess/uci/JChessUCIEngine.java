@@ -6,6 +6,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.iterativedeepening.SearchHistory;
+import com.fathzer.games.ai.moveselector.MoveSelector;
+import com.fathzer.games.ai.moveselector.RandomMoveSelector;
+import com.fathzer.games.ai.moveselector.StaticMoveSelector;
 import com.fathzer.games.ai.time.BasicTimeManager;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.ai.transposition.TranspositionTable;
@@ -16,7 +21,9 @@ import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.ai.JChessEngine;
+import com.fathzer.jchess.ai.LoggedSelector;
 import com.fathzer.jchess.ai.TT;
+import com.fathzer.jchess.ai.evaluator.BasicMoveComparator;
 import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
 import com.fathzer.jchess.ai.evaluator.SimplifiedEvaluator;
 import com.fathzer.jchess.fen.FENUtils;
@@ -166,5 +173,16 @@ public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implement
 	@Override
 	public String getFEN() {
 		return board==null ? null : FENUtils.to(board);
+	}
+	
+	public static MoveSelector<Move, SearchHistory<Move>> buildSelector(Board<Move> board) {
+		final BasicMoveComparator c = new BasicMoveComparator(board);
+		final MoveSelector<Move, SearchHistory<Move>> stmv = new StaticMoveSelector<>(c::evaluate);
+		return new LoggedSelector(board).setNext(stmv.setNext(new RandomMoveSelector<>()));
+	}
+	
+	@Override
+	protected EvaluatedMove<Move> getSelected(Board<Move> board, SearchHistory<Move> history) {
+		return history.getBestMove(buildSelector(board));
 	}
 }
