@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
@@ -16,8 +17,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.fathzer.jchess.bot.Engine;
-import com.fathzer.jchess.bot.Option;
 import com.fathzer.jchess.internal.InternalEngine;
+import com.fathzer.uci.client.Option;
 import com.fathzer.util.TinyJackson;
 import com.fathzer.util.TinyJackson.JsonIgnore;
 import com.fathzer.util.TinyJackson.JsonOptional;
@@ -143,14 +144,7 @@ public class EngineLoader {
 				if (command!=null) {
 					engine = new UCIEngine(this);
 					if (options!=null) {
-						for (String optionName : options.keySet()) {
-							final Optional<Option<?>> option = engine.getOptions().stream().filter(o -> o.getName().equals(optionName)).findAny();
-							if (option.isEmpty()) {
-								throw new IOException("Engine "+name+" has no "+optionName+" option");
-							}
-							final Option<?> theOption = option.get();
-							setValue(theOption, options.get(optionName));
-						}
+						applyOptions();
 					}
 				} else {
 					engine = new InternalEngine();
@@ -158,6 +152,17 @@ public class EngineLoader {
 				return true;
 			}
 			return false;
+		}
+
+		private void applyOptions() throws IOException {
+			for (Entry<String, String> entry : options.entrySet()) {
+				final Optional<Option<?>> option = engine.getOptions().stream().filter(o -> o.getName().equals(entry.getKey())).findAny();
+				if (option.isEmpty()) {
+					throw new IOException("Engine "+name+" has no "+entry.getKey()+" option");
+				}
+				final Option<?> theOption = option.get();
+				setValue(theOption, entry.getValue());
+			}
 		}
 		
 		private <T> void setValue(Option<T> option, String value) {

@@ -32,6 +32,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.fathzer</groupId>
+			<artifactId>jchess-uci-client</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fathzer</groupId>
 			<artifactId>plugin-loader</artifactId>
 			<version>0.0.3</version>
 		</dependency>

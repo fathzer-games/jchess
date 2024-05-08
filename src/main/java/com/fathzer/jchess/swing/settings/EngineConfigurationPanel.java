@@ -9,14 +9,14 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.fathzer.jchess.bot.Option;
-import com.fathzer.jchess.bot.options.ButtonOption;
-import com.fathzer.jchess.bot.options.CheckOption;
-import com.fathzer.jchess.bot.options.ComboOption;
-import com.fathzer.jchess.bot.options.SpinOption;
-import com.fathzer.jchess.bot.options.StringOption;
 import com.fathzer.soft.ajlib.swing.widget.IntegerWidget;
 import com.fathzer.soft.ajlib.swing.widget.TextWidget;
+import com.fathzer.uci.client.Option;
+import com.fathzer.uci.client.options.ButtonOption;
+import com.fathzer.uci.client.options.CheckOption;
+import com.fathzer.uci.client.options.ComboOption;
+import com.fathzer.uci.client.options.SpinOption;
+import com.fathzer.uci.client.options.StringOption;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;

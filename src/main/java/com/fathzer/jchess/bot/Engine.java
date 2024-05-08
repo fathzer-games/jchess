@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.fathzer.games.clock.CountDownState;
 import com.fathzer.jchess.settings.Settings.Variant;
+import com.fathzer.uci.client.Option;
 
 public interface Engine extends Closeable {
 	String getName();
