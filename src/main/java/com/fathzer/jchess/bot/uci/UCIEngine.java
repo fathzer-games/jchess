@@ -20,13 +20,11 @@ public class UCIEngine extends com.fathzer.uci.client.UCIEngine implements Engin
 		TO_UCI.put(Variant.CHESS960, com.fathzer.uci.client.Variant.CHESS960);
 	}
 
-	private final EngineData data;
+	private EngineData data;
 
 	public UCIEngine(EngineData data) throws IOException {
-		super(Arrays.asList(data.getCommand()));
-		this.data = data;
+		super(Arrays.asList(data.getCommand()), e -> ((UCIEngine)e).data=data);
 	}
-	
 	
 	@Override
 	public boolean isSupported(Variant variant) {
