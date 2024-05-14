@@ -97,7 +97,7 @@ public class GameSession {
 	}
 	
 	private void initGame() {
-		this.game = new Game(settings.getVariant().getRules().get(), buildClock());
+		this.game = new Game(settings.getVariant().getRules().apply(settings.getFen()), buildClock());
 		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
 		panel.setPlayer1Color(player1Color);
 		panel.setClock(game.getClock());
@@ -348,7 +348,6 @@ public class GameSession {
 			throw new IllegalStateException("Can't change the game settings during the game");
 		}
 		this.settings = settings;
-		panel.getBoard().setChessRules(settings.getVariant().getRules());
 		panel.setPlayer1Human(settings.getPlayer1().getEngine()==null);
 		panel.setPlayer2Human(settings.getPlayer2().getEngine()==null);
 		panel.getBoard().setShowPossibleMoves(settings.isShowPossibleMoves());

@@ -1,11 +1,13 @@
 package com.fathzer.jchess.settings;
 
 import java.util.Random;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.GameBuilders;
 
 import lombok.AllArgsConstructor;
@@ -20,6 +22,8 @@ public class Settings {
 	private static final Random RANDOM_GENERATOR = new Random();
 	
 	private Variant variant = Variant.STANDARD;
+	//TODO fen should be obtained by Settings panel 
+	private String fen = buildFEN();
 	private boolean tabletMode = true;
 	private boolean showPossibleMoves = true;
 	private boolean touchMove = false;
@@ -29,17 +33,29 @@ public class Settings {
 	private ColorSetting player1Color = ColorSetting.RANDOM;
 	private PlayerSettings player2 = new PlayerSettings();
 	
+	private static final String buildFEN() {
+		var fen = System.getProperty("fen");
+		final String result = fen==null ? fen : fen.replace('_', ' ');
+		if (result!=null) {
+			System.out.println("Fen of start position was retrieved in 'fen' system property: "+result);
+		}
+		return result;
+	}
 
 	@AllArgsConstructor
 	public enum Variant {
-		STANDARD(GameBuilders.STANDARD), CHESS960(GameBuilders.CHESS960);
-		private final Supplier<Board<Move>> rules;
+		STANDARD(toFunction(GameBuilders.STANDARD)), CHESS960(toFunction(GameBuilders.CHESS960));
+		private final Function<String, Board<Move>> rules;
 
 		/** Gets a Supplier that can create a new game.
 		 * <br>Typically, it is able to create the representation of a new game (for example, a chess board at the beginning of the game)
 		 */
-		public Supplier<Board<Move>> getRules() {
+		public Function<String, Board<Move>> getRules() {
 			return rules;
+		}
+		
+		private static Function<String, Board<Move>> toFunction(Supplier<Board<Move>> s) {
+			return fen -> fen==null ? s.get() : FENUtils.from(fen);
 		}
 	}
 	

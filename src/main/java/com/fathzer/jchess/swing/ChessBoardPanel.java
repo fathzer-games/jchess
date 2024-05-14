@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,7 +34,6 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	
 	private final transient com.fathzer.jchess.Dimension dimension;
     private final transient SpriteMover sprites;
-	private transient Supplier<Board<Move>> rules;
 	private int selected;
 	private boolean reverted;
     private transient Board<Move> board;
@@ -89,12 +87,6 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     	this.repaint();
     }
     
-    public void setChessRules(Supplier<Board<Move>> rules) {
-    	this.rules = rules;
-    	this.updatePossibleMoves();
-    	this.repaint();
-    }
-    
     public void setCellColors(Color whiteColor, Color blackColor) {
 		this.whiteColor = whiteColor;
         this.blackColor = blackColor;
@@ -122,7 +114,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
     
     private void updatePossibleMoves() {
     	this.targets = new int[0];
-    	if (board!=null && rules!=null) {
+    	if (board!=null) {
     		this.moveList = board.getLegalMoves();
     	}
     }
