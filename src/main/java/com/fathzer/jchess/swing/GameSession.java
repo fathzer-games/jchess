@@ -111,7 +111,14 @@ public class GameSession {
 	private Clock buildClock() {
 		if (settings.getClock()!=null) {
 			final ClockSettings common = settings.getClock().toClockSettings();
-			final Clock clock = new Clock(common);
+			final int extraTime = Integer.getInteger("player2ExtraTimeS",0);
+			final Clock clock;
+			if (extraTime==0) {
+				clock = new Clock(common);
+			} else {
+				final ClockSettings other = new ClockSettings(common.getInitialTime()+extraTime).withIncrement(common.getIncrement(), common.getMovesNumberBeforeIncrement(), common.isCanAccumulate());
+				clock = player1Color==Color.WHITE ? new Clock(common, other) : new Clock(other, common);
+			}
 			clock.addStatusListener(this::timeUp);
 			clock.addClockListener(e -> log.debug("Clock {} state changes from {} to {}",e.getClock(), e.getPreviousState(), e.getNewState()));
 			if (settings.isStartClockAfterFirstMove()) {
