@@ -17,12 +17,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
+import com.fathzer.jchess.AbstractGameSession;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.Context;
 import com.fathzer.jchess.settings.Settings;
 import com.fathzer.jchess.settings.Settings.PlayerSettings;
 import com.fathzer.jchess.swing.settings.SettingsDialog;
+import com.fathzer.jchess.tournament.Tournament;
 import com.fathzer.jchess.uci.JChessUCI;
 import com.fathzer.soft.ajlib.swing.framework.Application;
 import com.fathzer.util.TinyJackson;
@@ -41,6 +43,8 @@ public class JChess extends Application {
 	public static void main(String[] args) {
 		if (Boolean.getBoolean("uci")) {
 			JChessUCI.main(args);
+		} else if (Boolean.getBoolean("tournament")) {
+			new Tournament().launch(args);
 		} else {
 			new JChess().launch();
 		}
@@ -104,7 +108,7 @@ public class JChess extends Application {
 		fixSettings();
 		this.game = new GameSession(panel.getGamePanel(), settings);
 		this.game.addListener((o,n) -> {
-			if (GameSession.State.ENDED.equals(n)) {
+			if (AbstractGameSession.State.ENDED.equals(n)) {
 				this.startAction.setEnabled(true);
 				this.panel.setMenuVisible(true);
 			}

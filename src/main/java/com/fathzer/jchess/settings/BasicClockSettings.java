@@ -26,4 +26,14 @@ public class BasicClockSettings {
 		}
 		return result;
 	}
+	
+	public static BasicClockSettings fromClockSettings(ClockSettings cs) {
+		final BasicClockSettings settings = new BasicClockSettings();
+		settings.initialTime = cs.getInitialTime();
+		if (cs.getIncrement()!=0) {
+			settings.increment = cs.getIncrement();
+			settings.movesNumberBeforeIncrement = cs.getMovesNumberBeforeIncrement();
+		}
+		return settings;
+	}
 }

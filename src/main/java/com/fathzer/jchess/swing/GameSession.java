@@ -7,6 +7,7 @@ import com.fathzer.games.Color;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.AbstractGameSession;
 import com.fathzer.jchess.Game;
+import com.fathzer.jchess.GameRecorder;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
 import com.fathzer.jchess.bot.Engine;
@@ -35,9 +36,7 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 	}
 	
 	private void swingStateChanged(State current) {
-		if (State.RUNNING.equals(current)) {
-			nextMove();
-		} else {
+		if (!State.RUNNING.equals(current)) {
 			gui.getBoard().setManualMoveEnabled(false);
 		}
 	}
@@ -52,8 +51,8 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 	}
 	
 	@Override
-	protected void initGame() {
-		super.initGame();
+	protected void newGame() {
+		super.newGame();
 		setEvaluation();
 		gui.setPlayer1Color(player1Color);
 		gui.setClock(game.getClock());
@@ -91,7 +90,6 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 		});
 	}
 
-	@Override
 	protected void onMove(Move move) {
 		gui.repaint();
 		this.game.onMove(move);
@@ -140,8 +138,8 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 	}
 
 	@Override
-	protected void timeUp(Status status) {
-		SwingUtilities.invokeLater(()->doTimeUp(status));
+	protected void doTimeUp(Status status) {
+		SwingUtilities.invokeLater(()->super.doTimeUp(status));
 	}
 	
 	@Override
@@ -161,6 +159,16 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 	}
 	
 	@Override
+	protected void onGameEnded() {
+		gui.setScore(getScore());
+		try {
+			GameRecorder.print(this.game.getHistory(), this.getSettings(), this.player1Color, (long) this.getScore().getGameCount());
+		} catch (Exception e) {
+			log.error("An error occured while writing pgn",e);
+		}
+	}
+
+	@Override
 	protected boolean isMakeRevenge(final Status status) {
 		boolean result = super.isMakeRevenge(status);
 		if (!result && getTournamentGamesCount()==0) {
@@ -169,12 +177,6 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 			result = choice==0;
 		}
 		return result;
-	}
-
-	@Override
-	protected void updateScores(Status status) {
-		super.updateScores(status);
-		gui.setScore(getScore());
 	}
 	
 	private String getMessage(Status status) {

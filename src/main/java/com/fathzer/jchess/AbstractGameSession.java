@@ -36,6 +36,10 @@ public abstract class AbstractGameSession<T> {
 		return score;
 	}
 	
+	public Settings getSettings() {
+		return settings;
+	}
+	
 	protected AbstractGameSession(T gui, Settings settings) {
 		this.gui = gui;
 		this.state = new Observable<>(State.CREATED);
@@ -67,7 +71,7 @@ public abstract class AbstractGameSession<T> {
 			blackEngine = dummy;
 			onPlayerColorsChanged();
 		}
-		initGame();
+		newGame();
 		setState(State.PAUSED);
 		start();
 	}
@@ -76,7 +80,7 @@ public abstract class AbstractGameSession<T> {
 		// Allows subclasses to perform extra initialization when players color changes
 	}
 	
-	protected void initGame() {
+	protected void newGame() {
 		this.game = new Game(settings.getVariant().getRules().apply(settings.getFen()), buildClock());
 		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
 		score.newGame();
@@ -141,11 +145,14 @@ public abstract class AbstractGameSession<T> {
 	public void start() {
 		if (State.ENDED.equals(getState())) {
 			this.score.reset();
-			initGame();
+			newGame();
 		}
 		setEngine(player1Color, getEngine(settings.getPlayer1().getEngine()));
 		setEngine(player1Color.opposite(), getEngine(settings.getPlayer2().getEngine()));
 		setState(State.RUNNING);
+		//TODO With the nextMove here, TournamentGameSession goes (sometime) crazy !!!
+		//TODO The alternative is having the subclass trap the state change to call nextMove itself ... wich should do exactly the same !!!
+		nextMove();
 	}
 
 	protected abstract void nextMove();
@@ -160,15 +167,15 @@ public abstract class AbstractGameSession<T> {
 		this.state.setValue(state);
 	}
 
-	protected abstract void onMove(Move move);
-	
-	/** This method is called when clock emits a time up event.
-	 * <br>Please note that this method could be invoked on a thread that is not the Swing event thread. 
-	 * @param status The game status.
-	 */
-	protected void timeUp(Status status) {
+	private void timeUp(Status status) {
+		doTimeUp(status);
 	}
 	
+	/** This method is called when clock emits a time up event.
+	 * <br>Please note that this method could be invoked on a thread that is not the Swing event thread.
+	 * <br>One can override this method to ensure the correct thread is used.
+	 * @param status The game status.
+	 */
 	protected void doTimeUp(Status status) {
 		if (getTournamentGamesCount()==0) {
 			// If we are not in tournament mode, propose to continue without clock
@@ -209,12 +216,8 @@ public abstract class AbstractGameSession<T> {
 	protected void endOfGame(final Status status) {
 		setState(State.PAUSED);
 		log.debug("End of game,  state: {}", getState());
-		try {
-			GameRecorder.commit(this.settings, this.player1Color, this.game.getHistory());
-		} catch (Exception e) {
-			log.error("An error occured while writing pgn",e);
-		}
 		updateScores(status);
+		onGameEnded();
 		if (isMakeRevenge(status)) {
 			doRevenge();
 		} else {
@@ -222,12 +225,19 @@ public abstract class AbstractGameSession<T> {
 		}
 	}
 	
+	/** This method is called when game just finished.
+	 *  <br>It does nothing by default but allows subclasses to perform some specific actions (for instance, output a summary of the game in a file). 
+	 */
+	protected void onGameEnded() {
+		// Does nothing by default
+	}
+	
 	protected boolean isMakeRevenge(final Status status) {
 		final int toPlay = getTournamentGamesCount();
 		return toPlay!=0 && score.getGameCount()<toPlay;
 	}
 	
-	protected void updateScores(Status status) {
+	private void updateScores(Status status) {
 		if (Status.DRAW.equals(status)) {
 			score.draw();
 		} else {
@@ -246,6 +256,6 @@ public abstract class AbstractGameSession<T> {
 		this.settings = settings;
 		player1Color = settings.getPlayer1Color().getColor();
 		score.reset();
-		initGame();
+		newGame();
 	}
 }

@@ -8,6 +8,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.clock.PGNTimeControlTagParser;
 import com.fathzer.jchess.pgn.PGNHeaders;
 import com.fathzer.jchess.pgn.PGNHeaders.Builder;
 import com.fathzer.jchess.settings.Settings;
@@ -19,18 +20,24 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class GameRecorder {
-	public static void commit(Settings settings, Color player1Color, GameHistory history) throws IOException {
+	public static void print(GameHistory history, Settings settings, Color player1Color, Long round) throws IOException {
 		try (PrintWriter out=out()) {
-			final Builder builder = new PGNHeaders.Builder();
-			builder.setWhiteName(who(settings, player1Color, Color.WHITE));
-			builder.setBlackName(who(settings, player1Color, Color.BLACK));
-			if (Variant.STANDARD!=settings.getVariant()) {
-				builder.setVariant(settings.getVariant().name());
-			}
-			// Add white and black names
-			new PGNWriter().getPGN(builder.build(), history).forEach(out::println);
-			out.flush();
+			print(history, settings, player1Color, round, out);
 		}
+	}
+
+	public static void print(GameHistory history, Settings settings, Color player1Color, Long round, PrintWriter out) {
+		final Builder builder = new PGNHeaders.Builder();
+		builder.setWhiteName(who(settings, player1Color, Color.WHITE));
+		builder.setBlackName(who(settings, player1Color, Color.BLACK));
+		builder.setRound(round);
+		builder.setTimeControl(new PGNTimeControlTagParser().toTag(settings.getClock().toClockSettings()));
+		if (Variant.STANDARD!=settings.getVariant()) {
+			builder.setVariant(settings.getVariant().name());
+		}
+		// Add white and black names
+		new PGNWriter().getPGN(builder.build(), history).forEach(out::println);
+		out.flush();
 	}
 
 	private static PrintWriter out() throws IOException {

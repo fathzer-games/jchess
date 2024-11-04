@@ -65,7 +65,7 @@ If you specify a value for the `gameCount` system property while starting the ap
 - When a engine that is used in player settings hangs, it leaves settings in a wrong state with no possibility to fix it; The application should be restarted.
 
 # TODO
-- PGN should contain time settings
+- PGN should contain time settings and a [Termination tag](https://github.com/mliebelt/pgn-spec-commented/blob/main/pgn-specification.md#981-tag-termination).
 - Implement a way to play again on missclick.
 - Implement PGN game loading
 - Implement move backward/forward in the game.
