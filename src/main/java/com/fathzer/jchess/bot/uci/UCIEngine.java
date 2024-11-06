@@ -46,9 +46,11 @@ public class UCIEngine extends com.fathzer.uci.client.UCIEngine implements Engin
 	public String getMove(CountDownState params) throws IOException {
 		final GoParameters goParams = new GoParameters();
 		final GoParameters.TimeControl tc = goParams.getTimeControl();
-		tc.setRemainingMs(params.getRemainingMs());
-		tc.setIncrementMs(params.getIncrementMs());
-		tc.setMovesToGo(params.getMovesToGo());
+		if (params!=null) {
+			tc.setRemainingMs(params.getRemainingMs());
+			tc.setIncrementMs(params.getIncrementMs());
+			tc.setMovesToGo(params.getMovesToGo());
+		}
 		final List<UCIMove> moves = super.go(goParams).getMoves();
 		return moves.isEmpty() ? null : moves.get(0).getMove();
 	}

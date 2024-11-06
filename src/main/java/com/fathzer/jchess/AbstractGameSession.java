@@ -97,7 +97,7 @@ public abstract class AbstractGameSession<T> {
 				final ClockSettings other = new ClockSettings(common.getInitialTime()+extraTime).withIncrement(common.getIncrement(), common.getMovesNumberBeforeIncrement(), common.isCanAccumulate());
 				clock = player1Color==Color.WHITE ? new Clock(common, other) : new Clock(other, common);
 			}
-			clock.addStatusListener(this::timeUp);
+			clock.addStatusListener(this::doTimeUp);
 			clock.addClockListener(e -> log.debug("Clock {} state changes from {} to {}",e.getClock(), e.getPreviousState(), e.getNewState()));
 			if (settings.isStartClockAfterFirstMove()) {
 				clock.withStartingColor(Color.BLACK);
@@ -167,10 +167,6 @@ public abstract class AbstractGameSession<T> {
 		this.state.setValue(state);
 	}
 
-	private void timeUp(Status status) {
-		doTimeUp(status);
-	}
-	
 	/** This method is called when clock emits a time up event.
 	 * <br>Please note that this method could be invoked on a thread that is not the Swing event thread.
 	 * <br>One can override this method to ensure the correct thread is used.
@@ -182,6 +178,7 @@ public abstract class AbstractGameSession<T> {
 			this.setState(State.PAUSED);
 			if (continueOnTimeup(status)) {
 				this.setState(State.RUNNING);
+				nextMove();
 				return;
 			}
 		}
@@ -202,6 +199,7 @@ public abstract class AbstractGameSession<T> {
 			endOfGame(status);
 		} else {
 			setState(State.RUNNING);
+			nextMove();
 		}
 	}
 	
