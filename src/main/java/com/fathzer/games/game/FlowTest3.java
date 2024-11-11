@@ -2,6 +2,7 @@ package com.fathzer.games.game;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.IntPredicate;
@@ -70,8 +71,8 @@ public class FlowTest3 {
 	public static void main(String[] args) {
 		final MySubscriber sub1 = new MySubscriber(i->i!=0&&i%2==1);
 		final MySubscriber sub2 = new MySubscriber(i->i!=0&&i%2==0);
-		try (final ItemPublisher<Integer> publisher = new ItemPublisher<>()) {
-			publisher.setExecutor(Executors.newFixedThreadPool(4, new CustomThreadFactory(new CustomThreadFactory.BasicThreadNameSupplier("Item publisher thread"), true)));
+		final ExecutorService pool = Executors.newFixedThreadPool(4, new CustomThreadFactory(new CustomThreadFactory.BasicThreadNameSupplier("Item publisher thread"), true));
+		try (final ItemPublisher<Integer> publisher = new ItemPublisher<>(pool)) {
 			sub1.subscribe(publisher);
 			sub2.subscribe(publisher);
 			new Thread(publisher).start();

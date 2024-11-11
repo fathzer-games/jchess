@@ -11,28 +11,24 @@ import java.util.function.Consumer;
 public class ItemPublisher<T> implements AutoCloseable, Runnable {
 	
 	public interface ItemListener<T> extends Consumer<T> {
-		void onSubscribe(ItemPublisher<T> itemPublisher);
-		void onComplete(ItemPublisher<T> itemPublisher);
+		default void onSubscribe(ItemPublisher<T> itemPublisher) {}
+		default void onComplete(ItemPublisher<T> itemPublisher) {}
 	}
 	
-	private final Queue<T> items = new LinkedList<>();
-	private final List<ItemListener<T>> subscribers = new LinkedList<>();
-	private boolean isClosed = false;
-	private boolean wasInterrupted;
-	private ExecutorService executor = null;
-
-	/**
-	 * @return the executor
-	 */
-	public ExecutorService getExecutor() {
-		return executor;
+	private final Queue<T> items;
+	private final List<ItemListener<T>> subscribers;
+	private final ExecutorService executor;
+	private volatile boolean isClosed = false;
+	private volatile boolean wasInterrupted;
+	
+	public ItemPublisher() {
+		this(null);
 	}
-
-	/**
-	 * @param executor the executor to set
-	 */
-	public void setExecutor(ExecutorService executor) {
-		this.executor = executor;
+	
+	public ItemPublisher(ExecutorService itemProcessor) {
+		this.items = new LinkedList<>();
+		this.subscribers = new LinkedList<>();
+		this.executor = itemProcessor;
 	}
 
 	public void subscribe(ItemListener<T> subscriber) {
@@ -90,14 +86,15 @@ public class ItemPublisher<T> implements AutoCloseable, Runnable {
 		}
 	}
 	
-	public void submit(Collection<T> items) {
+	public boolean submit(Collection<T> items) {
 		if (isClosed) {
-			throw new IllegalStateException();
+			return false;
 		}
 		synchronized (this.items) {
 			this.items.addAll(items);
 			this.items.notifyAll();
 		}
+		return true;
 	}
 
 	@Override

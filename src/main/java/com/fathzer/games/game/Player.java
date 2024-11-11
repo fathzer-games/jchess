@@ -14,6 +14,7 @@ public interface Player {
 	 * This occurs typically when the other player resigns or a time out occurs.
 	 * <br>The default implementation does nothing because even if a call to {@link Game#add(com.fathzer.games.game.Game.IncomingEvent)} is made,
 	 * after this method call, it will be ignored by the game.
+	 * @param game The game where to post the move event.
 	 */
 	default void cancel(Game game) {
 	}

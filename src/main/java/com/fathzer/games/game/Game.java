@@ -1,8 +1,11 @@
 package com.fathzer.games.game;
 
-import java.util.concurrent.Flow.Publisher;
-import java.util.concurrent.Flow.Subscriber;
-import java.util.concurrent.SubmissionPublisher;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
@@ -15,64 +18,63 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class Game implements Runnable, Publisher<Game.OutcomingEvent> {
+public class Game implements Runnable {
+	private static final AtomicLong GAME_ID_GENERATOR = new AtomicLong(); 
+	
 	/** A tagging interface that all events that can be sent to a game extend.
 	 */
-	public sealed interface IncomingEvent {
-	}
+	public sealed interface IncomingEvent {}
 	
 	public static record MoveEvent(Move move) implements IncomingEvent {}
 	public static record ResignationEvent(Color player) implements IncomingEvent {}
-	public static record DrawProposal(Color player) implements IncomingEvent {}
-	public static record DrawAcceptance(Color player, boolean accepted) implements IncomingEvent {}
-	public static record TimeUpEvent() implements IncomingEvent {}
-	public static record PauseEvent(boolean paused) implements IncomingEvent {}
+//	public static record DrawProposal(Color player) implements IncomingEvent {}
+//	public static record DrawAcceptance(Color player, boolean accepted) implements IncomingEvent {}
+//	public static record PauseEvent(boolean paused) implements IncomingEvent {}
+	private static record TimeUpEvent() implements IncomingEvent {}
 
 	/** A tagging interface that all events sent by a game extend.
 	 */
-	public sealed interface OutcomingEvent {
-	}
+	public sealed interface OutcomingEvent {}
 
 	public static record MoveMade(Move move) implements OutcomingEvent {}
 	public static record GameEnded() implements OutcomingEvent {}
-/*	
-	private static class IncomingEventSubscriber extends BasicEventSubscriber<IncomingEvent>{
-		private final Game game;
 
-		private IncomingEventSubscriber(Game game) {
-			super();
-			this.game = game;
-		}
-
-		@Override
-		public void onNext(IncomingEvent item) {
-			game.doEvent(item);
-			super.onNext(item);
-		}
-	}*/
-	private Player white;
-	private Player black;
+	private final long id = GAME_ID_GENERATOR.incrementAndGet();
+	private final Player white;
+	private final Player black;
 	@Getter
-	private Clock clock;
+	private final Clock clock;
 	@Getter
-	private boolean paused;
+	private final GameHistory history;
+	private final ItemPublisher<IncomingEvent> events;
+	private final List<BiConsumer<Game, Move>> moveListeners;
+	private final List<Consumer<Game>> endGameListeners;
 	private boolean startClockAfterFirstMove = false;
 	@Getter
-	private GameHistory history;
-//	private Queue<IncomingEvent> events;
-	private SubmissionPublisher<OutcomingEvent> publisher;
-	private SubmissionPublisher<IncomingEvent> events;
+	private boolean paused;
 
+	/** Constructor.
+	 * @param board The start board of a game.
+	 * @param clock The clock used for the game (null if time allowed is infinite)
+	 * @param white The white player
+	 * @param black The black player
+	 */
 	public Game(Board<Move> board, Clock clock, Player white, Player black) {
+		if (white==null || black==null) {
+			throw new IllegalArgumentException("Players can't be null");
+		}
+		this.white = white;
+		this.black = black;
 		this.history = new GameHistory(board);
 		this.clock = clock;
 		if (clock!=null) {
+			clock.addStatusListener(s -> addEvent(new TimeUpEvent()));
 			clock.pause();
 		}
 		this.paused = true;
-//		events = new LinkedList<>();
-		events = new SubmissionPublisher<>();
-		publisher = new SubmissionPublisher<>(); 
+		events = new ItemPublisher<>();
+		moveListeners = new LinkedList<>();
+		endGameListeners = new LinkedList<>();
 	}
 	
 	private Player getPlayer(Color color) {
@@ -83,45 +85,28 @@ public class Game implements Runnable, Publisher<Game.OutcomingEvent> {
 		return this.history.getBoard().getActiveColor();
 	}
 	
-	
 	@Override
 	public void run() {
-		events.subscribe(new BasicEventSubscriber<IncomingEvent>() {
-			@Override
-			public void onNext(IncomingEvent item) {
-				doEvent(item);
-				super.onNext(item);
-			}
-		});
-		while (Status.PLAYING==this.getHistory().getStatus() || this.getHistory().getStatus()==null) {
-			
-//			synchronized(events) {
-//				try {
-//					log.trace("Waiting for incomming event");
-//					events.wait();
-//					IncomingEvent event = events.poll();
-//					log.info("incomming event {}", event);
-//					doEvent(event);
-//				} catch (InterruptedException e) {
-//					log.error("Thread {} was interrupted", Thread.currentThread(), e);
-//					Thread.currentThread().interrupt();
-//				}
-//			}
-		}
+		events.subscribe(this::doEvent);
+		this.start();
+		getPlayer(getActiveColor()).requestMove(this);
+		events.run();
 	}
 	
-	@Override
-	public void subscribe(Subscriber<? super OutcomingEvent> subscriber) {
-		publisher.subscribe(subscriber);
+	public void addMoveListener(BiConsumer<Game, Move> listener) {
+		moveListeners.add(listener);
 	}
 	
+	public void addEndGameListener(Consumer<Game> listener) {
+		endGameListeners.add(listener);
+	}
+
 	public synchronized void addEvent(IncomingEvent event) {
-//		events.add(event);
-//		events.notifyAll();
-		events.submit(event);
+		events.submit(Collections.singleton(event));
 	}
 	
 	void doEvent(IncomingEvent event) {
+		log.debug("Game {} Receives event {}", id, event);
 		if (!checkAlive(event)) {
 			return;
 		}
@@ -138,46 +123,68 @@ public class Game implements Runnable, Publisher<Game.OutcomingEvent> {
 	
 	private boolean checkAlive(IncomingEvent event) {
 		final Status status = history.getStatus();
-		if (status!=null) {
+		if (status!=null && status!=Status.PLAYING) {
 			if (event instanceof MoveEvent moveEvent) {
-				log.info("Move {} is ignored because game status is {}", moveEvent.move(), status);
+				log.debug("Move {} is ignored because game status is {}", moveEvent.move(), status);
 			} else {
-				log.info("{} is ignored because game status is {}", event, status);
+				log.debug("{} is ignored because game status is {}", event, status);
 			}
+			return false;
 		}
-		return status==null;
+		return true;
 	}
 	
 	private void doMove(Move move) {
 		final Color playing = history.getBoard().getActiveColor();
 		final boolean valid = history.add(move);
 		if (!valid) {
-			pause();
+			log.debug("Move {} is illegal. Declare the game won by rules infraction", move);
 			this.getHistory().earlyEnd(playing==Color.WHITE?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.RULES_INFRACTION);
-		} else if (clock!=null) {
+			onEndGame();
+			return;
+		}
+		log.debug("Move {} played by {}", move, playing);
+		if (clock!=null) {
 			clock.tap();
+		}
+		moveListeners.forEach(l -> l.accept(this, move));
+		if (!isEnded()) {
+			getPlayer(playing.opposite()).requestMove(this);
+		} else {
+			log.debug("Game is ended");
+			onEndGame();
 		}
 	}
 	
-	private void doTimeUp() {
+	private void onEndGame() {
 		pause();
+		events.close();
+		endGameListeners.forEach(l -> l.accept(this));
+	}
+	
+	private void doTimeUp() {
 		this.getHistory().earlyEnd(Color.WHITE==history.getBoard().getActiveColor()?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.TIME_FORFEIT);
+		onEndGame();
 	}
 	
 	private void doResignation(Color player) {
-		pause();
 		this.getHistory().earlyEnd(Color.WHITE==history.getBoard().getActiveColor()?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.TIME_FORFEIT);
+		onEndGame();
 	}
 
 	public void setStartClockAfterFirstMove(boolean afterFirst) {
+		if (clock==null) {
+			throw new IllegalStateException("This game has no clock");
+		}
 		this.startClockAfterFirstMove = afterFirst;
+		this.clock.withStartingColor(afterFirst ? Color.BLACK : Color.WHITE);
 	}
 	
 	private boolean isFirstMove() {
 		return history.getMoves().isEmpty();
 	}
 	
-	public void start() {
+	private void start() {
 		if (paused) {
 			this.paused = false;
 			if (clock!=null && !(isFirstMove() && startClockAfterFirstMove)) {
@@ -186,12 +193,24 @@ public class Game implements Runnable, Publisher<Game.OutcomingEvent> {
 		}
 	}
 	
-	public void pause() {
+	private void pause() {
 		if (!paused) {
 			this.paused = true;
 			if (clock!=null) {
 				this.clock.pause();
 			}
 		}
+	}
+	
+	public boolean isEnded() {
+		final Status status = this.getHistory().getStatus();
+		return status!=null && status!=Status.PLAYING;
+	}
+
+	/** Gets the game id.
+	 * @return a long that identifies this game (no other game can have the same id)
+	 */
+	public long getId() {
+		return id;
 	}
 }
