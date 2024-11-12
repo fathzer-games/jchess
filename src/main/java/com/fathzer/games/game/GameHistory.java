@@ -4,21 +4,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.fathzer.games.MoveGenerator.MoveConfidence;
+import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
-import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Move;
 import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 
-public class GameHistory {
-	private final Board<Move> startBoard;
-	private final Board<Move> board;
-	private final List<Move> moves;
+public class GameHistory<M,B extends MoveGenerator<M>> {
+	private final B startBoard;
+	private final B board;
+	private final List<M> moves;
 	private volatile Status extraStatus;
 	private volatile TerminationCause terminationCause;
 
-	public GameHistory(Board<Move> board) {
-		this.startBoard = (Board<Move>) board.fork();
-		this.board = (Board<Move>) board.fork();
+	public GameHistory(B board) {
+		this.startBoard = (B) board.fork();
+		this.board = (B) board.fork();
 		this.moves = new LinkedList<>();
 		this.terminationCause = TerminationCause.NORMAL;
 	}
@@ -28,7 +27,7 @@ public class GameHistory {
 	 * @return true if the move is legal. False if it is not. In such a case the move is also added to the list of moves.
 	 * @throws IllegalStateException if game is already ended.
 	 */
-	public synchronized boolean add(Move move) {
+	public synchronized boolean add(M move) {
 		if (Status.PLAYING!=getStatus()) {
 			throw new IllegalStateException();
 		}
@@ -36,15 +35,15 @@ public class GameHistory {
 		return board.makeMove(move, MoveConfidence.UNSAFE);
 	}
 
-	public Board<Move> getStartBoard() {
+	public B getStartBoard() {
 		return startBoard;
 	}
 	
-	public Board<Move> getBoard() {
+	public B getBoard() {
 		return board;
 	}
 
-	public List<Move> getMoves() {
+	public List<M> getMoves() {
 		return moves;
 	}
 	
@@ -71,10 +70,18 @@ public class GameHistory {
 		if (extraStatus!=null) {
 			return extraStatus;
 		}
-		return board.getStatus();
+		return getBoardStatus(board);
 	}
 	
 	public synchronized TerminationCause getTerminationCause() {
 		return this.terminationCause;
+	}
+	
+	protected Status getBoardStatus(B board) {
+		Status status = board.getContextualStatus();
+		if (status==Status.PLAYING && board.getLegalMoves().isEmpty()) {
+			status = board.getEndGameStatus();
+		}
+		return status;
 	}
 }

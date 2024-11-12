@@ -1,14 +1,16 @@
 package com.fathzer.games.game;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.clock.ClockState;
 import com.fathzer.games.clock.CountDownState;
 import com.fathzer.games.util.exec.CustomThreadFactory;
+import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.bot.Engine;
@@ -19,28 +21,50 @@ import com.fathzer.jchess.uci.UCIMove;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EnginePlayer implements Player {
-	private final Executor executor; 
+public class EnginePlayer implements Player<Move, Board<Move>> {
+	private static final CustomThreadFactory threadFactory = new CustomThreadFactory(new CustomThreadFactory.BasicThreadNameSupplier("Engine player"), true);
+
 	private final Engine engine;
+	@SuppressWarnings("java:S3077")
+	private volatile Future<Void> currentSearch;
 
 	public EnginePlayer(Engine engine) {
-		this.executor = Executors.newSingleThreadExecutor(new CustomThreadFactory(new CustomThreadFactory.BasicThreadNameSupplier("Engine player"), true));
 		this.engine = engine;
 	}
 	
 	@Override
-	public void requestMove(Game game) {
-		// TODO Auto-generated method stub
-
+	public synchronized void requestMove(Game<Move, Board<Move>> game, Consumer<Move> callBack) {
+		if (currentSearch!=null) {
+			throw new IllegalStateException();
+		} else {
+			this.currentSearch = Executors.newSingleThreadExecutor(threadFactory).submit(() -> {
+				synchronized (EnginePlayer.this) {
+					currentSearch = null;
+					callBack.accept(getMove(game));
+				}
+				return null;
+			});
+		}
+	}
+	
+	@Override
+	public synchronized void cancel(Game game) {
+		if (game.isEnded() && currentSearch!=null) {
+			// Game is ended => End the search
+			//TODO, currently, nothing allows to stop a search
+			log.warn("Currently no way to stop the search");
+			currentSearch.cancel(false);
+			currentSearch = null;
+		}
 	}
 
-	private Move getMove(Game game) throws IOException {
-		final GameHistory history = game.getHistory();
-		final Clock clock = game.getClock(); 
+	private Move getMove(Game<Move, Board<Move>> game) throws IOException {
+		final GameHistory<Move, Board<Move>> history = game.getHistory();
 		final CoordinatesSystem cs = history.getBoard().getCoordinatesSystem();
 		engine.setPosition(FENUtils.to(history.getStartBoard()), history.getMoves().stream().map(m -> JChessUCIEngine.toUCIMove(cs, m)).
 				map(UCIMove::toString).toList());
 		final CountDownState params;
+		final Clock clock = game.getClock(); 
 		if (clock==null || clock.getState()==ClockState.ENDED) {
 			params = null;
 		} else {
@@ -61,15 +85,4 @@ public class EnginePlayer implements Player {
 		}
 		return JChessUCIEngine.toMove(history.getBoard(), UCIMove.from(engine.getMove(params)));
 	}
-/*
-	public void playEngine(Engine engine, BiConsumer<Game, Move> moveConsumer, Consumer<Exception> errorManager) {
-		EXECUTOR.execute(() -> {
-			try {
-				moveConsumer.accept(this, getMove(engine));
-			} catch (IOException e) {
-				errorManager.accept(e);
-			}
-		});
-	}
-*/
 }

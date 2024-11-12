@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
@@ -23,26 +24,28 @@ import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 import com.fathzer.jchess.settings.Settings.Variant;
 
 class GameTest {
-	private static class EventCounter implements Consumer<Game>, BiConsumer<Game, Move> {
+	private static class EventCounter implements Consumer<Game<Move, Board<Move>>>, BiConsumer<Game<Move, Board<Move>>, Move> {
 		private int moveCounter, endCounter;
 		@Override
-		public void accept(Game game, Move move) {
+		public void accept(Game<Move, Board<Move>> game, Move move) {
 			moveCounter++;
 		}
 
 		@Override
-		public void accept(Game game) {
+		public void accept(Game<Move, Board<Move>> game) {
 			endCounter++;
 		}
 	}
 
 	@Test
 	void testNoClock() throws InterruptedException {
+		LoggerFactory.getLogger(GameTest.class).debug("Here we are");
+		
 		Board<Move> board = Variant.STANDARD.getRules().apply(null);
 		CoordinatesSystem cs = board.getCoordinatesSystem();
 		TestPlayer white = new TestPlayer(Color.WHITE, Arrays.asList(new BasicMove(cs.getIndex("e2"), cs.getIndex("e4")), new BasicMove(cs.getIndex("f1"), cs.getIndex("c4")), new BasicMove(cs.getIndex("d1"), cs.getIndex("h5")), new BasicMove(cs.getIndex("h5"), cs.getIndex("f7"))));
 		TestPlayer black = new TestPlayer(Color.BLACK, Arrays.asList(new BasicMove(cs.getIndex("e7"), cs.getIndex("e5")), new BasicMove(cs.getIndex("f8"), cs.getIndex("c5")), new BasicMove(cs.getIndex("b8"), cs.getIndex("c6"))));
-		final Game game = new Game(board, null, white, black);
+		final Game<Move, Board<Move>> game = new Game<>(board, null, white, black);
 		assertThrows(IllegalStateException.class, () -> game.setStartClockAfterFirstMove(true));
 		assertTrue(game.isPaused());
 		final EventCounter counter = new EventCounter();
@@ -70,7 +73,7 @@ class GameTest {
 		black.thinkTime = 550;
 		
 		ClockSettings settings = new ClockSettings(1);
-		Game game = new Game(board, new Clock(settings), white, black);
+		Game<Move, Board<Move>> game = new Game<>(board, new Clock(settings), white, black);
 		game.setStartClockAfterFirstMove(true);
 		final EventCounter counter = new EventCounter();
 		game.addMoveListener(counter);
@@ -91,7 +94,7 @@ class GameTest {
 	}
 	
 	
-	private static final class TestPlayer implements Player {
+	private static final class TestPlayer implements Player<Move, Board<Move>> {
 		private final Queue<Move> moves;
 		private final Color color;
 		private boolean errorOccured;
@@ -104,14 +107,13 @@ class GameTest {
 		}
 
 		@Override
-		public void requestMove(Game game) {
+		public void requestMove(Game<Move, Board<Move>> game, Consumer<Move> callBack) {
 			requestThread = new Thread(() -> {
 				try {
 					if (thinkTime>0) {
 						Thread.sleep(thinkTime);
 					}
-					final Move move = moves.poll();
-					game.addEvent(new Game.MoveEvent(move));
+					callBack.accept(moves.poll());
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					Thread.currentThread().interrupt();

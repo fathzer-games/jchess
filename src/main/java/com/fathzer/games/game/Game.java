@@ -3,14 +3,14 @@ package com.fathzer.games.game;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Move;
 import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 import com.fathzer.games.Color;
+import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.games.clock.Clock;
 
@@ -18,37 +18,30 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class Game implements Runnable {
+public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	private static final AtomicLong GAME_ID_GENERATOR = new AtomicLong(); 
 	
 	/** A tagging interface that all events that can be sent to a game extend.
 	 */
-	public sealed interface IncomingEvent {}
+	private sealed interface IncomingEvent<T> {}
 	
-	public static record MoveEvent(Move move) implements IncomingEvent {}
-	public static record ResignationEvent(Color player) implements IncomingEvent {}
-//	public static record DrawProposal(Color player) implements IncomingEvent {}
-//	public static record DrawAcceptance(Color player, boolean accepted) implements IncomingEvent {}
+	private static record MoveEvent<T>(T move) implements IncomingEvent<T> {}
+	private static record ResignationEvent<T>(Color player) implements IncomingEvent<T> {}
+	private static record DrawProposal<T>(Color player) implements IncomingEvent<T> {}
+	private static record DrawAcceptance<T>(Color player, boolean accepted) implements IncomingEvent<T> {}
 //	public static record PauseEvent(boolean paused) implements IncomingEvent {}
-	private static record TimeUpEvent() implements IncomingEvent {}
-
-	/** A tagging interface that all events sent by a game extend.
-	 */
-	public sealed interface OutcomingEvent {}
-
-	public static record MoveMade(Move move) implements OutcomingEvent {}
-	public static record GameEnded() implements OutcomingEvent {}
+	private static record TimeUpEvent<T>() implements IncomingEvent<T> {}
 
 	private final long id = GAME_ID_GENERATOR.incrementAndGet();
-	private final Player white;
-	private final Player black;
+	private final Player<M,B> white;
+	private final Player<M,B> black;
 	@Getter
 	private final Clock clock;
 	@Getter
-	private final GameHistory history;
-	private final ItemPublisher<IncomingEvent> events;
-	private final List<BiConsumer<Game, Move>> moveListeners;
-	private final List<Consumer<Game>> endGameListeners;
+	private final GameHistory<M, B> history;
+	private final ItemPublisher<IncomingEvent<M>> events;
+	private final List<BiConsumer<Game<M, B>, M>> moveListeners;
+	private final List<Consumer<Game<M,B>>> endGameListeners;
 	private boolean startClockAfterFirstMove = false;
 	@Getter
 	private boolean paused;
@@ -59,16 +52,16 @@ public class Game implements Runnable {
 	 * @param white The white player
 	 * @param black The black player
 	 */
-	public Game(Board<Move> board, Clock clock, Player white, Player black) {
+	public Game(B board, Clock clock, Player<M, B> white, Player<M,B> black) {
 		if (white==null || black==null) {
 			throw new IllegalArgumentException("Players can't be null");
 		}
 		this.white = white;
 		this.black = black;
-		this.history = new GameHistory(board);
+		this.history = new GameHistory<>(board);
 		this.clock = clock;
 		if (clock!=null) {
-			clock.addStatusListener(s -> addEvent(new TimeUpEvent()));
+			clock.addStatusListener(s -> addEvent(new TimeUpEvent<>()));
 			clock.pause();
 		}
 		this.paused = true;
@@ -77,54 +70,58 @@ public class Game implements Runnable {
 		endGameListeners = new LinkedList<>();
 	}
 	
-	private Player getPlayer(Color color) {
+	private Player<M,B> getPlayer(Color color) {
 		return color==Color.WHITE ? white : black;
 	}
 	
 	private Color getActiveColor() {
-		return this.history.getBoard().getActiveColor();
+		return this.history.getBoard().isWhiteToMove() ? Color.WHITE : Color.BLACK;
 	}
 	
 	@Override
 	public void run() {
 		events.subscribe(this::doEvent);
 		this.start();
-		getPlayer(getActiveColor()).requestMove(this);
+		requestMove(getActiveColor());
 		events.run();
 	}
 	
-	public void addMoveListener(BiConsumer<Game, Move> listener) {
+	private void requestMove(Color color) {
+		getPlayer(color).requestMove(this, m -> this.addEvent(new MoveEvent<>(m)));
+	}
+	
+	public void addMoveListener(BiConsumer<Game<M, B>, M> listener) {
 		moveListeners.add(listener);
 	}
 	
-	public void addEndGameListener(Consumer<Game> listener) {
+	public void addEndGameListener(Consumer<Game<M, B>> listener) {
 		endGameListeners.add(listener);
 	}
 
-	public synchronized void addEvent(IncomingEvent event) {
+	public synchronized void addEvent(IncomingEvent<M> event) {
 		events.submit(Collections.singleton(event));
 	}
 	
-	void doEvent(IncomingEvent event) {
+	void doEvent(IncomingEvent<M> event) {
 		log.debug("Game {} Receives event {}", id, event);
 		if (!checkAlive(event)) {
 			return;
 		}
-		if (event instanceof MoveEvent moveEvent) {
+		if (event instanceof MoveEvent<M> moveEvent) {
 			doMove(moveEvent.move());
 		} else if (event instanceof TimeUpEvent) {
 			doTimeUp();
-		} else if (event instanceof ResignationEvent resignation) {
+		} else if (event instanceof ResignationEvent<M> resignation) {
 			doResignation(resignation.player());
 		} else {
 			throw new UnsupportedOperationException(event+" is not yet supported"); //TODO
 		}
 	}
 	
-	private boolean checkAlive(IncomingEvent event) {
+	private boolean checkAlive(IncomingEvent<M> event) {
 		final Status status = history.getStatus();
 		if (status!=null && status!=Status.PLAYING) {
-			if (event instanceof MoveEvent moveEvent) {
+			if (event instanceof MoveEvent<M> moveEvent) {
 				log.debug("Move {} is ignored because game status is {}", moveEvent.move(), status);
 			} else {
 				log.debug("{} is ignored because game status is {}", event, status);
@@ -134,8 +131,8 @@ public class Game implements Runnable {
 		return true;
 	}
 	
-	private void doMove(Move move) {
-		final Color playing = history.getBoard().getActiveColor();
+	private void doMove(M move) {
+		final Color playing = getActiveColor();
 		final boolean valid = history.add(move);
 		if (!valid) {
 			log.debug("Move {} is illegal. Declare the game won by rules infraction", move);
@@ -143,32 +140,39 @@ public class Game implements Runnable {
 			onEndGame();
 			return;
 		}
-		log.debug("Move {} played by {}", move, playing);
 		if (clock!=null) {
-			clock.tap();
+			// Stops the clock because listeners can be not as fast as expected
+			clock.pause();
 		}
+		log.debug("Move {} played by {}", move, playing);
 		moveListeners.forEach(l -> l.accept(this, move));
 		if (!isEnded()) {
-			getPlayer(playing.opposite()).requestMove(this);
+			if (clock!=null) {
+				// Restarts clock
+				clock.tap();
+				// Change player
+				clock.tap();
+			}
+			requestMove(playing.opposite());
 		} else {
-			log.debug("Game is ended");
 			onEndGame();
 		}
 	}
 	
 	private void onEndGame() {
+		log.debug("Game is ended");
 		pause();
 		events.close();
 		endGameListeners.forEach(l -> l.accept(this));
 	}
 	
 	private void doTimeUp() {
-		this.getHistory().earlyEnd(Color.WHITE==history.getBoard().getActiveColor()?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.TIME_FORFEIT);
+		this.getHistory().earlyEnd(Color.WHITE==getActiveColor()?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.TIME_FORFEIT);
 		onEndGame();
 	}
 	
 	private void doResignation(Color player) {
-		this.getHistory().earlyEnd(Color.WHITE==history.getBoard().getActiveColor()?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.TIME_FORFEIT);
+		this.getHistory().earlyEnd(Color.WHITE==player?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.TIME_FORFEIT);
 		onEndGame();
 	}
 
@@ -213,4 +217,27 @@ public class Game implements Runnable {
 	public long getId() {
 		return id;
 	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		@SuppressWarnings("rawtypes")
+		Game other = (Game) obj;
+		return id == other.id;
+	}
+	
+	
 }
