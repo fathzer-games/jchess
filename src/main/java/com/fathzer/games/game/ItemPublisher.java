@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class ItemPublisher<T> implements AutoCloseable, Runnable {
@@ -18,6 +20,8 @@ public class ItemPublisher<T> implements AutoCloseable, Runnable {
 	private final Queue<T> items;
 	private final List<ItemListener<T>> subscribers;
 	private final ExecutorService executor;
+	private final AtomicBoolean paused; 
+	private final Semaphore pauseLock;
 	private volatile boolean isClosed = false;
 	private volatile boolean wasInterrupted;
 	
@@ -29,6 +33,8 @@ public class ItemPublisher<T> implements AutoCloseable, Runnable {
 		this.items = new LinkedList<>();
 		this.subscribers = new LinkedList<>();
 		this.executor = itemProcessor;
+		this.paused = new AtomicBoolean();
+		this.pauseLock = new Semaphore(1);
 	}
 
 	public void subscribe(ItemListener<T> subscriber) {
@@ -53,16 +59,29 @@ public class ItemPublisher<T> implements AutoCloseable, Runnable {
 					item = items.poll();
 				}
 				if (item!=null) {
-					process(item);
+					pauseLock.acquire();
+					try {
+						process(item);
+					} finally {
+						pauseLock.release();
+					}
 				}
 			} catch (InterruptedException e) {
-				// Exit gracefully
-				this.isClosed = true;
-				this.items.clear();
-				close();
-				Thread.currentThread().interrupt();
+				doInterrupted(e);
 			}
 		}
+		for (ItemListener<T> sub : subscribers) {
+			sub.onComplete(this);
+		}
+	}
+
+	private void doInterrupted(InterruptedException e) {
+		wasInterrupted = true;
+		// Exit gracefully
+		this.isClosed = true;
+		this.items.clear();
+		close();
+		Thread.currentThread().interrupt();
 	}
 
 	private void process(T item) throws InterruptedException {
@@ -96,15 +115,26 @@ public class ItemPublisher<T> implements AutoCloseable, Runnable {
 		}
 		return true;
 	}
+	
+	public boolean pause(boolean pause) {
+		if (!this.paused.compareAndSet(!pause, pause)) {
+			return false;
+		}
+		if (pause) {
+			try {
+				pauseLock.acquire();
+			} catch (InterruptedException e) {
+				doInterrupted(e);
+			}
+		} else {
+			pauseLock.release();
+		}
+		return true;
+	}
 
 	@Override
 	public void close() {
 		this.isClosed = true;
-		synchronized (subscribers) {
-			for (ItemListener<T> sub : subscribers) {
-				sub.onComplete(this);
-			}
-		}
 		synchronized (items) {
 			items.notifyAll();
 		}

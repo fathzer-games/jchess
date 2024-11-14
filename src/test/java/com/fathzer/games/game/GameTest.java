@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
@@ -24,6 +23,13 @@ import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 import com.fathzer.jchess.settings.Settings.Variant;
 
 class GameTest {
+	private static final CoordinatesSystem CS;
+	
+	static {
+		Board<Move> board = Variant.STANDARD.getRules().apply(null);
+		CS = board.getCoordinatesSystem();
+	}
+	
 	private static class EventCounter implements Consumer<Game<Move, Board<Move>>>, BiConsumer<Game<Move, Board<Move>>, Move> {
 		private int moveCounter, endCounter;
 		@Override
@@ -36,15 +42,16 @@ class GameTest {
 			endCounter++;
 		}
 	}
-
+	
+	private static MoveAction mv(String from, String to) {
+		return new MoveAction(new BasicMove(CS.getIndex(from), CS.getIndex(to)));
+	}
+	
 	@Test
 	void testNoClock() throws InterruptedException {
-		LoggerFactory.getLogger(GameTest.class).debug("Here we are");
-		
 		Board<Move> board = Variant.STANDARD.getRules().apply(null);
-		CoordinatesSystem cs = board.getCoordinatesSystem();
-		TestPlayer white = new TestPlayer(Color.WHITE, Arrays.asList(new BasicMove(cs.getIndex("e2"), cs.getIndex("e4")), new BasicMove(cs.getIndex("f1"), cs.getIndex("c4")), new BasicMove(cs.getIndex("d1"), cs.getIndex("h5")), new BasicMove(cs.getIndex("h5"), cs.getIndex("f7"))));
-		TestPlayer black = new TestPlayer(Color.BLACK, Arrays.asList(new BasicMove(cs.getIndex("e7"), cs.getIndex("e5")), new BasicMove(cs.getIndex("f8"), cs.getIndex("c5")), new BasicMove(cs.getIndex("b8"), cs.getIndex("c6"))));
+		TestPlayer white = new TestPlayer(Color.WHITE, Arrays.asList(mv("e2","e4"), mv("f1","c4"), mv("d1","h5"), mv("h5","f7")));
+		TestPlayer black = new TestPlayer(Color.BLACK, Arrays.asList(mv("e7","e5"), mv("f8","c5"), mv("b8", "c6")));
 		final Game<Move, Board<Move>> game = new Game<>(board, null, white, black);
 		assertThrows(IllegalStateException.class, () -> game.setStartClockAfterFirstMove(true));
 		assertTrue(game.isPaused());
@@ -63,13 +70,38 @@ class GameTest {
 		assertEquals(7, counter.moveCounter);
 	}
 
+	@Test
+	void testResignation() throws InterruptedException {
+		Board<Move> board = Variant.STANDARD.getRules().apply(null);
+		TestPlayer white = new TestPlayer(Color.WHITE, Arrays.asList(mv("e2","e4"), mv("f1","c4"), new ResignAction()));
+		TestPlayer black = new TestPlayer(Color.BLACK, Arrays.asList(mv("e7","e5"), mv("f8","c5"), mv("b8", "c6")));
+		final Game<Move, Board<Move>> game = new Game<>(board, null, white, black);
+		final EventCounter counter = new EventCounter();
+		game.addMoveListener(counter);
+		game.addEndGameListener(counter);
+		Thread gameThread = new Thread(game);
+		gameThread.start();
+		gameThread.join();
+		assertTrue(game.isEnded());
+		assertEquals(Status.BLACK_WON, game.getHistory().getStatus());
+		assertEquals(TerminationCause.ABANDONED, game.getHistory().getTerminationCause());
+		assertFalse(white.errorOccured);
+		assertFalse(black.errorOccured);
+		assertEquals(1, counter.endCounter);
+		assertEquals(4, counter.moveCounter);
+	}
+	
 	
 	@Test
-	void test() throws InterruptedException {
+	void testDrawNegociation() throws InterruptedException {
+		fail("Not yet implemented");
+	}
+
+	@Test
+	void testTimeForfeit() throws InterruptedException {
 		Board<Move> board = Variant.STANDARD.getRules().apply(null);
-		CoordinatesSystem cs = board.getCoordinatesSystem();
-		TestPlayer white = new TestPlayer(Color.WHITE, Arrays.asList(new BasicMove(cs.getIndex("e2"), cs.getIndex("e4")), new BasicMove(cs.getIndex("f1"), cs.getIndex("c4")), new BasicMove(cs.getIndex("d1"), cs.getIndex("h5")), new BasicMove(cs.getIndex("h5"), cs.getIndex("f7"))));
-		TestPlayer black = new TestPlayer(Color.BLACK, Arrays.asList(new BasicMove(cs.getIndex("e7"), cs.getIndex("e5")), new BasicMove(cs.getIndex("f8"), cs.getIndex("c5")), new BasicMove(cs.getIndex("b8"), cs.getIndex("c6"))));
+		TestPlayer white = new TestPlayer(Color.WHITE, Arrays.asList(mv("e2","e4"), mv("f1","c4"), mv("d1","h5"), mv("h5","f7")));
+		TestPlayer black = new TestPlayer(Color.BLACK, Arrays.asList(mv("e7","e5"), mv("f8","c5"), mv("b8", "c6")));
 		black.thinkTime = 550;
 		
 		ClockSettings settings = new ClockSettings(1);
@@ -93,17 +125,26 @@ class GameTest {
 		assertEquals(3, counter.moveCounter);
 	}
 	
+	private sealed interface Action {}
+	private record MoveAction(Move move) implements Action{}
+	private record ResignAction() implements Action{}
 	
 	private static final class TestPlayer implements Player<Move, Board<Move>> {
-		private final Queue<Move> moves;
+		private final Queue<Action> actions;
 		private final Color color;
 		private boolean errorOccured;
 		private Thread requestThread;
 		private long thinkTime = 0;
+		private Runnable resignation;
 		
-		TestPlayer(Color color, List<Move> moves) {
+		TestPlayer(Color color, List<Action> actions) {
 			this.color = color;
-			this.moves = new LinkedList<>(moves);
+			this.actions = new LinkedList<>(actions);
+		}
+
+		@Override
+		public void setResignationMethod(Game<Move, Board<Move>> game, Runnable resignation) {
+			this.resignation = resignation;
 		}
 
 		@Override
@@ -113,7 +154,14 @@ class GameTest {
 					if (thinkTime>0) {
 						Thread.sleep(thinkTime);
 					}
-					callBack.accept(moves.poll());
+					final Action action = actions.poll();
+					if (action instanceof MoveAction mv) {
+						callBack.accept(mv.move);
+					} else if (action instanceof ResignAction) {
+						resignation.run();
+					} else {
+						throw new UnsupportedOperationException();
+					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					Thread.currentThread().interrupt();
@@ -131,5 +179,4 @@ class GameTest {
 			}
 		}
 	}
-
 }

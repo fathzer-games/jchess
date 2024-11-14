@@ -26,9 +26,9 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	private sealed interface IncomingEvent<T> {}
 	
 	private static record MoveEvent<T>(T move) implements IncomingEvent<T> {}
-	private static record ResignationEvent<T>(Color player) implements IncomingEvent<T> {}
-	private static record DrawProposal<T>(Color player) implements IncomingEvent<T> {}
-	private static record DrawAcceptance<T>(Color player, boolean accepted) implements IncomingEvent<T> {}
+	private static record ResignationEvent<T>(Color color) implements IncomingEvent<T> {}
+	private static record DrawProposal<T>(Color color) implements IncomingEvent<T> {}
+	private static record DrawAcceptance<T>(Color color, boolean accepted) implements IncomingEvent<T> {}
 //	public static record PauseEvent(boolean paused) implements IncomingEvent {}
 	private static record TimeUpEvent<T>() implements IncomingEvent<T> {}
 
@@ -57,7 +57,9 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 			throw new IllegalArgumentException("Players can't be null");
 		}
 		this.white = white;
+		white.setResignationMethod(this, () -> addEvent(new ResignationEvent<>(Color.WHITE)));
 		this.black = black;
+		black.setResignationMethod(this, () -> addEvent(new ResignationEvent<>(Color.BLACK)));
 		this.history = new GameHistory<>(board);
 		this.clock = clock;
 		if (clock!=null) {
@@ -112,7 +114,7 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 		} else if (event instanceof TimeUpEvent) {
 			doTimeUp();
 		} else if (event instanceof ResignationEvent<M> resignation) {
-			doResignation(resignation.player());
+			doResignation(resignation.color());
 		} else {
 			throw new UnsupportedOperationException(event+" is not yet supported"); //TODO
 		}
@@ -172,7 +174,7 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	}
 	
 	private void doResignation(Color player) {
-		this.getHistory().earlyEnd(Color.WHITE==player?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.TIME_FORFEIT);
+		this.getHistory().earlyEnd(Color.WHITE==player?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.ABANDONED);
 		onEndGame();
 	}
 
