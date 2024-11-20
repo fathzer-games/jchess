@@ -6,8 +6,8 @@ import javax.swing.JLabel;
 
 import java.awt.GridBagConstraints;
 
+import com.fathzer.games.game.AbstractGameSettings.ColorSetting;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
-import com.fathzer.jchess.settings.Settings.ColorSetting;
 import com.fathzer.jchess.settings.Settings.EngineSettings;
 import com.fathzer.jchess.settings.Settings.PlayerSettings;
 import com.fathzer.jchess.settings.Settings.Variant;

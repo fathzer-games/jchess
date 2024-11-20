@@ -1,10 +1,10 @@
 package com.fathzer.jchess.settings;
 
-import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.fathzer.games.Color;
+import com.fathzer.games.clock.ClockSettings;
+import com.fathzer.games.game.AbstractGameSettings;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENUtils;
@@ -18,9 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Settings {
-	private static final Random RANDOM_GENERATOR = new Random();
-	
+public class Settings extends AbstractGameSettings {
 	private Variant variant = Variant.STANDARD;
 	//TODO fen should be obtained by Settings panel 
 	private String fen = buildFEN();
@@ -30,7 +28,6 @@ public class Settings {
 	private boolean startClockAfterFirstMove = false;
 	private BasicClockSettings clock = null;
 	private PlayerSettings player1 = new PlayerSettings();
-	private ColorSetting player1Color = ColorSetting.RANDOM;
 	private PlayerSettings player2 = new PlayerSettings();
 	
 	private static final String buildFEN() {
@@ -59,20 +56,6 @@ public class Settings {
 		}
 	}
 	
-	public enum ColorSetting {
-		RANDOM, BLACK, WHITE;
-		
-		public Color getColor() {
-			if (BLACK.equals(this)) {
-				return Color.BLACK;
-			} else if (WHITE.equals(this)) {
-				return Color.WHITE;
-			} else {
-				return RANDOM_GENERATOR.nextBoolean() ? Color.BLACK : Color.WHITE;
-			}
-		}
-	}
-	
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Getter
@@ -87,5 +70,15 @@ public class Settings {
 	@Setter
 	public static class EngineSettings {
 		private String name;
+	}
+
+	@Override
+	public ClockSettings getClockSettings() {
+		return clock.toClockSettings();
+	}
+
+	@Override
+	public void setClockSettings(ClockSettings clockSettings) {
+		throw new UnsupportedOperationException();
 	}
 }

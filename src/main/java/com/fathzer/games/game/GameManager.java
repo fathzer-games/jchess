@@ -1,0 +1,187 @@
+package com.fathzer.games.game;
+
+import java.util.function.BiConsumer;
+
+import com.fathzer.games.Color;
+import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.Status;
+import com.fathzer.jchess.Score;
+import com.fathzer.games.clock.Clock;
+import com.fathzer.games.clock.ClockSettings;
+import com.fathzer.games.game.AbstractGameSettings.ColorSetting;
+import com.fathzer.util.Observable;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public abstract class GameManager<M,B extends MoveGenerator<M>,S extends AbstractGameSettings> implements Runnable {
+	public enum State {
+		CREATED, PAUSED, RUNNING, ENDED
+	}
+	
+	@Getter
+	private S settings;
+	private Player<M, B> player1;
+	private Player<M, B> player2;
+	private Score score;
+	private Color player1Color;
+	private Observable<State> state;
+	protected Game<M, B> game;
+
+	public Score getScore() {
+		return score;
+	}
+	
+	protected GameManager(S settings, Player<M, B> player1, Player<M, B> player2) {
+		this.player1 = player1;
+		this.player2 = player2;
+		this.state = new Observable<>(State.CREATED);
+		state.addListener(this::onStateChanged);
+		score = new Score();
+		setSettings(settings);
+	}
+	
+	@Override
+	public void run() {
+		while (state.getValue()!=State.ENDED) {
+			state.setValue(State.RUNNING);
+			this.game.run();
+			endOfGame(this.game.getHistory().getStatus());
+		}
+	}
+	
+	protected void onStateChanged(State old, State current) {
+	}
+	
+	private void doRevenge() {
+		final Color previous1 = player1Color;
+		if (ColorSetting.RANDOM.equals(settings.getPlayer1Color()) && score.getGameCount()%2==0) {
+			player1Color = settings.getPlayer1Color().getColor();
+		} else {
+			player1Color = player1Color.opposite();
+		}
+		if (!previous1.equals(player1Color)) {
+			onPlayerColorsChanged();
+		}
+		newGame();
+		setState(State.PAUSED);
+		start();
+	}
+	
+	protected void onPlayerColorsChanged() {
+		// Allows subclasses to perform extra initialization when players color changes
+	}
+	
+	protected Player<M,B> getPlayer(Color color) {
+		if (color==null) {
+			throw new IllegalArgumentException();
+		}
+		return color==player1Color ? player1 : player2;
+	}
+
+	/**
+	 * 	final Board<Move> board = settings.getVariant().getRules().apply(settings.getFen());
+	 * @return //TODO
+	 */
+	protected abstract B getStartPosition();
+	
+	
+	private void newGame() {
+		this.game = new Game<>(getStartPosition(), buildClock(), getPlayer(Color.WHITE), getPlayer(Color.BLACK));
+		log.debug("New game created: {}", this.game.getId());
+		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
+		score.newGame();
+	}
+
+	protected Clock buildClock() {
+		if (settings.getClockSettings()!=null) {
+			final ClockSettings common = settings.getClockSettings();
+//TODO integrate player 2 extra time to ClockSettings? 
+//			final int extraTime = Integer.getInteger("player2ExtraTimeS",0);
+			final Clock clock;
+//			if (extraTime==0) {
+				clock = new Clock(common);
+//			} else {
+//				final ClockSettings other = new ClockSettings(common.getInitialTime()+extraTime).withIncrement(common.getIncrement(), common.getMovesNumberBeforeIncrement(), common.isCanAccumulate());
+//				clock = player1Color==Color.WHITE ? new Clock(common, other) : new Clock(other, common);
+//			}
+			if (settings.isStartClockAfterFirstMove()) {
+				clock.withStartingColor(Color.BLACK);
+			}
+			return clock;
+		} else {
+			return null;
+		}
+	}
+
+	public void addListener(BiConsumer<State,State> listener) {
+		this.state.addListener(listener);
+	}
+	
+	private void start() {
+		if (State.ENDED.equals(getState())) {
+			this.score.reset();
+			newGame();
+		}
+		setState(State.RUNNING);
+	}
+
+	public State getState() {
+		return this.state.getValue();
+	}
+	
+	private void setState(State state) {
+		this.state.setValue(state);
+	}
+	
+	public int getTournamentGamesCount() {
+		return Integer.getInteger("gameCount",0);
+	}
+
+	private void endOfGame(final Status status) {
+		setState(State.PAUSED);
+		log.debug("End of game,  state: {}", getState());
+		updateScores(status);
+		onGameEnded();
+		if (isMakeRevenge(status)) {
+			doRevenge();
+		} else {
+			setState(State.ENDED);
+		}
+	}
+	
+	/** This method is called when game just finished.
+	 *  <br>It does nothing by default but allows subclasses to perform some specific actions (for instance, output a summary of the game in a file). 
+	 */
+	protected void onGameEnded() {
+		// Does nothing by default
+	}
+	
+	protected boolean isMakeRevenge(final Status status) {
+		final int toPlay = getTournamentGamesCount();
+		return toPlay!=0 && score.getGameCount()<toPlay;
+	}
+	
+	private void updateScores(Status status) {
+		if (Status.DRAW.equals(status)) {
+			score.draw();
+		} else {
+			score.win(status.winner()==player1Color);
+		}
+	}
+	
+	public void stop() {
+		setState(State.PAUSED);
+	}
+
+	public void setSettings(S settings) {
+		if (State.RUNNING.equals(getState()) || State.PAUSED.equals(getState())) {
+			throw new IllegalStateException("Can't change the game settings during the game");
+		}
+		this.settings = settings;
+		player1Color = settings.getPlayer1Color().getColor();
+		score.reset();
+		newGame();
+	}
+}

@@ -1,5 +1,6 @@
 package com.fathzer.jchess.internal;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -127,6 +128,12 @@ public class InternalEngine implements Engine {
 		} finally {
 			engine.getDeepeningPolicy().setMaxTime(maxTime);
 		}
+	}
+
+
+	@Override
+	public void stop() throws IOException {
+		//TODO
 	}
 
 	@Override

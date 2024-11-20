@@ -26,6 +26,11 @@ public interface Engine extends Closeable {
 	 */
 	boolean newGame(Variant variant) throws IOException;
 	
+	/** Sets the current game position. 
+	 * @param fen The start position
+	 * @param moves The moves that occurred since start of the game in <a href="https://gist.github.com/DOBRO/2592c6dad754ba67e6dcaec8c90165bf">UCI</a> format.
+	 * @throws IOException If communication with engine fails
+	 */
 	void setPosition(String fen, List<String> moves) throws IOException;
 	
 	/** Gets the engine move choice.
@@ -34,4 +39,9 @@ public interface Engine extends Closeable {
 	 * @throws IOException If communication with engine fails
 	 */
 	String getMove(CountDownState params) throws IOException;
+	
+	/** Ask the engine to stop searching for a move as soon as possible.
+	 * @throws IOException If communication with engine fails
+	 */
+	void stop() throws IOException;
 }

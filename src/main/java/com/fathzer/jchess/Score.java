@@ -53,4 +53,11 @@ public class Score {
 			throw new IllegalStateException();
 		}
 	}
+
+	@Override
+	public String toString() {
+		return getPlayerScore(true)+" - "+getPlayerScore(false);
+	}
+	
+	
 }

@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.clock.PGNTimeControlTagParser;
-import com.fathzer.games.game.EnginePlayer;
-import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.BasicClockSettings;
@@ -34,18 +32,10 @@ public class Tournament {
 		settings.getPlayer2().setName(args[2]);
 		settings.getPlayer2().setEngine(new EngineSettings());
 		settings.getPlayer2().getEngine().setName(args[2]);
-		final EnginePlayer p1 = new EnginePlayer(getEngine(settings.getPlayer1().getName()));
-		final EnginePlayer p2 = new EnginePlayer(getEngine(settings.getPlayer2().getName()));
-		final TournamentGameSession session = new TournamentGameSession(settings, p1, p2);
+		final TournamentGameSession session = new TournamentGameSession(settings);
 		final Thread thread = new Thread(session);
-		thread.setName("Tournament session");
+		thread.setName("Game session");
 		thread.start();
-	}
-	
-	private Engine getEngine(String name) {
-		Optional<EngineData> found = EngineLoader.getEngines().stream().filter(e -> e.getEngine()!=null && e.getName().equals(name)).findAny();
-		return found.orElseThrow().getEngine();
-
 	}
 
 	private boolean init(String[] args) {

@@ -1,18 +1,28 @@
 package com.fathzer.games.game;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 import com.fathzer.games.Color;
+import com.fathzer.games.GameHistory;
+import com.fathzer.games.GameHistory.TerminationCause;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.games.clock.Clock;
+import com.fathzer.games.util.exec.CustomThreadFactory;
+import com.fathzer.games.util.exec.ItemPublisher;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +39,6 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	private static record ResignationEvent<T>(Color color) implements IncomingEvent<T> {}
 	private static record DrawProposal<T>(Color color) implements IncomingEvent<T> {}
 	private static record DrawAcceptance<T>(Color color, boolean accepted) implements IncomingEvent<T> {}
-//	public static record PauseEvent(boolean paused) implements IncomingEvent {}
 	private static record TimeUpEvent<T>() implements IncomingEvent<T> {}
 
 	private final long id = GAME_ID_GENERATOR.incrementAndGet();
@@ -58,8 +67,10 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 		}
 		this.white = white;
 		white.setResignationMethod(this, () -> addEvent(new ResignationEvent<>(Color.WHITE)));
+		white.setDrawRequestMethod(this, () -> addEvent(new DrawProposal<>(Color.WHITE)));
 		this.black = black;
 		black.setResignationMethod(this, () -> addEvent(new ResignationEvent<>(Color.BLACK)));
+		black.setDrawRequestMethod(this, () -> addEvent(new DrawProposal<>(Color.BLACK)));
 		this.history = new GameHistory<>(board);
 		this.clock = clock;
 		if (clock!=null) {
@@ -70,6 +81,27 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 		events = new ItemPublisher<>();
 		moveListeners = new LinkedList<>();
 		endGameListeners = new LinkedList<>();
+	}
+	
+	private static record PlayerFuture<M,B extends MoveGenerator<M>>(Player<M, B> player, Future<Void> future) {
+		private void check() {
+			try {
+				future.get(5, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			} catch (ExecutionException | TimeoutException e) {
+				throw new UnresponsivePlayerException(player);
+			}
+		}
+	}
+
+	private void checkPlayerReadiness(List<Player<M, B>> players) {
+		final ExecutorService exec = Executors.newCachedThreadPool(new CustomThreadFactory(new CustomThreadFactory.BasicThreadNameSupplier("Player readiness waiter"), true));
+		try {
+			players.stream().map(p -> new PlayerFuture<>(p, exec.submit(() -> {p.onNewGame(this); return null;}))).forEach(pf -> pf.check());
+		} finally {
+			exec.shutdown();
+		}
 	}
 	
 	private Player<M,B> getPlayer(Color color) {
@@ -83,6 +115,7 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	@Override
 	public void run() {
 		events.subscribe(this::doEvent);
+		checkPlayerReadiness(Arrays.asList(white, black));
 		this.start();
 		requestMove(getActiveColor());
 		events.run();
@@ -165,6 +198,8 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 		log.debug("Game is ended");
 		pause();
 		events.close();
+		white.onEndGame(this);
+		black.onEndGame(this);
 		endGameListeners.forEach(l -> l.accept(this));
 	}
 	

@@ -6,6 +6,7 @@ import javax.swing.SwingUtilities;
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.AbstractGameSession;
+import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Game;
 import com.fathzer.jchess.GameRecorder;
 import com.fathzer.jchess.Move;
@@ -18,9 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GameSession extends AbstractGameSession<GamePanel> {
 	private long lastMoveTime = 0;
+	private GamePanel gui;
 
 	public GameSession(GamePanel panel, Settings settings) {
-		super(panel, settings);
+		super(settings);
+		this.gui = panel;
 		panel.getBoard().addPropertyChangeListener(ChessBoardPanel.TARGET, evt -> onMove((Move) evt.getNewValue()));
 		panel.setResignationHandler(this::resign);
 	}
@@ -57,14 +60,14 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 		gui.setPlayer1Color(player1Color);
 		gui.setClock(game.getClock());
 		gui.setScore(getScore());
-		gui.getBoard().setBoard(game.getBoard());
+		gui.getBoard().setBoard((Board<Move>) game.getHistory().getBoard().fork());
 		gui.getBoard().setManualMoveEnabled(false);
 		lastMoveTime = System.currentTimeMillis();
 	}
 	
 	@Override
 	protected void nextMove() {
-		final Color activeColor = game.getBoard().getActiveColor();
+		final Color activeColor = game.getHistory().getBoard().getActiveColor();
 		final Engine engine = getEngine(activeColor);
 		gui.getBoard().setManualMoveEnabled(engine==null);
 		if (engine!=null) {
@@ -82,7 +85,7 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 			// WARNING: If a revenge is launched before the engine returns its choice, state can be RUNNING again
 			// and the move would be transmitted to the panel if we omitted to check we are still in the same game!
 			if (move!=null && game==this.game && State.RUNNING.equals(getState())) {
-				log.debug("Transmitting {}'s move {} to panel's board",game.getBoard().getActiveColor(),move);
+				log.debug("Transmitting {}'s move {} to panel's board",game.getHistory().getBoard().getActiveColor(),move);
 				gui.getBoard().doMove(move);
 			} else {
 				log.debug("Ignore move {}, state is {}", move, getState());
@@ -133,8 +136,8 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 
 	private void setEvaluation() {
 		final NaiveEvaluator ev = new NaiveEvaluator();
-		ev.init(game.getBoard());
-		gui.setEvaluation(ev.evaluateAsWhite(game.getBoard())/100);
+		ev.init(game.getHistory().getBoard());
+		gui.setEvaluation(ev.evaluateAsWhite(game.getHistory().getBoard())/100);
 	}
 
 	@Override
@@ -154,7 +157,7 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 	
 	private void onEngineError(Engine engine) {
 		JOptionPane.showMessageDialog(gui, "An error occured while communicating with the "+engine.getName()+" engine. Assuming it resigns", "Error", JOptionPane.ERROR_MESSAGE);
-		final Status status = Color.WHITE.equals(game.getBoard().getActiveColor()) ? Status.BLACK_WON : Status.WHITE_WON;
+		final Status status = Color.WHITE.equals(game.getHistory().getBoard().getActiveColor()) ? Status.BLACK_WON : Status.WHITE_WON;
 		endOfGame(status);
 	}
 	

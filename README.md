@@ -66,6 +66,7 @@ If you specify a value for the `gameCount` system property while starting the ap
 
 # TODO
 - PGN should contain time settings and a [Termination tag](https://github.com/mliebelt/pgn-spec-commented/blob/main/pgn-specification.md#981-tag-termination).
+- Finish Game (make Draw Proposal work and call cancel method on game end).
 - Implement a way to play again on missclick.
 - Implement PGN game loading
 - Implement move backward/forward in the game.

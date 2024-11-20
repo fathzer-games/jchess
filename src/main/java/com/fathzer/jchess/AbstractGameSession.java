@@ -8,10 +8,11 @@ import com.fathzer.games.Status;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
+import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
+import com.fathzer.games.game.AbstractGameSettings.ColorSetting;
 import com.fathzer.jchess.settings.Settings;
-import com.fathzer.jchess.settings.Settings.ColorSetting;
 import com.fathzer.jchess.settings.Settings.EngineSettings;
 import com.fathzer.util.Observable;
 
@@ -23,7 +24,6 @@ public abstract class AbstractGameSession<T> {
 		CREATED, PAUSED, RUNNING, ENDED
 	}
 	
-	protected final T gui;
 	private Settings settings;
 	private Engine whiteEngine;
 	private Engine blackEngine;
@@ -40,8 +40,7 @@ public abstract class AbstractGameSession<T> {
 		return settings;
 	}
 	
-	protected AbstractGameSession(T gui, Settings settings) {
-		this.gui = gui;
+	protected AbstractGameSession(Settings settings) {
 		this.state = new Observable<>(State.CREATED);
 		state.addListener(this::onStateChanged);
 		score = new Score();
@@ -82,6 +81,7 @@ public abstract class AbstractGameSession<T> {
 	
 	protected void newGame() {
 		this.game = new Game(settings.getVariant().getRules().apply(settings.getFen()), buildClock());
+		log.info("New game created: "+this.game);		//TODO
 		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
 		score.newGame();
 	}
@@ -182,6 +182,7 @@ public abstract class AbstractGameSession<T> {
 				return;
 			}
 		}
+		game.getHistory().earlyEnd(status, TerminationCause.TIME_FORFEIT);
 		endOfGame(status);
 	}
 	
@@ -194,8 +195,9 @@ public abstract class AbstractGameSession<T> {
 			return;
 		}
 		setState(State.PAUSED);
-		if (game.getBoard().getActiveColor().equals(color) && isResignationConfirmed()) {
+		if (game.getHistory().getBoard().getActiveColor().equals(color) && isResignationConfirmed()) {
 			final Status status = Color.WHITE.equals(color) ? Status.BLACK_WON : Status.WHITE_WON;
+			game.getHistory().earlyEnd(status, TerminationCause.ABANDONED);
 			endOfGame(status);
 		} else {
 			setState(State.RUNNING);

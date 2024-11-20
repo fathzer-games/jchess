@@ -19,6 +19,13 @@ public interface Player<M,B extends MoveGenerator<M>> {
 	 */
 	default void setDrawRequestMethod(Game<M, B> game, Runnable drawRequest) {}
 	
+	/** Informs the player that it starts playing in a new game.
+	 * <br>The default implementation does nothing
+	 * @param game The new game
+	 */
+	default void onNewGame(Game<M, B> game) {
+	}
+	
 	/** The player is requested to play a move.
 	 * <br>It should start thinking in a background thread and then call {@code moveConsumer} with the chosen move.
 	 * @param game The game that asks for the move.
@@ -26,15 +33,13 @@ public interface Player<M,B extends MoveGenerator<M>> {
 	 */
 	void requestMove(Game<M, B> game, Consumer<M> moveConsumer);
 	
-	/** The player is requested to cancel the search for a move or thinking about a draw proposal. 
-	 * <br>This method is typically called when the game is finished after a call to {@link #requestMove(Game)} and
-	 * before the move is posted with {@link Game#addEvent(com.fathzer.games.game.Events.GameEvent)}.
-	 * This occurs typically when the other player resigns or a time out occurs.
-	 * <br>The default implementation does nothing because even if a call to {@link Game#add(com.fathzer.games.game.Game.IncomingEvent)} is made,
-	 * after this method call, it will be ignored by the game.
-	 * @param game The game that cancels the request for a move.
+	/** The player is informed that the game is ended.
+	 * <br>The default implementation does nothing.
+	 * Nevertheless, it is a good practice to override this method and cancel the current search for a move or thinking about a draw proposal.
+	 * <br>It is optional because any call to {@link Game#add(com.fathzer.games.game.Game.IncomingEvent)} after the end of the game will be ignored.
+	 * @param game The game that ends.
 	 */
-	default void cancel(Game<M, B> game) {
+	default void onEndGame(Game<M, B> game) {
 	}
 	
 	/** The player is requested to accept or reject a draw proposal. 

@@ -11,6 +11,7 @@ import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.Settings.Variant;
 import com.fathzer.uci.client.GoParameters;
+import com.fathzer.uci.client.GoParameters.TimeControl;
 import com.fathzer.uci.client.GoReply.UCIMove;
 
 public class UCIEngine extends com.fathzer.uci.client.UCIEngine implements Engine {
@@ -45,11 +46,8 @@ public class UCIEngine extends com.fathzer.uci.client.UCIEngine implements Engin
 	@Override
 	public String getMove(CountDownState params) throws IOException {
 		final GoParameters goParams = new GoParameters();
-		final GoParameters.TimeControl tc = goParams.getTimeControl();
 		if (params!=null) {
-			tc.setRemainingMs(params.getRemainingMs());
-			tc.setIncrementMs(params.getIncrementMs());
-			tc.setMovesToGo(params.getMovesToGo());
+			goParams.setTimeControl(new TimeControl(params.getRemainingMs(), params.getIncrementMs(), params.getMovesToGo()));
 		}
 		final List<UCIMove> moves = super.go(goParams).getMoves();
 		return moves.isEmpty() ? null : moves.get(0).getMove();
@@ -57,6 +55,6 @@ public class UCIEngine extends com.fathzer.uci.client.UCIEngine implements Engin
 	
 	@Override
 	public String getName() {
-		return data.getName();
+		return data==null? "?" : data.getName();
 	}
 }

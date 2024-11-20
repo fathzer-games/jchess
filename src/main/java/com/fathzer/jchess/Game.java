@@ -8,24 +8,24 @@ import java.util.function.Consumer;
 
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.fen.FENUtils;
+import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
+import com.fathzer.games.Color;
+import com.fathzer.games.Status;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.clock.ClockState;
 import com.fathzer.games.clock.CountDownState;
+import com.fathzer.games.util.exec.CustomThreadFactory;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Game {
-	private static final Executor EXECUTOR = Executors.newSingleThreadExecutor(r -> {
-	    Thread t = Executors.defaultThreadFactory().newThread(r);
-	    t.setDaemon(true);
-	    return t;
-	});
+	private static final Executor EXECUTOR = Executors.newSingleThreadExecutor(new CustomThreadFactory(new CustomThreadFactory.BasicThreadNameSupplier("Game thread"), true));
 	
-	@Getter
-	private final Board<Move> board;
 	@Getter
 	private boolean firstMove;
 	@Getter
@@ -37,7 +37,6 @@ public class Game {
 	private GameHistory history;
 
 	public Game(Board<Move> board, Clock clock) {
-		this.board = board;
 		this.history = new GameHistory(board);
 		this.firstMove = true;
 		this.clock = clock;
@@ -70,7 +69,7 @@ public class Game {
 	}
 	
 	private Move getMove(Engine engine) throws IOException {
-		final CoordinatesSystem cs = board.getCoordinatesSystem();
+		final CoordinatesSystem cs = this.history.getBoard().getCoordinatesSystem();
 		engine.setPosition(FENUtils.to(history.getStartBoard()), history.getMoves().stream().map(m -> JChessUCIEngine.toUCIMove(cs, m)).
 				map(UCIMove::toString).toList());
 		final CountDownState params;
@@ -82,8 +81,17 @@ public class Game {
 			final int increment = clockSettings.getIncrement()>0 ? clockSettings.getIncrement()*1000/clockSettings.getMovesNumberBeforeIncrement() : 0;
 			final int movesToGo = clock.getRemainingMovesBeforeNext(clock.getPlaying());
 			params = new CountDownState(remainingTime, increment, movesToGo);
+			//TODO
+			log.info("engine "+engine.getName()+" will wait "+(remainingTime+500)+" to have time forfeit");
+			try {
+				Thread.sleep(remainingTime+500);
+			} catch (InterruptedException e) {
+				log.error("Interrupted", e);
+				Thread.currentThread().interrupt();
+			}
+			//End of TODO
 		}
-		return JChessUCIEngine.toMove(board, UCIMove.from(engine.getMove(params)));
+		return JChessUCIEngine.toMove(this.history.getBoard(), UCIMove.from(engine.getMove(params)));
 	}
 
 	public void playEngine(Engine engine, BiConsumer<Game, Move> moveConsumer, Consumer<Exception> errorManager) {
@@ -97,9 +105,21 @@ public class Game {
 	}
 	
 	public void onMove(Move move) {
-		if (clock!=null) {
-			clock.tap();
+		synchronized (history) {
+			final Status status = history.getStatus();
+			if (status!=null) {
+				// If game is already ended, ignore the move (probably, the game was ended by a time forfeit).
+				log.info("Move {} is ignored because game status is {}", move, status); //TODO
+				return;
+			}
+			final Color playing = history.getBoard().getActiveColor();
+			final boolean valid = history.add(move);
+			if (!valid) {
+				pause();
+				this.getHistory().earlyEnd(playing==Color.WHITE?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.RULES_INFRACTION);
+			} else if (clock!=null) {
+				clock.tap();
+			}
 		}
-		history.add(move);
 	}
 }
