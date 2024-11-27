@@ -25,6 +25,7 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 	private Player<M, B> player1;
 	private Player<M, B> player2;
 	private Score score;
+	@Getter
 	private Color player1Color;
 	private Observable<State> state;
 	protected Game<M, B> game;

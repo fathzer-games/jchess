@@ -156,7 +156,7 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 	}
 	
 	private void onEngineError(Engine engine) {
-		JOptionPane.showMessageDialog(gui, "An error occured while communicating with the "+engine.getName()+" engine. Assuming it resigns", "Error", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(gui, "An error occurred while communicating with the "+engine.getName()+" engine. Assuming it resigns", "Error", JOptionPane.ERROR_MESSAGE);
 		final Status status = Color.WHITE.equals(game.getHistory().getBoard().getActiveColor()) ? Status.BLACK_WON : Status.WHITE_WON;
 		endOfGame(status);
 	}
@@ -167,7 +167,7 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 		try {
 			GameRecorder.print(this.game.getHistory(), this.getSettings(), this.player1Color, (long) this.getScore().getGameCount());
 		} catch (Exception e) {
-			log.error("An error occured while writing pgn",e);
+			log.error("An error occurred while writing pgn",e);
 		}
 	}
 

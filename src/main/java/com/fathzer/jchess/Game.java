@@ -8,10 +8,11 @@ import java.util.function.Consumer;
 
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.fen.FENUtils;
-import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
 import com.fathzer.games.Color;
+import com.fathzer.games.GameHistory;
+import com.fathzer.games.GameHistory.TerminationCause;
 import com.fathzer.games.Status;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
@@ -34,10 +35,10 @@ public class Game {
 	private boolean paused;
 	private boolean startClockAfterFirstMove = false;
 	@Getter
-	private GameHistory history;
+	private GameHistory<Move, Board<Move>> history;
 
 	public Game(Board<Move> board, Clock clock) {
-		this.history = new GameHistory(board);
+		this.history = new GameHistory<>(board);
 		this.firstMove = true;
 		this.clock = clock;
 		if (clock!=null) {

@@ -1,6 +1,7 @@
 package com.fathzer.games.game;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -57,12 +58,16 @@ public class EnginePlayer implements Player<Move, Board<Move>> {
 		} else {
 			this.currentSearch.set(moveWaiter.submit(() -> {
 				log.debug("{} starts searching best move on game {}", getName(), game.getId());
-				final Move move = getMove(game);
+				final Optional<Move> move = getMove(game);
 				synchronized (EnginePlayer.this) {
 					currentSearch.set(null);
 				}
-				log.debug("{} returns a move on game {}", getName(), game.getId());
-				callBack.accept(move);
+				if (move.isPresent()) {
+					log.debug("{} returns a move on game {}", getName(), game.getId());
+					callBack.accept(move.get());
+				} else {
+					log.debug("No time remaining for {} to compute best move on game {}", getName(), game.getId());
+				}
 				return null;
 			}));
 		}
@@ -86,7 +91,7 @@ public class EnginePlayer implements Player<Move, Board<Move>> {
 		}
 	}
 
-	private Move getMove(Game<Move, Board<Move>> game) throws IOException {
+	private Optional<Move> getMove(Game<Move, Board<Move>> game) throws IOException {
 		final GameHistory<Move, Board<Move>> history = game.getHistory();
 		final CoordinatesSystem cs = history.getBoard().getCoordinatesSystem();
 		engine.setPosition(FENUtils.to(history.getStartBoard()), history.getMoves().stream().map(m -> JChessUCIEngine.toUCIMove(cs, m)).
@@ -103,9 +108,9 @@ public class EnginePlayer implements Player<Move, Board<Move>> {
 			params = new CountDownState(remainingTime, increment, movesToGo);
 		}
 		if (params.getRemainingMs()<0) {
-			log.error("Something will go wrong, allowed time is <0"); //TODO
+			return Optional.empty();
 		}
-		return JChessUCIEngine.toMove(history.getBoard(), UCIMove.from(engine.getMove(params)));
+		return Optional.of(JChessUCIEngine.toMove(history.getBoard(), UCIMove.from(engine.getMove(params))));
 	}
 	
 	public String getName() {

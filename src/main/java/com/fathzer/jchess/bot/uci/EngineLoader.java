@@ -99,7 +99,7 @@ public class EngineLoader {
 				try {
 					e.stop();
 				} catch (IOException e1) {
-					log.error("An error occured while stopping "+e.getName()+" engine",e1);
+					log.error("An error occurred while stopping {} engine", e.getName(),e1);
 				}
 			}
 		});

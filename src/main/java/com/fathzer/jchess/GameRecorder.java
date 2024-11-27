@@ -8,6 +8,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.GameHistory;
 import com.fathzer.games.clock.PGNTimeControlTagParser;
 import com.fathzer.jchess.pgn.PGNHeaders;
 import com.fathzer.jchess.pgn.PGNHeaders.Builder;
@@ -20,13 +21,13 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class GameRecorder {
-	public static void print(GameHistory history, Settings settings, Color player1Color, Long round) throws IOException {
+	public static void print(GameHistory<Move, Board<Move>> history, Settings settings, Color player1Color, Long round) throws IOException {
 		try (PrintWriter out=out()) {
 			print(history, settings, player1Color, round, out);
 		}
 	}
 
-	public static void print(GameHistory history, Settings settings, Color player1Color, Long round, PrintWriter out) {
+	public static void print(GameHistory<Move, Board<Move>> history, Settings settings, Color player1Color, Long round, PrintWriter out) {
 		final Builder builder = new PGNHeaders.Builder();
 		builder.setWhiteName(who(settings, player1Color, Color.WHITE));
 		builder.setBlackName(who(settings, player1Color, Color.BLACK));

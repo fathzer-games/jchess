@@ -4,11 +4,11 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.GameHistory.TerminationCause;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
-import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.game.AbstractGameSettings.ColorSetting;

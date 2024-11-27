@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.GameHistory.TerminationCause;
 import com.fathzer.games.Status;
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
@@ -19,7 +20,6 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.generic.BasicMove;
-import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 import com.fathzer.jchess.settings.Settings.Variant;
 
 class GameTest {
@@ -64,8 +64,8 @@ class GameTest {
 		assertTrue(game.isEnded());
 		assertEquals(Status.WHITE_WON, game.getHistory().getStatus());
 		assertEquals(TerminationCause.NORMAL, game.getHistory().getTerminationCause());
-		assertFalse(white.errorOccured);
-		assertFalse(black.errorOccured);
+		assertFalse(white.errorOccurred);
+		assertFalse(black.errorOccurred);
 		assertEquals(1, counter.endCounter);
 		assertEquals(7, counter.moveCounter);
 	}
@@ -85,8 +85,8 @@ class GameTest {
 		assertTrue(game.isEnded());
 		assertEquals(Status.BLACK_WON, game.getHistory().getStatus());
 		assertEquals(TerminationCause.ABANDONED, game.getHistory().getTerminationCause());
-		assertFalse(white.errorOccured);
-		assertFalse(black.errorOccured);
+		assertFalse(white.errorOccurred);
+		assertFalse(black.errorOccurred);
 		assertEquals(1, counter.endCounter);
 		assertEquals(4, counter.moveCounter);
 	}
@@ -119,8 +119,8 @@ class GameTest {
 		assertEquals(TerminationCause.TIME_FORFEIT, game.getHistory().getTerminationCause());
 		white.join();
 		black.join();
-		assertFalse(white.errorOccured);
-		assertFalse(black.errorOccured);
+		assertFalse(white.errorOccurred);
+		assertFalse(black.errorOccurred);
 		assertEquals(1, counter.endCounter);
 		assertEquals(3, counter.moveCounter);
 	}
@@ -132,7 +132,7 @@ class GameTest {
 	private static final class TestPlayer implements Player<Move, Board<Move>> {
 		private final Queue<Action> actions;
 		private final Color color;
-		private boolean errorOccured;
+		private boolean errorOccurred;
 		private Thread requestThread;
 		private long thinkTime = 0;
 		private Runnable resignation;
@@ -167,7 +167,7 @@ class GameTest {
 					Thread.currentThread().interrupt();
 				} catch (Throwable e) {
 					e.printStackTrace();
-					errorOccured = true;
+					errorOccurred = true;
 				}
 			});
 			requestThread.start();

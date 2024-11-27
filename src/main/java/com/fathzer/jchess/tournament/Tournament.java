@@ -56,7 +56,7 @@ public class Tournament {
 			try {
 				EngineLoader.init();
 			} catch (IOException e) {
-				LOGGER.error("An error occured while reading the external engine configuration file (data/engines.json)", e);
+				LOGGER.error("An error occurred while reading the external engine configuration file (data/engines.json)", e);
 				return false;
 			}
 		}
