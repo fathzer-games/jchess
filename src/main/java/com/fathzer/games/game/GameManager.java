@@ -20,11 +20,11 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 		CREATED, PAUSED, RUNNING, ENDED
 	}
 	
+	private final Player<M, B> player1;
+	private final Player<M, B> player2;
+	private final Score score;
 	@Getter
 	private S settings;
-	private Player<M, B> player1;
-	private Player<M, B> player2;
-	private Score score;
 	@Getter
 	private Color player1Color;
 	private Observable<State> state;
@@ -74,11 +74,25 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 		// Allows subclasses to perform extra initialization when players color changes
 	}
 	
-	protected Player<M,B> getPlayer(Color color) {
+	public Player<M,B> getPlayer(Color color) {
 		if (color==null) {
 			throw new IllegalArgumentException();
 		}
 		return color==player1Color ? player1 : player2;
+	}
+	
+	/**
+	 * @return the player1
+	 */
+	public Player<M, B> getPlayer1() {
+		return player1;
+	}
+
+	/**
+	 * @return the player2
+	 */
+	public Player<M, B> getPlayer2() {
+		return player2;
 	}
 
 	/**
@@ -87,12 +101,20 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 	 */
 	protected abstract B getStartPosition();
 	
-	
 	private void newGame() {
 		this.game = new Game<>(getStartPosition(), buildClock(), getPlayer(Color.WHITE), getPlayer(Color.BLACK));
 		log.debug("New game created: {}", this.game.getId());
 		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
 		score.newGame();
+		onNewGame(this.game);
+	}
+	
+	/** A new Game was created.
+	 * <br>This method does nothing but subclasses can override it to perform extra actions when new game is created.
+	 * @param game The new game
+	 */
+	protected void onNewGame(Game<M,B> game) {
+		// Does nothing, can be used by subclass
 	}
 
 	protected Clock buildClock() {

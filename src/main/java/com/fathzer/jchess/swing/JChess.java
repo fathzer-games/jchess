@@ -17,11 +17,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
-import com.fathzer.jchess.AbstractGameSession;
+import com.fathzer.games.game.EnginePlayer;
+import com.fathzer.games.game.GameManager;
+import com.fathzer.games.game.GameManager.State;
+import com.fathzer.games.game.HumanPlayer;
+import com.fathzer.games.game.Player;
+import com.fathzer.jchess.Board;
+import com.fathzer.jchess.Move;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.Context;
 import com.fathzer.jchess.settings.Settings;
+import com.fathzer.jchess.settings.Settings.EngineSettings;
 import com.fathzer.jchess.settings.Settings.PlayerSettings;
 import com.fathzer.jchess.swing.settings.SettingsDialog;
 import com.fathzer.jchess.tournament.Tournament;
@@ -29,8 +36,11 @@ import com.fathzer.jchess.uci.JChessUCI;
 import com.fathzer.soft.ajlib.swing.framework.Application;
 import com.fathzer.util.TinyJackson;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.awt.Color;
 
+@Slf4j
 public class JChess extends Application {
 	private static final String SETTINGS_PREF = "gameSettings";
 
@@ -75,7 +85,7 @@ public class JChess extends Application {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				startGame();
+				startGameSession();
 			}
 		};
 		panel.setPlayAction(() -> this.startAction.actionPerformed(null));
@@ -97,8 +107,8 @@ public class JChess extends Application {
 		try {
 			EngineLoader.init();
 		} catch (IOException e) {
-			LoggerFactory.getLogger(JChess.class).error("An error occured while reading the external engine configuration file (data/engines.json)", e);
-			int result = JOptionPane.showConfirmDialog(null,"An error occured while reading the external engine configuration file (data/engines.json).\nWould you like to quit now?", "Engine configuration error",
+			LoggerFactory.getLogger(JChess.class).error("An error occurred while reading the external engine configuration file (data/engines.json)", e);
+			int result = JOptionPane.showConfirmDialog(null,"An error occurred while reading the external engine configuration file (data/engines.json).\nWould you like to quit now?", "Engine configuration error",
 		               JOptionPane.YES_NO_OPTION,
 		               JOptionPane.ERROR_MESSAGE);
 			if (result==0) {
@@ -106,14 +116,26 @@ public class JChess extends Application {
 			}
 		}
 		fixSettings();
-		this.game = new GameSession(panel.getGamePanel(), settings);
+		final GamePanel gamePanel = panel.getGamePanel();
+		this.game = new GameSession(panel.getGamePanel(), settings, getPlayer(settings.getPlayer1(), gamePanel.getPlayer1()), getPlayer(settings.getPlayer2(), gamePanel.getPlayer2()));
 		this.game.addListener((o,n) -> {
-			if (AbstractGameSession.State.ENDED.equals(n)) {
+			if (GameManager.State.ENDED.equals(n)) {
 				this.startAction.setEnabled(true);
 				this.panel.setMenuVisible(true);
 			}
 		});
 		return true;
+	}
+	
+	private Player<Move, Board<Move>> getPlayer(PlayerSettings playerSettings, PlayerPanel playerPanel) {
+		final EngineSettings engineSettings = playerSettings.getEngine();
+		if (engineSettings==null) {
+			return new HumanPlayer(panel.getGamePanel().getBoard(), playerPanel);
+		} else {
+			final String name = engineSettings.getName();
+			Optional<EngineData> found = EngineLoader.getEngines().stream().filter(e -> e.getEngine()!=null && e.getName().equals(name)).findAny();
+			return new EnginePlayer(found.orElseThrow().getEngine());
+		}
 	}
 	
 	/** Fixes incompatibilities between settings and available engines and starts used engines.
@@ -138,7 +160,7 @@ public class JChess extends Application {
 						engine.get().start();
 						ok = true;
 					} catch (IOException e) {
-						// TODO Log the error?
+						log.error("Error while launching engine {}", engine.get().getName(), e);
 					}
 				}
 			}
@@ -159,8 +181,9 @@ public class JChess extends Application {
 			try {
 				final String value = TinyJackson.toJSONObject(settings).toString();
 				preferences.put(SETTINGS_PREF, value);
+				log.debug("Application state written: {}", value);
 			} catch (JSONException e) {
-				//TODO Log the error;
+				log.error("Error while saving application state", e);
 			}
 		}
 	}
@@ -169,11 +192,12 @@ public class JChess extends Application {
 	protected void restoreState() {
 		super.restoreState();
 		final String value = getPreferences().get(SETTINGS_PREF, null);
+		log.debug("Application state read: {}", value);
 		try {
 			this.settings = value==null ? new Settings() : TinyJackson.toObject(new JSONObject(value), Settings.class);
 		} catch (JSONException e) {
+			log.error("Error while reading previous application state", e);
 			this.settings = new Settings();
-			//TODO Log the error
 		}
 	}
 
@@ -186,10 +210,13 @@ public class JChess extends Application {
 		return bar;
 	}
 
-	private void startGame() {
+	private void startGameSession() {
 		this.startAction.setEnabled(false);
 		this.panel.setMenuVisible(false);
-		this.game.start();
+		if (game.getState()==State.ENDED) {
+			this.game = new GameSession(panel.getGamePanel(), settings, game.getPlayer1(), game.getPlayer2());
+		}
+		new Thread(this.game).start();
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import com.fathzer.games.perft.PerfTParser;
 import com.fathzer.games.perft.PerfTTestData;
 import com.fathzer.jchess.uci.extended.ExtendedUCI;
 import com.fathzer.jchess.uci.extended.SpeedTest;
+import com.fathzer.jchess.uci.helper.AbstractEngine;
 import com.fathzer.plugin.loader.jar.JarPluginLoader;
 import com.fathzer.plugin.loader.utils.FileUtils;
 
@@ -54,8 +55,8 @@ public class JChessUCI extends ExtendedUCI {
 	}
 
 	private void speedTest(Deque<String> args) {
-		if (engine instanceof JChessUCIEngine) {
-			out("completed in "+new SpeedTest<>((JChessUCIEngine)engine).run()+"ms");
+		if (engine instanceof AbstractEngine<?, ?> abstractEngine) {
+			out("completed in "+new SpeedTest<>(abstractEngine).run()+"ms");
 		} else {
 			debug("This engine does not support this command");
 		}

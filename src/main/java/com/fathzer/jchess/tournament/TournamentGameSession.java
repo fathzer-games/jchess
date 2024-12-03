@@ -12,7 +12,7 @@ import com.fathzer.jchess.settings.Settings;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class TournamentGameSession extends GameManager<Move, Board<Move>, Settings> implements Runnable {
+class TournamentGameSession extends GameManager<Move, Board<Move>, Settings> {
 	TournamentGameSession(Settings settings, Player<Move, Board<Move>> player1, Player<Move, Board<Move>> player2) {
 		super(settings, player1, player2);
 	}
@@ -38,7 +38,6 @@ class TournamentGameSession extends GameManager<Move, Board<Move>, Settings> imp
 		super.onStateChanged(old, current);
 		if (State.ENDED.equals(current)) {
 			log.info("Game session ended");
-			
 			log.info("Final score: {} {} {}", this.getSettings().getPlayer1().getName(), this.getScore(), this.getSettings().getPlayer2().getName());
 		}
 	}

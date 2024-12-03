@@ -1,7 +1,5 @@
 package com.fathzer.jchess.swing;
 
-import java.util.function.Consumer;
-
 import javax.swing.JPanel;
 
 import com.fathzer.games.Color;
@@ -18,7 +16,9 @@ public class GamePanel extends JPanel {
 
 	private Color player1Color;
 
+	@Getter
 	private PlayerPanel player1;
+	@Getter
 	private PlayerPanel player2;
 
 	public GamePanel() {
@@ -50,11 +50,6 @@ public class GamePanel extends JPanel {
 	public void setClock(Clock clock) {
 		player1.setClock(clock, player1Color);
 		player2.setClock(clock, player1Color.opposite());
-	}
-	
-	public void setResignationHandler(Consumer<Color> resignationHandler) {
-		player1.setResignationHandler(resignationHandler);
-		player2.setResignationHandler(resignationHandler);
 	}
 
 	@Override

@@ -5,28 +5,38 @@ import javax.swing.SwingUtilities;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
-import com.fathzer.jchess.AbstractGameSession;
+import com.fathzer.games.game.Game;
+import com.fathzer.games.game.GameManager;
+import com.fathzer.games.game.Player;
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Game;
 import com.fathzer.jchess.GameRecorder;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.evaluator.NaiveEvaluator;
-import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.settings.Settings;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GameSession extends AbstractGameSession<GamePanel> {
+public class GameSession extends GameManager<Move, Board<Move>, Settings> {
 	private long lastMoveTime = 0;
 	private GamePanel gui;
 
-	public GameSession(GamePanel panel, Settings settings) {
-		super(settings);
+	public GameSession(GamePanel panel, Settings settings, Player<Move, Board<Move>> player1, Player<Move, Board<Move>> player2) {
+		super(settings, player1, player2);
 		this.gui = panel;
-		panel.getBoard().addPropertyChangeListener(ChessBoardPanel.TARGET, evt -> onMove((Move) evt.getNewValue()));
-		panel.setResignationHandler(this::resign);
+		onNewGame(this.game);
+		refreshAppearance(settings);
 	}
+	
+	@Override
+	protected Board<Move> getStartPosition() {
+		return getSettings().getVariant().getRules().apply(getSettings().getFen());
+	}
+
+	protected boolean onlyHumans() {
+		return this.getSettings().getPlayer1().getEngine()==null && this.getSettings().getPlayer2().getEngine()==null;
+	}
+
 	
 	@Override
 	protected void onStateChanged(State old, State current) {
@@ -46,6 +56,7 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 
 	@Override
 	protected void onPlayerColorsChanged() {
+		final Color player1Color = getPlayer1Color();
 		gui.getBoard().setReverted(Color.BLACK.equals(player1Color));
 		if (onlyHumans()) {
 			// Change upside down color
@@ -54,33 +65,23 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 	}
 	
 	@Override
-	protected void newGame() {
-		super.newGame();
-		setEvaluation();
-		gui.setPlayer1Color(player1Color);
-		gui.setClock(game.getClock());
-		gui.setScore(getScore());
-		gui.getBoard().setBoard((Board<Move>) game.getHistory().getBoard().fork());
-		gui.getBoard().setManualMoveEnabled(false);
-		lastMoveTime = System.currentTimeMillis();
-	}
-	
-	@Override
-	protected void nextMove() {
-		final Color activeColor = game.getHistory().getBoard().getActiveColor();
-		final Engine engine = getEngine(activeColor);
-		gui.getBoard().setManualMoveEnabled(engine==null);
-		if (engine!=null) {
-			log.debug("Engine detected for {}",activeColor);
-			game.playEngine(engine, this::play, e -> {
-				log.error("Error while communicating with "+engine.getName()+" engine", e);
-				SwingUtilities.invokeLater(() -> onEngineError(engine));
+	protected void onNewGame(Game<Move, Board<Move>> game) {
+		this.game = game;
+		if (gui!=null) {
+			SwingUtilities.invokeLater(() -> {
+				lastMoveTime = System.currentTimeMillis();
+				game.addMoveListener(this::onMove);
+				setEvaluation();
+				gui.setPlayer1Color(getPlayer1Color());
+				gui.setClock(game.getClock());
+				gui.setScore(getScore());
+				gui.getBoard().setBoard((Board<Move>) game.getHistory().getBoard().fork());
+				gui.getBoard().setManualMoveEnabled(false);
 			});
 		}
 	}
-	
-	@Override
-	protected void play(Game game, Move move) {
+
+	protected void onMove(Game<Move, Board<Move>> game, Move move) {
 		SwingUtilities.invokeLater(() -> {
 			// WARNING: If a revenge is launched before the engine returns its choice, state can be RUNNING again
 			// and the move would be transmitted to the panel if we omitted to check we are still in the same game!
@@ -90,49 +91,35 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 			} else {
 				log.debug("Ignore move {}, state is {}", move, getState());
 			}
+			gui.repaint();
+			setEvaluation();
 		});
-	}
-
-	protected void onMove(Move move) {
-		gui.repaint();
-		this.game.onMove(move);
-		setEvaluation();
-//TODO		think(5000);
-		final Status status = gui.getBoard().getStatus();
-		if (!Status.PLAYING.equals(status)) {
-			// Game is ended
-			endOfGame(status);
-		} else {
-			if (getState()==State.RUNNING) {
-				nextMove();
-			}
-		}
 	}
 	
 	// This makes, always when two bots are competing, and sometime when human plays against a bot,
 	// closing the window not exiting the application (and not closing the engine's process)
 	//TODO Should be investigated
-	@SuppressWarnings("unused")
-	private void think(long thinkTime) {
-		final long remaining = thinkTime - (System.currentTimeMillis() - lastMoveTime);
-		if (remaining>0) {
-			game.pause();
-			SwingUtilities.invokeLater(() -> {
-				System.out.println("Will wait for "+remaining+"ms");
-				try {
-					synchronized (this) {
-						this.wait(remaining);
-					}
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
-				lastMoveTime = System.currentTimeMillis();
-				game.start();
-			});
-		} else {
-			lastMoveTime = System.currentTimeMillis();
-		}
-	}
+//	@SuppressWarnings("unused")
+//	private void think(long thinkTime) {
+//		final long remaining = thinkTime - (System.currentTimeMillis() - lastMoveTime);
+//		if (remaining>0) {
+//			game.pause();
+//			SwingUtilities.invokeLater(() -> {
+//				System.out.println("Will wait for "+remaining+"ms");
+//				try {
+//					synchronized (this) {
+//						this.wait(remaining);
+//					}
+//				} catch (InterruptedException e) {
+//					Thread.currentThread().interrupt();
+//				}
+//				lastMoveTime = System.currentTimeMillis();
+//				game.start();
+//			});
+//		} else {
+//			lastMoveTime = System.currentTimeMillis();
+//		}
+//	}
 
 	private void setEvaluation() {
 		final NaiveEvaluator ev = new NaiveEvaluator();
@@ -140,32 +127,32 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 		gui.setEvaluation(ev.evaluateAsWhite(game.getHistory().getBoard())/100);
 	}
 
-	@Override
-	protected void doTimeUp(Status status) {
-		SwingUtilities.invokeLater(()->super.doTimeUp(status));
-	}
-	
-	@Override
-	protected boolean continueOnTimeup(Status status) {
-		return JOptionPane.showConfirmDialog(gui, getMessage(status)+" Do you want to continue game without clock?","Time is up",JOptionPane.YES_NO_OPTION)==0;
-	}
-
-	@Override
-	protected boolean isResignationConfirmed() {
-		return JOptionPane.showConfirmDialog(gui, "Are you sure you want to resign?","Resignation",JOptionPane.YES_NO_OPTION)==0;
-	}
-	
-	private void onEngineError(Engine engine) {
-		JOptionPane.showMessageDialog(gui, "An error occurred while communicating with the "+engine.getName()+" engine. Assuming it resigns", "Error", JOptionPane.ERROR_MESSAGE);
-		final Status status = Color.WHITE.equals(game.getHistory().getBoard().getActiveColor()) ? Status.BLACK_WON : Status.WHITE_WON;
-		endOfGame(status);
-	}
+//	@Override
+//	protected void doTimeUp(Status status) {
+//		SwingUtilities.invokeLater(()->super.doTimeUp(status));
+//	}
+//	
+//	@Override
+//	protected boolean continueOnTimeup(Status status) {
+//		return JOptionPane.showConfirmDialog(gui, getMessage(status)+" Do you want to continue game without clock?","Time is up",JOptionPane.YES_NO_OPTION)==0;
+//	}
+//
+//	@Override
+//	protected boolean isResignationConfirmed() {
+//		return JOptionPane.showConfirmDialog(gui, "Are you sure you want to resign?","Resignation",JOptionPane.YES_NO_OPTION)==0;
+//	}
+//	
+//	private void onEngineError(Engine engine) {
+//		JOptionPane.showMessageDialog(gui, "An error occurred while communicating with the "+engine.getName()+" engine. Assuming it resigns", "Error", JOptionPane.ERROR_MESSAGE);
+//		final Status status = Color.WHITE.equals(game.getHistory().getBoard().getActiveColor()) ? Status.BLACK_WON : Status.WHITE_WON;
+//		endOfGame(status);
+//	}
 	
 	@Override
 	protected void onGameEnded() {
 		gui.setScore(getScore());
 		try {
-			GameRecorder.print(this.game.getHistory(), this.getSettings(), this.player1Color, (long) this.getScore().getGameCount());
+			GameRecorder.print(this.game.getHistory(), this.getSettings(), this.getPlayer1Color(), (long) this.getScore().getGameCount());
 		} catch (Exception e) {
 			log.error("An error occurred while writing pgn",e);
 		}
@@ -201,15 +188,17 @@ public class GameSession extends AbstractGameSession<GamePanel> {
 	}
 
 	private void refreshAppearance(Settings settings) {
-		gui.setPlayer1Human(settings.getPlayer1().getEngine()==null);
-		gui.setPlayer2Human(settings.getPlayer2().getEngine()==null);
-		gui.getBoard().setShowPossibleMoves(settings.isShowPossibleMoves());
-		gui.getBoard().setTouchMove(settings.isTouchMove());
-		gui.getBoard().setReverted(Color.BLACK.equals(player1Color));
-		if (onlyHumans() && settings.isTabletMode()) {
-			gui.getBoard().setUpsideDownColor(player1Color.opposite());
-		} else {
-			gui.getBoard().setUpsideDownColor(null);
+		if (gui!=null) {
+			gui.setPlayer1Human(settings.getPlayer1().getEngine()==null);
+			gui.setPlayer2Human(settings.getPlayer2().getEngine()==null);
+			gui.getBoard().setShowPossibleMoves(settings.isShowPossibleMoves());
+			gui.getBoard().setTouchMove(settings.isTouchMove());
+			gui.getBoard().setReverted(Color.BLACK.equals(getPlayer1Color()));
+			if (onlyHumans() && settings.isTabletMode()) {
+				gui.getBoard().setUpsideDownColor(getPlayer1Color().opposite());
+			} else {
+				gui.getBoard().setUpsideDownColor(null);
+			}
 		}
 	}
 }

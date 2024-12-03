@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
@@ -186,9 +185,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	}
 	protected void drawPiece(Graphics g, Piece p, int x, int y) {
 		final Rectangle bounds = getPieceBounds(p);
-        if (bounds!=null) {
-            g.drawImage(chessPiecesImage, x, y, x+squareSize, y+squareSize, bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, this);
-        }
+		g.drawImage(chessPiecesImage, x, y, x+squareSize, y+squareSize, bounds.x, bounds.y, bounds.x+bounds.width, bounds.y+bounds.height, this);
 	}
 	private Rectangle getPieceBounds(Piece p) {
     	int j=-1;
@@ -223,7 +220,10 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
         if (p.getColor().equals(this.invertedColor)) {
         	k = k+2;
         }
-        return (j<0 || k<0) ? null : new Rectangle(j*SPRITE_SIZE, k*SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE);
+        if (j<0 || k<0) {
+        	throw new IllegalArgumentException("Unknown piece");
+        }
+        return new Rectangle(j*SPRITE_SIZE, k*SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE);
 	}
 	
 	protected void drawGhost(Graphics g) {
@@ -381,7 +381,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
 	private boolean doMove(int destination) {
 		if (Arrays.stream(targets).anyMatch(i -> i == destination)) {
 			// Legal move
-			final List<Move> moves = getMoves().filter(m -> m.getFrom()==selected && m.getTo()==destination).collect(Collectors.toList());
+			final List<Move> moves = getMoves().filter(m -> m.getFrom()==selected && m.getTo()==destination).toList();
 			final Move move;
 			if (moves.isEmpty()) {
 				move = null;

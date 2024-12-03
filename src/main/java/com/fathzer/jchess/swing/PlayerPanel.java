@@ -5,10 +5,7 @@ import javax.swing.SwingUtilities;
 
 import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockState;
-import com.fathzer.soft.ajlib.swing.Utils;
 import com.fathzer.soft.ajlib.swing.widget.RotatingLabel;
-
-import lombok.Setter;
 
 import java.awt.BorderLayout;
 import java.time.Instant;
@@ -16,10 +13,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-
-import javax.swing.Icon;
-import javax.swing.JButton;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -28,21 +21,13 @@ import java.text.DecimalFormat;
 public class PlayerPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 
-	private static final int FLAG_SIZE = 48;
-	private static final String IMAGE_PATH = "/whiteFlag.png";
-	private static final String IMAGE_PATH_REVERTED = "/whiteFlagReverted.png";
-	private static final Icon FLAG_ICON = Utils.createIcon(PlayerPanel.class.getResource(IMAGE_PATH), FLAG_SIZE);
-	private static final Icon FLAG_ICON_REVERTED = Utils.createIcon(PlayerPanel.class.getResource(IMAGE_PATH_REVERTED), FLAG_SIZE);
-
 	private final JPanel flagPanel;
-	private final JButton whiteFlag;
+	private final ResignationButton resignButton;
 	private final RotatingLabel scoreLabel;
 	private final RotatingLabel clockLabel;
 	private transient Clock clock;
 	private com.fathzer.games.Color playerColor;
 	private transient ScheduledFuture<?> refreshTask;
-	@Setter
-	private transient Consumer<com.fathzer.games.Color> resignationHandler; 
 
 	private int evaluation = 0;
 	private double score = -1.0;
@@ -54,23 +39,14 @@ public class PlayerPanel extends JPanel {
 		setOpaque(false);
 		setLayout(new BorderLayout(0, 0));
 
-		whiteFlag = new JButton();
-		whiteFlag.addActionListener(e -> {
-			if (resignationHandler!=null) {
-				resignationHandler.accept(playerColor);
-			}
-		});
-		whiteFlag.setOpaque(false);
-		whiteFlag.setBorderPainted(false);
-		whiteFlag.setContentAreaFilled(false);
-		whiteFlag.setFocusPainted(false);
-		
 		scoreLabel = new RotatingLabel();
 		scoreLabel.setFont(new Font("Dialog", Font.BOLD, 20));
 		scoreLabel.setForeground(Color.WHITE);
 		scoreLabel.setText(" ");
 		flagPanel = new JPanel();
 		flagPanel.setOpaque(false);
+		
+		resignButton = new ResignationButton();
 		
 		clockLabel = new RotatingLabel();
 		clockLabel.setText(" ");
@@ -84,20 +60,20 @@ public class PlayerPanel extends JPanel {
 		getLayout().removeLayoutComponent(flagPanel);
 		getLayout().removeLayoutComponent(clockLabel);
 		flagPanel.getLayout().removeLayoutComponent(scoreLabel);
-		flagPanel.getLayout().removeLayoutComponent(whiteFlag);
+		flagPanel.getLayout().removeLayoutComponent(resignButton);
 		addComponents(reverted);
 	}
 	
 	private void addComponents(boolean reverted) {
-		whiteFlag.setIcon(reverted ? FLAG_ICON_REVERTED : FLAG_ICON);
+		resignButton.setReverted(reverted);
 		clockLabel.setRotation(reverted ? 180 : 0);
 		scoreLabel.setRotation(reverted ? 180 : 0);
 
 		if (reverted) {
 			flagPanel.add(scoreLabel);
-			flagPanel.add(whiteFlag);
+			flagPanel.add(resignButton);
 		} else {
-			flagPanel.add(whiteFlag);
+			flagPanel.add(resignButton);
 			flagPanel.add(scoreLabel);
 		}
 
@@ -138,7 +114,7 @@ public class PlayerPanel extends JPanel {
 	}
 	
 	public void setWhiteFlagVisible(boolean visible) {
-		this.whiteFlag.setVisible(visible);
+		this.resignButton.setVisible(visible);
 	}
 	
 	public void setEvaluation(int evaluation) {
@@ -178,5 +154,9 @@ public class PlayerPanel extends JPanel {
 	public void clearScore() {
 		this.score = -1.0;
 		setScoreLabel();
+	}
+
+	public void setResignationHandler(Runnable resignationHandler) {
+		this.resignButton.setResignationHandler(resignationHandler);
 	}
 }
