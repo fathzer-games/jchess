@@ -9,6 +9,7 @@ import java.util.Queue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
@@ -93,6 +94,7 @@ class GameTest {
 	
 	
 	@Test
+	@Disabled("Draw negociation is not yet implement")
 	void testDrawNegociation() throws InterruptedException {
 		fail("Not yet implemented");
 	}
