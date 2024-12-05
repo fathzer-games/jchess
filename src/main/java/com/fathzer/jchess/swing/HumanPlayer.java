@@ -1,4 +1,4 @@
-package com.fathzer.games.game;
+package com.fathzer.jchess.swing;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -6,10 +6,10 @@ import java.util.function.Consumer;
 
 import javax.swing.SwingUtilities;
 
+import com.fathzer.games.game.Game;
+import com.fathzer.games.game.Player;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.swing.ChessBoardPanel;
-import com.fathzer.jchess.swing.PlayerPanel;
 
 public class HumanPlayer implements Player<Move, Board<Move>> {
 	private final ChessBoardPanel chessBoardPanel;

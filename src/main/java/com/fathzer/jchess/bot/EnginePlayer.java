@@ -1,4 +1,4 @@
-package com.fathzer.games.game;
+package com.fathzer.jchess.bot;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -13,13 +13,15 @@ import com.fathzer.games.clock.Clock;
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.clock.ClockState;
 import com.fathzer.games.clock.CountDownState;
+import com.fathzer.games.game.Game;
+import com.fathzer.games.game.Player;
 import com.fathzer.games.util.UncheckedException;
 import com.fathzer.games.util.exec.CustomThreadFactory;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.bot.Engine;
 import com.fathzer.jchess.fen.FENUtils;
+import com.fathzer.jchess.generic.BasicMove;
 import com.fathzer.jchess.settings.Settings.Variant;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
@@ -30,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EnginePlayer implements Player<Move, Board<Move>> {
 	private static final CustomThreadFactory threadFactory = new CustomThreadFactory(new CustomThreadFactory.BasicThreadNameSupplier("Engine player"), true);
 	private final ExecutorService moveWaiter = Executors.newSingleThreadExecutor(threadFactory);
-
+	
 	private final Engine engine;
 	private AtomicReference<Future<Void>> currentSearch;
 	private Variant variant;
@@ -58,9 +60,17 @@ public class EnginePlayer implements Player<Move, Board<Move>> {
 		} else {
 			this.currentSearch.set(moveWaiter.submit(() -> {
 				log.debug("{} starts searching best move on game {}", getName(), game.getId());
-				final Optional<Move> move = getMove(game);
-				synchronized (EnginePlayer.this) {
-					currentSearch.set(null);
+				final Optional<Move> move;
+				try {
+					move = getMove(game);
+					synchronized (EnginePlayer.this) {
+						currentSearch.set(null);
+					}
+				} catch (Exception e) {
+					log.error("An error occurred while searching for move, we will return an invalid move");
+					final int index = game.getHistory().getBoard().getCoordinatesSystem().getIndex("a1");
+					callBack.accept(new BasicMove(index, index));
+					return null;
 				}
 				if (move.isPresent()) {
 					log.debug("{} returns a move on game {}", getName(), game.getId());
@@ -106,6 +116,9 @@ public class EnginePlayer implements Player<Move, Board<Move>> {
 			final int increment = clockSettings.getIncrement()>0 ? clockSettings.getIncrement()*1000/clockSettings.getMovesNumberBeforeIncrement() : 0;
 			final int movesToGo = clock.getRemainingMovesBeforeNext(clock.getPlaying());
 			params = new CountDownState(remainingTime, increment, movesToGo);
+		}
+		if (params==null) {
+			System.out.println("We are fucked"); //TODO
 		}
 		if (params.getRemainingMs()<0) {
 			return Optional.empty();

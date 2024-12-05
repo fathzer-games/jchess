@@ -1,8 +1,10 @@
 package com.fathzer.games.game;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.GameHistory;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Score;
@@ -102,7 +104,7 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 	protected abstract B getStartPosition();
 	
 	private void newGame() {
-		this.game = new Game<>(getStartPosition(), buildClock(), getPlayer(Color.WHITE), getPlayer(Color.BLACK));
+		this.game = new Game<>(new GameHistory<>(getStartPosition()), buildClock(), getPlayer(Color.WHITE), getPlayer(Color.BLACK));
 		log.debug("New game created: {}", this.game.getId());
 		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
 		score.newGame();
@@ -164,14 +166,27 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 
 	private void endOfGame(final Status status) {
 		setState(State.PAUSED);
-		log.debug("End of game,  state: {}", getState());
-		updateScores(status);
-		onGameEnded();
-		if (isMakeRevenge(status)) {
-			doRevenge();
+		final Optional<Game<M,B>> resumed = getResumedGame();
+		if (resumed.isPresent()) {
+			// Replace game by the same one returned (for instance, the same game without clock)
+			this.game = resumed.get();
+			log.debug("Continue ended with another game at same position, state: {}", getState());
+			setState(State.RUNNING);
 		} else {
-			setState(State.ENDED);
+			log.debug("End of game,  state: {}", getState());
+			updateScores(status);
+			onGameEnded();
+			if (isMakeRevenge(status)) {
+				doRevenge();
+			} else {
+				setState(State.ENDED);
+			}
 		}
+	}
+	
+	protected Optional<Game<M,B>> getResumedGame() {
+		//TODO comment
+		return Optional.empty();
 	}
 	
 	/** This method is called when game just finished.

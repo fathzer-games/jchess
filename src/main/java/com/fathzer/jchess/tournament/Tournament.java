@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fathzer.games.clock.ClockSettings;
 import com.fathzer.games.clock.PGNTimeControlTagParser;
-import com.fathzer.games.game.EnginePlayer;
 import com.fathzer.jchess.bot.Engine;
+import com.fathzer.jchess.bot.EnginePlayer;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.BasicClockSettings;

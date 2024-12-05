@@ -56,12 +56,12 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	private boolean paused;
 
 	/** Constructor.
-	 * @param board The start board of a game.
+	 * @param history A game history.
 	 * @param clock The clock used for the game (null if time allowed is infinite)
 	 * @param white The white player
 	 * @param black The black player
 	 */
-	public Game(B board, Clock clock, Player<M, B> white, Player<M,B> black) {
+	public Game(GameHistory<M, B> history, Clock clock, Player<M, B> white, Player<M,B> black) {
 		if (white==null || black==null) {
 			throw new IllegalArgumentException("Players can't be null");
 		}
@@ -71,7 +71,7 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 		this.black = black;
 		black.setResignationMethod(this, () -> addEvent(new ResignationEvent<>(Color.BLACK)));
 		black.setDrawRequestMethod(this, () -> addEvent(new DrawProposal<>(Color.BLACK)));
-		this.history = new GameHistory<>(board);
+		this.history = history;
 		this.clock = clock;
 		if (clock!=null) {
 			clock.addStatusListener(s -> addEvent(new TimeUpEvent<>()));
@@ -114,6 +114,9 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	
 	@Override
 	public void run() {
+		if (Status.PLAYING!=getHistory().getStatus()) {
+			return;
+		}
 		events.subscribe(this::doEvent);
 		checkPlayerReadiness(Arrays.asList(white, black));
 		this.start();
@@ -254,7 +257,7 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	public long getId() {
 		return id;
 	}
-
+	
 	@Override
 	public int hashCode() {
 		return Objects.hash(id);
@@ -275,6 +278,4 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 		Game other = (Game) obj;
 		return id == other.id;
 	}
-	
-	
 }

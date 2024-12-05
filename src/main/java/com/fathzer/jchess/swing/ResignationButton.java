@@ -30,7 +30,7 @@ public class ResignationButton extends JButton {
 	private static final Icon ARMED_FLAG_ICON_REVERTED = Utils.createIcon(PlayerPanel.class.getResource(ARMED_IMAGE_PATH_REVERTED), FLAG_SIZE);
 
 	private boolean reverted;
-	private ScheduledFuture<?> armed;
+	private transient ScheduledFuture<?> armed;
 
 	@Setter
 	private transient Runnable resignationHandler; 

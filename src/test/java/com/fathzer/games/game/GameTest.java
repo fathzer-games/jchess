@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.games.Color;
+import com.fathzer.games.GameHistory;
 import com.fathzer.games.GameHistory.TerminationCause;
 import com.fathzer.games.Status;
 import com.fathzer.games.clock.Clock;
@@ -51,9 +51,9 @@ class GameTest {
 	@Test
 	void testNoClock() throws InterruptedException {
 		Board<Move> board = Variant.STANDARD.getRules().apply(null);
-		TestPlayer white = new TestPlayer(Color.WHITE, Arrays.asList(mv("e2","e4"), mv("f1","c4"), mv("d1","h5"), mv("h5","f7")));
-		TestPlayer black = new TestPlayer(Color.BLACK, Arrays.asList(mv("e7","e5"), mv("f8","c5"), mv("b8", "c6")));
-		final Game<Move, Board<Move>> game = new Game<>(board, null, white, black);
+		TestPlayer white = new TestPlayer(Arrays.asList(mv("e2","e4"), mv("f1","c4"), mv("d1","h5"), mv("h5","f7")));
+		TestPlayer black = new TestPlayer(Arrays.asList(mv("e7","e5"), mv("f8","c5"), mv("b8", "c6")));
+		final Game<Move, Board<Move>> game = new Game<>(new GameHistory<>(board), null, white, black);
 		assertThrows(IllegalStateException.class, () -> game.setStartClockAfterFirstMove(true));
 		assertTrue(game.isPaused());
 		final EventCounter counter = new EventCounter();
@@ -74,9 +74,9 @@ class GameTest {
 	@Test
 	void testResignation() throws InterruptedException {
 		Board<Move> board = Variant.STANDARD.getRules().apply(null);
-		TestPlayer white = new TestPlayer(Color.WHITE, Arrays.asList(mv("e2","e4"), mv("f1","c4"), new ResignAction()));
-		TestPlayer black = new TestPlayer(Color.BLACK, Arrays.asList(mv("e7","e5"), mv("f8","c5"), mv("b8", "c6")));
-		final Game<Move, Board<Move>> game = new Game<>(board, null, white, black);
+		TestPlayer white = new TestPlayer(Arrays.asList(mv("e2","e4"), mv("f1","c4"), new ResignAction()));
+		TestPlayer black = new TestPlayer(Arrays.asList(mv("e7","e5"), mv("f8","c5"), mv("b8", "c6")));
+		final Game<Move, Board<Move>> game = new Game<>(new GameHistory<>(board), null, white, black);
 		final EventCounter counter = new EventCounter();
 		game.addMoveListener(counter);
 		game.addEndGameListener(counter);
@@ -102,12 +102,12 @@ class GameTest {
 	@Test
 	void testTimeForfeit() throws InterruptedException {
 		Board<Move> board = Variant.STANDARD.getRules().apply(null);
-		TestPlayer white = new TestPlayer(Color.WHITE, Arrays.asList(mv("e2","e4"), mv("f1","c4"), mv("d1","h5"), mv("h5","f7")));
-		TestPlayer black = new TestPlayer(Color.BLACK, Arrays.asList(mv("e7","e5"), mv("f8","c5"), mv("b8", "c6")));
+		TestPlayer white = new TestPlayer(Arrays.asList(mv("e2","e4"), mv("f1","c4"), mv("d1","h5"), mv("h5","f7")));
+		TestPlayer black = new TestPlayer(Arrays.asList(mv("e7","e5"), mv("f8","c5"), mv("b8", "c6")));
 		black.thinkTime = 550;
 		
 		ClockSettings settings = new ClockSettings(1);
-		Game<Move, Board<Move>> game = new Game<>(board, new Clock(settings), white, black);
+		Game<Move, Board<Move>> game = new Game<>(new GameHistory<>(board), new Clock(settings), white, black);
 		game.setStartClockAfterFirstMove(true);
 		final EventCounter counter = new EventCounter();
 		game.addMoveListener(counter);
@@ -133,14 +133,12 @@ class GameTest {
 	
 	private static final class TestPlayer implements Player<Move, Board<Move>> {
 		private final Queue<Action> actions;
-		private final Color color;
 		private boolean errorOccurred;
 		private Thread requestThread;
 		private long thinkTime = 0;
 		private Runnable resignation;
 		
-		TestPlayer(Color color, List<Action> actions) {
-			this.color = color;
+		TestPlayer(List<Action> actions) {
 			this.actions = new LinkedList<>(actions);
 		}
 

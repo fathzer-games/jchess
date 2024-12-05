@@ -1,13 +1,21 @@
 package com.fathzer.jchess.swing;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.GameHistory;
+import com.fathzer.games.GameHistory.TerminationCause;
 import com.fathzer.games.Status;
 import com.fathzer.games.game.Game;
 import com.fathzer.games.game.GameManager;
 import com.fathzer.games.game.Player;
+import com.fathzer.games.util.UncheckedException;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.GameRecorder;
 import com.fathzer.jchess.Move;
@@ -126,16 +134,45 @@ public class GameSession extends GameManager<Move, Board<Move>, Settings> {
 		ev.init(game.getHistory().getBoard());
 		gui.setEvaluation(ev.evaluateAsWhite(game.getHistory().getBoard())/100);
 	}
+	
+	@Override
+	protected Optional<Game<Move, Board<Move>>> getResumedGame() {
+		if (TerminationCause.TIME_FORFEIT==game.getHistory().getTerminationCause()) {
+			try {
+				boolean resume = safeSwingCall(() -> continueOnTimeup(game.getHistory().getStatus()));
+				if (resume) {
+					final GameHistory<Move, Board<Move>> oldHistory = game.getHistory();
+					final GameHistory<Move, Board<Move>> history = new GameHistory<>(oldHistory.getStartBoard());
+					oldHistory.getMoves().forEach(history::add);
+					return Optional.of(new Game<Move, Board<Move>>(history, null, getPlayer(Color.WHITE), getPlayer(Color.BLACK)));
+				}
+			} catch (InterruptedException e) {
+				log.error("An interruption occurred while waiting for user reply", e);
+				Thread.currentThread().interrupt();
+			}
+		}
+		return super.getResumedGame();
+	}
+	
+	private <T> T safeSwingCall(Supplier<T> callable) throws InterruptedException {
+		if (SwingUtilities.isEventDispatchThread()) {
+			return callable.get();
+		} else {
+			final AtomicReference<T> result = new AtomicReference<>();
+			try {
+				SwingUtilities.invokeAndWait(() -> result.set(callable.get()));
+				return result.get();
+			} catch (InvocationTargetException e) {
+				throw new UncheckedException(e);
+			}
+		}
+	}
 
-//	@Override
-//	protected void doTimeUp(Status status) {
-//		SwingUtilities.invokeLater(()->super.doTimeUp(status));
-//	}
-//	
-//	@Override
-//	protected boolean continueOnTimeup(Status status) {
-//		return JOptionPane.showConfirmDialog(gui, getMessage(status)+" Do you want to continue game without clock?","Time is up",JOptionPane.YES_NO_OPTION)==0;
-//	}
+	private boolean continueOnTimeup(Status status) {
+		return JOptionPane.showConfirmDialog(gui, getMessage(status)+" Do you want to continue game without clock?","Time is up",JOptionPane.YES_NO_OPTION)==0;
+	}
+
+
 //
 //	@Override
 //	protected boolean isResignationConfirmed() {

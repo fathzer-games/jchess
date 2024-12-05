@@ -17,13 +17,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
-import com.fathzer.games.game.EnginePlayer;
 import com.fathzer.games.game.GameManager;
 import com.fathzer.games.game.GameManager.State;
-import com.fathzer.games.game.HumanPlayer;
 import com.fathzer.games.game.Player;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.bot.EnginePlayer;
 import com.fathzer.jchess.bot.uci.EngineLoader;
 import com.fathzer.jchess.bot.uci.EngineLoader.EngineData;
 import com.fathzer.jchess.settings.Context;
