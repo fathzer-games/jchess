@@ -21,7 +21,6 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENUtils;
-import com.fathzer.jchess.generic.BasicMove;
 import com.fathzer.jchess.settings.Settings.Variant;
 import com.fathzer.jchess.uci.JChessUCIEngine;
 import com.fathzer.jchess.uci.UCIMove;
@@ -67,9 +66,8 @@ public class EnginePlayer implements Player<Move, Board<Move>> {
 						currentSearch.set(null);
 					}
 				} catch (Exception e) {
-					log.error("An error occurred while searching for move, we will return an invalid move");
-					final int index = game.getHistory().getBoard().getCoordinatesSystem().getIndex("a1");
-					callBack.accept(new BasicMove(index, index));
+					log.error("An error occurred while searching for move, declare the engine dead");
+					callBack.accept(null);
 					return null;
 				}
 				if (move.isPresent()) {

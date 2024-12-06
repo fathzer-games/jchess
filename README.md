@@ -62,13 +62,12 @@ If you specify a value for the `gameCount` system property while starting the ap
 
 
 # Known bugs
+- When a game is continued after a time forfeit, its PGN still mention the initial time control.
 - When a engine that is used in player settings hangs, it leaves settings in a wrong state with no possibility to fix it; The application should be restarted.
 
 # TODO
-- When engine crashes it ends the game with an illegal move instead of a death termination.
 - Finish Game (make Draw Proposal work).
-- Implement a way to play again on missclick.
+- Implement a way to play again on missclick and move backward/forward in the game.
 - Implement PGN game loading
-- Implement move backward/forward in the game.
 - Use com.fathzer.jchess.gui.GameGUI interface or delete it.
 - Externalize perfT data in order to reduce the package size?

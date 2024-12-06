@@ -29,7 +29,9 @@ public interface Player<M,B extends MoveGenerator<M>> {
 	/** The player is requested to play a move.
 	 * <br>It should start thinking in a background thread and then call {@code moveConsumer} with the chosen move.
 	 * @param game The game that asks for the move.
-	 * @param moveConsumer a consumer that will post the chosen move to the game.
+	 * @param moveConsumer a consumer where to post the chosen move.
+	 * <br>A player can send null to this consumer if it is not able to process the request. Typically a chess engine
+	 * must use this mechanism to gracefully inform the game when an exception occurs during its best move search.
 	 */
 	void requestMove(Game<M, B> game, Consumer<M> moveConsumer);
 	

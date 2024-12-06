@@ -136,7 +136,7 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 		endGameListeners.add(listener);
 	}
 
-	public synchronized void addEvent(IncomingEvent<M> event) {
+	private synchronized void addEvent(IncomingEvent<M> event) {
 		events.submit(Collections.singleton(event));
 	}
 	
@@ -171,6 +171,12 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	
 	private void doMove(M move) {
 		final Color playing = getActiveColor();
+		if (move==null) {
+			log.debug("Engine declares itself dead", move);
+			this.getHistory().earlyEnd(playing==Color.WHITE?Status.BLACK_WON:Status.WHITE_WON, TerminationCause.DEATH);
+			onEndGame();
+			return;
+		}
 		final boolean valid = history.add(move);
 		if (!valid) {
 			log.debug("Move {} is illegal. Declare the game won by rules infraction", move);
