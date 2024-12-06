@@ -62,6 +62,7 @@ If you specify a value for the `gameCount` system property while starting the ap
 
 
 # Known bugs
+- When no time control is set, some engines never replies
 - When a game is continued after a time forfeit, its PGN still mention the initial time control.
 - When a engine that is used in player settings hangs, it leaves settings in a wrong state with no possibility to fix it; The application should be restarted.
 

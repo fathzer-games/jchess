@@ -66,7 +66,7 @@ public class EnginePlayer implements Player<Move, Board<Move>> {
 						currentSearch.set(null);
 					}
 				} catch (Exception e) {
-					log.error("An error occurred while searching for move, declare the engine dead");
+					log.error("An error occurred while searching for move, declare the engine dead", e);
 					callBack.accept(null);
 					return null;
 				}
@@ -115,10 +115,7 @@ public class EnginePlayer implements Player<Move, Board<Move>> {
 			final int movesToGo = clock.getRemainingMovesBeforeNext(clock.getPlaying());
 			params = new CountDownState(remainingTime, increment, movesToGo);
 		}
-		if (params==null) {
-			System.out.println("We are fucked"); //TODO
-		}
-		if (params.getRemainingMs()<0) {
+		if (params!=null && params.getRemainingMs()<0) {
 			return Optional.empty();
 		}
 		return Optional.of(JChessUCIEngine.toMove(history.getBoard(), UCIMove.from(engine.getMove(params))));

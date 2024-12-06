@@ -125,6 +125,7 @@ public class Game<M,B extends MoveGenerator<M>> implements Runnable {
 	}
 	
 	private void requestMove(Color color) {
+		log.debug("Game {} request move from {} player", id, color);
 		getPlayer(color).requestMove(this, m -> this.addEvent(new MoveEvent<>(m)));
 	}
 	

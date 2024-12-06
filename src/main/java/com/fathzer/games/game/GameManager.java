@@ -171,6 +171,7 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 			// Replace game by the same one returned (for instance, the same game without clock)
 			this.game = resumed.get();
 			log.debug("Continue ended with another game at same position, state: {}", getState());
+			onNewGame(this.game);
 			setState(State.RUNNING);
 		} else {
 			log.debug("End of game,  state: {}", getState());
@@ -184,8 +185,11 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 		}
 	}
 	
+	/** Gets a new game to start just after a game just ended.
+	 * <br>A typical use of this method is to allow a game lost by time forfeit to be resumed without a clock.
+	 * @return an empty option if the game should not be resumed or the game to resume. 
+	 */
 	protected Optional<Game<M,B>> getResumedGame() {
-		//TODO comment
 		return Optional.empty();
 	}
 	
