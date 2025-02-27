@@ -124,7 +124,7 @@ public class InternalEngine implements Engine {
 		}
 		try {
 			final SearchHistory<Move> history = engine.getBestMoves(board);
-			return JChessUCIEngine.toUCIMove(board.getCoordinatesSystem(), history.getBestMove(JChessUCIEngine.buildSelector(board)).getContent()).toString();
+			return JChessUCIEngine.toUCIMove(board.getCoordinatesSystem(), history.getBestMove(JChessUCIEngine.buildSelector(board)).getMove()).toString();
 		} finally {
 			engine.getDeepeningPolicy().setMaxTime(maxTime);
 		}
