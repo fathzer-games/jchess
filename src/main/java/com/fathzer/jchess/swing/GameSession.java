@@ -94,7 +94,7 @@ public class GameSession extends GameManager<Move, Board<Move>, Settings> {
 			// WARNING: If a revenge is launched before the engine returns its choice, state can be RUNNING again
 			// and the move would be transmitted to the panel if we omitted to check we are still in the same game!
 			if (move!=null && game==this.game && State.RUNNING.equals(getState())) {
-				log.debug("Transmitting {}'s move {} to panel's board",game.getHistory().getBoard().getActiveColor(),move);
+				log.debug("Transmitting {}'s move {} to panel's board",game.getHistory().getBoard().isWhiteToMove()?Color.WHITE:Color.BLACK,move);
 				gui.getBoard().doMove(move);
 			} else {
 				log.debug("Ignore move {}, state is {}", move, getState());

@@ -97,9 +97,8 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 		return player2;
 	}
 
-	/**
-	 * 	final Board<Move> board = settings.getVariant().getRules().apply(settings.getFen());
-	 * @return //TODO
+	/** Gets the game start position.
+	 * @return a MoveGenerator instance.
 	 */
 	protected abstract B getStartPosition();
 	

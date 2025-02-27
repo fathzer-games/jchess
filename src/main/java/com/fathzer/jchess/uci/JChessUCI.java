@@ -56,7 +56,7 @@ public class JChessUCI extends ExtendedUCI {
 
 	private void speedTest(Deque<String> args) {
 		if (engine instanceof AbstractEngine<?, ?> abstractEngine) {
-			out("completed in "+new SpeedTest<>(abstractEngine).run()+"ms");
+			out("completed in "+new SpeedTest<>(abstractEngine, this::out).run()+"ms");
 		} else {
 			debug("This engine does not support this command");
 		}

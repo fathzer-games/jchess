@@ -14,7 +14,7 @@ import com.fathzer.games.ai.moveselector.StaticMoveSelector;
 import com.fathzer.games.ai.time.BasicTimeManager;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.ai.transposition.TranspositionTable;
-import com.fathzer.games.perft.TestableMoveGeneratorBuilder;
+import com.fathzer.games.perft.FromPositionMoveGeneratorBuilder;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -36,7 +36,7 @@ import com.fathzer.jchess.uci.helper.EvaluatorConfiguration;
 import com.fathzer.jchess.uci.option.ComboOption;
 import com.fathzer.jchess.uci.option.Option;
 
-public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implements TestableMoveGeneratorBuilder<Move, Board<Move>>, Displayable {
+public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implements FromPositionMoveGeneratorBuilder<Move, Board<Move>>, Displayable {
 	private static final EvaluatorConfiguration<Move, Board<Move>> SIMPLIFIED_EVAL_CONFIG = new EvaluatorConfiguration<>("simplified",SimplifiedEvaluator::new);
 	private static final EvaluatorConfiguration<Move, Board<Move>> NAIVE_EVAL_CONFIG = new EvaluatorConfiguration<>("naive",NaiveEvaluator::new);
 	private static final List<EvaluatorConfiguration<Move, Board<Move>>> EVALUATORS = Arrays.asList(SIMPLIFIED_EVAL_CONFIG, NAIVE_EVAL_CONFIG);
@@ -77,7 +77,7 @@ public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implement
 	}
 
 	@Override
-	protected TranspositionTable<Move> buildTranspositionTable(int sizeInMB) {
+	protected TranspositionTable<Move, Board<Move>> buildTranspositionTable(int sizeInMB) {
 		return new TT(sizeInMB, SizeUnit.MB);
 	}
 
@@ -166,7 +166,7 @@ public class JChessUCIEngine extends AbstractEngine<Move, Board<Move>> implement
 	}
 	
 	@Override
-	public Board<Move> fromFEN(String fen) {
+	public Board<Move> fromPosition(String fen) {
 		return FENUtils.from(fen);
 	}
 

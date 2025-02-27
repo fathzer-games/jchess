@@ -14,7 +14,6 @@ import com.fathzer.jchess.pgn.PGNHeaders;
 import com.fathzer.jchess.pgn.PGNHeaders.Builder;
 import com.fathzer.jchess.settings.Settings;
 import com.fathzer.jchess.settings.Settings.PlayerSettings;
-import com.fathzer.jchess.settings.Settings.Variant;
 import com.fathzer.jchess.pgn.PGNWriter;
 
 import lombok.experimental.UtilityClass;
@@ -33,9 +32,6 @@ public class GameRecorder {
 		builder.setBlackName(who(settings, player1Color, Color.BLACK));
 		builder.setRound(round);
 		builder.setTimeControl(new PGNTimeControlTagParser().toTag(settings.getClock().toClockSettings()));
-		if (Variant.STANDARD!=settings.getVariant()) {
-			builder.setVariant(settings.getVariant().name());
-		}
 		// Add white and black names
 		new PGNWriter().getPGN(builder.build(), history).forEach(out::println);
 		out.flush();

@@ -15,7 +15,7 @@ public interface Player<M,B extends MoveGenerator<M>> {
 	/** Sets the method to invoke to make a draw proposal.
 	 * <br>The default implementation does nothing making draw proposal impossible.
 	 * @param game The game The game to resign
-	 * @param resignation The method to call to resign.
+	 * @param drawRequest The method to call process a draw request.
 	 */
 	default void setDrawRequestMethod(Game<M, B> game, Runnable drawRequest) {}
 	
@@ -38,7 +38,7 @@ public interface Player<M,B extends MoveGenerator<M>> {
 	/** The player is informed that the game is ended.
 	 * <br>The default implementation does nothing.
 	 * Nevertheless, it is a good practice to override this method and cancel the current search for a move or thinking about a draw proposal.
-	 * <br>It is optional because any call to {@link Game#add(com.fathzer.games.game.Game.IncomingEvent)} after the end of the game will be ignored.
+	 * <br>It is optional because any event sent to a {@link Game} after the end of the game will be ignored.
 	 * @param game The game that ends.
 	 */
 	default void onEndGame(Game<M, B> game) {

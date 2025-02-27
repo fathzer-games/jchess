@@ -329,7 +329,7 @@ public class ChessBoardPanel extends JPanel implements MouseListener {
             if (Piece.BORDER.equals(piece)) {
             	System.out.println("What's the fuck");
             }
-			if (piece!=null && piece.getColor().equals(board.getActiveColor())) {
+			if (piece!=null && ((piece.getColor()==com.fathzer.games.Color.WHITE)==board.isWhiteToMove())) {
             	// The player clicked one of his pieces
                 this.targets = getMoves().filter(m->m.getFrom()==position).mapToInt(Move::getTo).distinct().toArray();
                 if (this.targets.length>0) {
