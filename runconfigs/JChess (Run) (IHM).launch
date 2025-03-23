@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+    <stringAttribute key="bad_container_name" value="/jchess/runconfigs"/>
+    <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+        <listEntry value="/jchess/src/main/java/com/fathzer/jchess/swing/JChess.java"/>
+    </listAttribute>
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+        <listEntry value="1"/>
+    </listAttribute>
+    <stringAttribute key="org.eclipse.debug.ui.ATTR_CAPTURE_IN_FILE" value="${workspace_loc:/jchess}/logs.txt"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_ATTR_USE_ARGFILE" value="false"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_EXCLUDE_TEST_CODE" value="true"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
+    <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.m2e.launchconfig.classpathProvider"/>
+    <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.fathzer.jchess.swing.JChess"/>
+    <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="jchess"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="jchess"/>
+    <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dxorg.slf4j.simpleLogger.log.com.fathzer.jchess.swing=debug -DxgameCount=10 -Dxfen=1r2k1r1/ppp1pp2/3p2pp/5bn1/P7/2N2B2/1PPPPP2/RR2K3_w_Q_-_4_11 -ea -Dxplayer2ExtraTimeS=30 -Dxorg.slf4j.simpleLogger.log.com.fathzer.uci.client.UCIEngine=error -Dorg.slf4j.simpleLogger.log.com.fathzer.jchess.ai=error -Dxorg.slf4j.simpleLogger.log.com.fathzer.jchess.tournament=debug -Dxorg.slf4j.simpleLogger.log.com.fathzer.uci.client=debug"/>
+</launchConfiguration>

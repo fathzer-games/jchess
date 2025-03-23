@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml><project xmlns="https://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.fathzer</groupId>
+		<artifactId>parent-pom</artifactId>
+		<version>1.0.8</version>
+	</parent>
+	<artifactId>jchess</artifactId>
+	<version>0.0.2</version>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<check-dependencies-java-version>17</check-dependencies-java-version>
+	    <maven.compiler.release>17</maven.compiler.release>
+		<sonar.organization>fathzer-games</sonar.organization>
+		<customized.jar.name>jchess</customized.jar.name>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.fathzer</groupId>
+			<artifactId>games-core</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fathzer</groupId>
+			<artifactId>jchess-core</artifactId>
+			<version>0.0.12-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fathzer</groupId>
+			<artifactId>jchess-uci</artifactId>
+			<version>2.0.6-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fathzer</groupId>
+			<artifactId>jchess-uci-client</artifactId>
+			<version>0.0.3-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fathzer</groupId>
+			<artifactId>plugin-loader</artifactId>
+			<version>0.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fathzer</groupId>
+			<artifactId>jchess-perft-dataset</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fathzer</groupId>
+			<artifactId>ajlib</artifactId>
+			<version>0.3.15</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20240205</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.30</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>2.0.7</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.10.2</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+			</plugin>			
+			<plugin>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.4.1</version>
+				<configuration>
+					<finalName>${customized.jar.name}</finalName>
+					<minimizeJar>true</minimizeJar>
+					<transformers>
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<mainClass>com.fathzer.jchess.swing.JChess</mainClass>
+						</transformer>
+					</transformers>
+					<filters>
+						<filter>
+							<artifact>com.fathzer:jchess-core</artifact>
+							<includes>
+								<include>**</include>
+							</includes>
+						</filter>
+					</filters>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Prevent maven from deploying the produced files to local repository -->
+			<plugin>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>3.0.1</version> <!-- IMPORTANT: versions previous 2.4 ignore skip configuration -->
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<!-- Prevent maven from deploying the produced files -->
+			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

@@ -1,0 +1,23 @@
+{
+	"engines": [
+		{
+			"name": "Dragon",
+			"command": ["C:/Program Files (x86)/Arena/Engines/Dragon/Dragon_46.exe"]
+		},
+		{
+			"name": "ChesLib",
+			"command": ["C:/Program Files/Java/jdk-17/bin/java","-DopeningsUrl=C:/Users/jeanm/git/hosting/lichess-bot/masters-shrink.json.gz", "-jar","C:/Users/jeanm/git/hosting/lichess-bot/chesslib-uci-engine.jar"]
+		},
+		{
+			"name": "ChesLib-dev",
+			"command": ["C:/Program Files/Java/jdk-17/bin/java","-DopeningsUrl=C:/Users/jeanm/git/chesslib-uci-engine/data/masters-shrink.json.gz","-jar","C:/Users/jeanm/git/chesslib-uci-engine/target/chesslib-uci-engine.jar"],
+			"options": {
+				"evaluation":"simplified"
+			}
+		},
+		{
+			"name": "ChesLib-hb",
+			"command": ["C:/Program Files/Java/jdk-17/bin/java","-DopeningsUrl=C:/Users/jeanm/git/chesslib-uci-engine/data/masters-shrink.json.gz","-jar","C:/Users/jeanm/git/chesslib-uci-engine/target/chesslib-uci-engine.jar"]
+		}
+	]
+}

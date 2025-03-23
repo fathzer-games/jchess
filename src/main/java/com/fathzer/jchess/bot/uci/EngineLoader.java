@@ -1,0 +1,188 @@
+package com.fathzer.jchess.bot.uci;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.fathzer.jchess.bot.Engine;
+import com.fathzer.jchess.internal.InternalEngine;
+import com.fathzer.uci.client.Option;
+import com.fathzer.util.TinyJackson;
+import com.fathzer.util.TinyJackson.JsonIgnore;
+import com.fathzer.util.TinyJackson.JsonOptional;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class EngineLoader {
+	private static final Path PATH = Paths.get("data/engines.json");
+	private static List<EngineData> data;
+	
+	private EngineLoader() {
+		super();
+	}
+	
+	public static void init() throws IOException {
+		if (data!=null) {
+			return;
+		}
+		final InternalEngine engine = new InternalEngine();
+		final EngineData internal = new EngineData(engine.getName(), null, Collections.emptyMap(), engine);
+		final EngineData[] array;
+		IOException error = null;
+		if (!Files.exists(PATH)) {
+			// No external engines
+			array = new EngineData[] {internal};
+		} else {
+			EngineData[] dummy;
+			try {
+				dummy = readExternalEnginesData();
+			} catch (IOException e) {
+				dummy = new EngineData[0];
+				error = e;
+			}
+			array = new EngineData[dummy.length+1];
+			array[0] = internal;
+			System.arraycopy(dummy, 0, array, 1, dummy.length);
+			deDuplicateNames(array);
+		}
+		data = Arrays.asList(array);
+		Runtime.getRuntime().addShutdownHook(new Thread(()-> shutdown()));
+		if (error!=null) {
+			throw error;
+		}
+	}
+
+	private static EngineData[] readExternalEnginesData() throws IOException {
+		try {
+			return TinyJackson.toArray(new JSONObject(Files.readString(PATH)).getJSONArray("engines"), EngineData.class);
+		} catch (JSONException e) {
+			throw new IOException(e);
+		}
+	}
+	
+	private static void deDuplicateNames(EngineData[] engines) {
+		final Set<String> names = new HashSet<>();
+		Arrays.stream(engines).forEach(e -> e.name = deDuplicate(e.getName(), names));
+	}
+
+	private static String deDuplicate(String name, Set<String> names) {
+		String candidate = name;
+		int i = 0;
+		while (!names.add(candidate)) {
+			i++;
+			candidate = name + " (" + i + ')';
+		}
+		return candidate;
+	}
+
+	private static void shutdown() {
+		data.forEach(e -> {
+			if (e.command!=null) {
+				// If not the internal engine
+				try {
+					e.stop();
+				} catch (IOException e1) {
+					log.error("An error occurred while stopping {} engine", e.getName(),e1);
+				}
+			}
+		});
+	}
+
+	public static List<EngineData> getEngines() {
+		if (data==null) {
+			throw new IllegalStateException("Loader is not inited");
+		}
+		return data;
+	}
+	
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class EngineData {
+		@Getter
+		@Setter
+		private String name;
+		@Getter
+		@Setter
+		private String[] command;
+		@Getter
+		@Setter
+		@JsonOptional
+		private Map<String,String> options;
+		@JsonIgnore
+		private Engine engine;
+		
+		/** Gets the engine.
+		 * @return The engine or null if server is not started
+		 */
+		public Engine getEngine() {
+			return engine;
+		}
+
+		/** Starts the engine.
+		 * @return true if the engine was not started before calling this method
+		 * @throws IOException If something went wrong during server start
+		 */
+		public boolean start() throws IOException {
+			if (engine==null) {
+				if (command!=null) {
+					engine = new UCIEngine(this);
+					if (options!=null) {
+						applyOptions();
+					}
+				} else {
+					engine = new InternalEngine();
+				}
+				return true;
+			}
+			return false;
+		}
+
+		private void applyOptions() throws IOException {
+			for (Entry<String, String> entry : options.entrySet()) {
+				final Optional<Option<?>> option = engine.getOptions().stream().filter(o -> o.getName().equals(entry.getKey())).findAny();
+				if (option.isEmpty()) {
+					throw new IOException("Engine "+name+" has no "+entry.getKey()+" option");
+				}
+				final Option<?> theOption = option.get();
+				setValue(theOption, entry.getValue());
+			}
+		}
+		
+		private <T> void setValue(Option<T> option, String value) {
+			option.setValue(option.toValue(value));
+		}
+		
+		/** Stops the engine.
+		 * @return true if the engine was not stopped before calling this method
+		 * @throws IOException If something went wrong during server stop
+		 */
+		public boolean stop() throws IOException {
+			if (engine!=null) {
+				try {
+					engine.close();
+					return true;
+				} finally {
+					engine = null;
+				}
+			}
+			return false;
+		}
+	}
+}
