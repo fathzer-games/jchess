@@ -74,7 +74,7 @@ public class Settings extends AbstractGameSettings {
 
 	@Override
 	public ClockSettings getClockSettings() {
-		return clock.toClockSettings();
+		return clock==null ? null : clock.toClockSettings();
 	}
 
 	@Override
