@@ -193,7 +193,7 @@ public class JChess extends Application {
 		final String value = getPreferences().get(SETTINGS_PREF, null);
 		log.debug("Application state read: {}", value);
 		try {
-			this.settings = value==null ? new Settings() : TinyJackson.toObject(new JSONObject(value), Settings.class);
+			this.settings = value==null || Boolean.getBoolean("forgetSettings") ? new Settings() : TinyJackson.toObject(new JSONObject(value), Settings.class);
 		} catch (JSONException e) {
 			log.error("Error while reading previous application state", e);
 			this.settings = new Settings();

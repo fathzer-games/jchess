@@ -105,7 +105,10 @@ public abstract class GameManager<M,B extends MoveGenerator<M>,S extends Abstrac
 	private void newGame() {
 		this.game = new Game<>(new GameHistory<>(getStartPosition()), buildClock(), getPlayer(Color.WHITE), getPlayer(Color.BLACK));
 		log.debug("New game created: {}", this.game.getId());
-		this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
+		if (game.getClock()!=null) {
+			//TODO This is ugly, the start after first move should probably been set by buildClock (what seems to be already the case) and not here?
+			this.game.setStartClockAfterFirstMove(settings.isStartClockAfterFirstMove());
+		}
 		score.newGame();
 		onNewGame(this.game);
 	}
